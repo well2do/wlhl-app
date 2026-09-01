@@ -78,6 +78,7 @@ Copy `.env.example` to `.env.local` and replace the example contact, Zelle, pass
 | `/member` | Member sign-in, reservations, and event history |
 | `/cn/member` | 中文会员中心、活动预约与历史记录 |
 | `/admin` | Club management, registrations, attendance, and activity logs |
+| `/admin/database` | Authenticated, read-only browser for all database tables and raw records |
 | `/admin/members/[id]` | Complete member registration, engagement, and audit history |
 | `/api/admin/export` | Authenticated member CSV export |
 

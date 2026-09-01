@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
+  Database,
   Download,
   Eye,
   LayoutDashboard,
@@ -56,7 +57,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <Brand inverse />
-        <nav>{navItems.map(({ view: itemView, label, icon: Icon }) => <Link key={itemView} href={`/admin?view=${itemView}`} className={view === itemView ? "active" : ""}><Icon size={18} />{label}</Link>)}</nav>
+        <nav>
+          {navItems.map(({ view: itemView, label, icon: Icon }) => <Link key={itemView} href={`/admin?view=${itemView}`} className={view === itemView ? "active" : ""}><Icon size={18} />{label}</Link>)}
+          <Link href="/admin/database"><Database size={18} />Database</Link>
+        </nav>
         <div className="admin-sidebar-bottom"><Link href="/">View club website</Link><form action={adminLogoutAction}><button><LogOut size={17} />Sign out</button></form></div>
       </aside>
       <main className="admin-main">

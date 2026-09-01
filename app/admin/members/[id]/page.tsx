@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Bell, CalendarCheck2, ClipboardList, LogOut, Mail, Phone, ScrollText, UserRound } from "lucide-react";
+import { ArrowLeft, Bell, CalendarCheck2, ClipboardList, Database, LogOut, Mail, Phone, ScrollText, UserRound } from "lucide-react";
 import { adminLogoutAction } from "@/app/actions";
 import { Brand } from "@/components/brand";
 import { isAdmin } from "@/lib/auth";
@@ -28,6 +28,7 @@ export default async function AdminMemberProfilePage({ params }: { params: Promi
           <Link href="/admin"><UserRound size={18} />Admin overview</Link>
           <Link href="/admin?view=registrations"><ClipboardList size={18} />Registrations</Link>
           <Link href="/admin?view=activity"><ScrollText size={18} />Activity log</Link>
+          <Link href="/admin/database"><Database size={18} />Database</Link>
         </nav>
         <div className="admin-sidebar-bottom"><Link href="/">View club website</Link><form action={adminLogoutAction}><button><LogOut size={17} />Sign out</button></form></div>
       </aside>
