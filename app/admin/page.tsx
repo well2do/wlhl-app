@@ -4,6 +4,7 @@ import {
   BellRing,
   CalendarDays,
   CheckCircle2,
+  CircleAlert,
   ClipboardList,
   Database,
   Download,
@@ -11,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  Pencil,
   Plus,
   ScrollText,
   UserCheck,
@@ -21,11 +23,14 @@ import {
   createAnnouncementAction,
   createEventAction,
   createProductAction,
+  deleteProductAction,
   recordAttendanceAction,
   toggleProductAction,
   updateMemberStatusAction,
+  updateProductAction,
 } from "@/app/actions";
 import { Brand } from "@/components/brand";
+import { DeleteProductButton } from "@/components/delete-product-button";
 import { isAdmin } from "@/lib/auth";
 import { getActivityLogs, getAllAttendance, getAnnouncements, getDashboardStats, getEventRegistrations, getEvents, getMembers, getProducts } from "@/lib/db";
 import { formatCurrency, formatEventDate, formatEventTime, initials } from "@/lib/format";
@@ -44,7 +49,7 @@ const navItems = [
 
 export const metadata = { title: "Admin Dashboard" };
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ view?: string; saved?: string }> }) {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ view?: string; saved?: string; error?: string; editProduct?: string }> }) {
   if (!(await isAdmin())) redirect("/admin/login");
   const params = await searchParams;
   const allowed = navItems.map((item) => item.view);
@@ -52,6 +57,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const [stats, members, events, attendance, announcements, products, registrations, activityLogs] = await Promise.all([
     getDashboardStats(), getMembers(), getEvents(true), getAllAttendance(), getAnnouncements(50), getProducts(false), getEventRegistrations(), getActivityLogs(),
   ]);
+  const editingProduct = view === "products" ? products.find((product) => product.id === params.editProduct) : undefined;
 
   return (
     <div className="admin-shell">
@@ -65,7 +71,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </aside>
       <main className="admin-main">
         <header className="admin-topbar"><div><p className="eyebrow">WLHL operations</p><h1>{navItems.find((item) => item.view === view)?.label}</h1></div><div className="admin-date">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div></header>
-        {params.saved && <div className="saved-toast"><CheckCircle2 size={17} />{params.saved}</div>}
+        {params.saved && <div className="saved-toast" role="status"><CheckCircle2 size={17} />{params.saved}</div>}
+        {params.error && <div className="error-toast" role="alert"><CircleAlert size={17} />{params.error}</div>}
 
         {view === "overview" && (
           <>
@@ -129,8 +136,48 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
         {view === "products" && (
           <div className="admin-two-col admin-editor-grid">
-            <section className="admin-panel"><div className="admin-panel-heading"><div><h2>Wellness products</h2><p>Items advertised on the club website</p></div></div><div className="manage-product-list">{products.map((product) => <article key={product.id}><span><Package size={20} /></span><div><small>{product.category}</small><h3>{product.name}</h3><p>{formatCurrency(Number(product.price))} · {product.badge || "Standard item"}</p></div><form action={toggleProductAction}><input type="hidden" name="productId" value={product.id} /><button className={`table-status ${product.active ? "status-active" : "status-paused"}`}>{product.active ? "Active" : "Hidden"}</button></form></article>)}</div></section>
-            <section className="admin-panel editor-panel"><span className="editor-icon"><Package size={20} /></span><h2>Add a product</h2><p>Promote a new club-selected wellness item.</p><form action={createProductAction} className="stack-form"><label>Product name<input name="name" required /></label><label>Description<textarea name="description" rows={4} required /></label><div className="form-row two-columns"><label>Price<input name="price" type="number" step="0.01" min="0" required /></label><label>Category<input name="category" required /></label></div><label>Badge <span className="label-note">Optional</span><input name="badge" placeholder="New, Member favorite…" /></label><button className="button button-dark button-full">Add product</button></form></section>
+            <section className="admin-panel">
+              <div className="admin-panel-heading"><div><h2>Wellness products</h2><p>Items advertised on the club website</p></div></div>
+              <div className="manage-product-list">
+                {products.map((product) => (
+                  <article className={editingProduct?.id === product.id ? "is-editing" : undefined} key={product.id}>
+                    <span><Package size={20} /></span>
+                    <div><small>{product.category}</small><h3>{product.name}</h3><p>{formatCurrency(Number(product.price))} · {product.badge || "Standard item"}</p></div>
+                    <div className="manage-product-actions">
+                      <form action={toggleProductAction}>
+                        <input type="hidden" name="productId" value={product.id} />
+                        <button className={`table-status ${product.active ? "status-active" : "status-paused"}`} aria-label={product.active ? `Hide ${product.name}` : `Show ${product.name}`} title={product.active ? `Hide ${product.name}` : `Show ${product.name}`}>{product.active ? "Active" : "Hidden"}</button>
+                      </form>
+                      <Link className="product-edit-link" href={`/admin?view=products&editProduct=${encodeURIComponent(product.id)}`} aria-label={`Edit ${product.name}`}><Pencil size={12} />Edit</Link>
+                      <form action={deleteProductAction}>
+                        <input type="hidden" name="productId" value={product.id} />
+                        <DeleteProductButton productName={product.name} />
+                      </form>
+                    </div>
+                  </article>
+                ))}
+                {products.length === 0 && <p className="admin-empty">Products you add will appear here.</p>}
+              </div>
+            </section>
+            <section className="admin-panel editor-panel">
+              <span className="editor-icon">{editingProduct ? <Pencil size={20} /> : <Package size={20} />}</span>
+              <h2>{editingProduct ? "Edit product" : "Add a product"}</h2>
+              <p>{editingProduct ? "Update the details shown in the wellness shop." : "Promote a new club-selected wellness item."}</p>
+              <form action={editingProduct ? updateProductAction : createProductAction} className="stack-form" key={editingProduct?.id || "new-product"}>
+                {editingProduct && <input type="hidden" name="productId" value={editingProduct.id} />}
+                <label>Product name<input name="name" defaultValue={editingProduct?.name} minLength={2} maxLength={120} required /></label>
+                <label>Description<textarea name="description" rows={4} defaultValue={editingProduct?.description} minLength={8} maxLength={1000} required /></label>
+                <div className="form-row two-columns">
+                  <label>Price<input name="price" type="number" step="0.01" min="0" defaultValue={editingProduct ? Number(editingProduct.price) : undefined} required /></label>
+                  <label>Category<input name="category" defaultValue={editingProduct?.category} maxLength={80} required /></label>
+                </div>
+                <label>Badge <span className="label-note">Optional</span><input name="badge" defaultValue={editingProduct?.badge} maxLength={80} placeholder="New, Member favorite…" /></label>
+                <div className={editingProduct ? "product-editor-actions" : undefined}>
+                  <button className="button button-dark button-full">{editingProduct ? "Save changes" : "Add product"}</button>
+                  {editingProduct && <Link className="button button-outline button-full" href="/admin?view=products">Cancel</Link>}
+                </div>
+              </form>
+            </section>
           </div>
         )}
       </main>

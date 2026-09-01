@@ -324,18 +324,93 @@ export async function createEventAction(formData: FormData) {
 
 export async function createProductAction(formData: FormData) {
   await requireAdmin();
+  const product = readProductForm(formData);
   await execute("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, 1)", [
     crypto.randomUUID(),
-    text(formData, "name"),
-    text(formData, "description"),
-    Number(text(formData, "price")) || 0,
-    text(formData, "category"),
-    text(formData, "badge"),
+    product.name,
+    product.description,
+    product.price,
+    product.category,
+    product.badge,
   ]);
-  await writeActivityLog({ activityType: "product_created", description: `Added product: ${text(formData, "name")}`, actorType: "admin" });
+  await writeActivityLog({ activityType: "product_created", description: `Added product: ${product.name}`, actorType: "admin" });
+  revalidateProductPages();
+  productAdminRedirect("saved", "Product added");
+}
+
+function productAdminRedirect(kind: "saved" | "error", message: string, productId?: string): never {
+  const params = new URLSearchParams({ view: "products", [kind]: message });
+  if (productId) params.set("editProduct", productId);
+  redirect(`/admin?${params.toString()}`);
+}
+
+function readProductForm(formData: FormData, productId?: string) {
+  const name = text(formData, "name");
+  const description = text(formData, "description");
+  const priceText = text(formData, "price");
+  const price = Number(priceText);
+  const category = text(formData, "category");
+  const badge = text(formData, "badge");
+
+  if (
+    name.length < 2 || name.length > 120
+    || description.length < 8 || description.length > 1000
+    || priceText.length === 0 || !Number.isFinite(price) || price < 0
+    || category.length === 0 || category.length > 80
+    || badge.length > 80
+  ) {
+    productAdminRedirect("error", "Please complete the product fields.", productId);
+  }
+
+  return { name, description, price, category, badge };
+}
+
+function revalidateProductPages() {
   revalidatePath("/");
+  revalidatePath("/cn");
   revalidatePath("/admin");
-  redirect("/admin?view=products&saved=Product+added");
+  revalidatePath("/admin/landing-page-editor");
+}
+
+export async function updateProductAction(formData: FormData) {
+  await requireAdmin();
+  const productId = text(formData, "productId");
+  if (!productId) productAdminRedirect("error", "Product not found.");
+  const product = readProductForm(formData, productId);
+  const existing = await execute("SELECT id FROM products WHERE id = ? LIMIT 1", [productId]);
+  if (existing.rows.length === 0) productAdminRedirect("error", "Product not found.");
+
+  await execute(
+    "UPDATE products SET name = ?, description = ?, price = ?, category = ?, badge = ? WHERE id = ?",
+    [product.name, product.description, product.price, product.category, product.badge, productId],
+  );
+  await writeActivityLog({
+    activityType: "product_updated",
+    description: `Updated product: ${product.name}`,
+    actorType: "admin",
+    metadata: { productId },
+  });
+  revalidateProductPages();
+  productAdminRedirect("saved", "Product updated");
+}
+
+export async function deleteProductAction(formData: FormData) {
+  await requireAdmin();
+  const productId = text(formData, "productId");
+  if (!productId) productAdminRedirect("error", "Product not found.");
+  const existing = await execute("SELECT name FROM products WHERE id = ? LIMIT 1", [productId]);
+  if (existing.rows.length === 0) productAdminRedirect("error", "Product not found.");
+  const productName = String(existing.rows[0].name);
+
+  await execute("DELETE FROM products WHERE id = ?", [productId]);
+  await writeActivityLog({
+    activityType: "product_deleted",
+    description: `Deleted product: ${productName}`,
+    actorType: "admin",
+    metadata: { productId },
+  });
+  revalidateProductPages();
+  productAdminRedirect("saved", "Product deleted");
 }
 
 export async function updateMemberStatusAction(formData: FormData) {
@@ -371,8 +446,8 @@ export async function recordAttendanceAction(formData: FormData) {
 export async function toggleProductAction(formData: FormData) {
   await requireAdmin();
   const productId = text(formData, "productId");
+  if (!productId) productAdminRedirect("error", "Product not found.");
   await execute("UPDATE products SET active = CASE active WHEN 1 THEN 0 ELSE 1 END WHERE id = ?", [productId]);
   await writeActivityLog({ activityType: "product_visibility_updated", description: "Changed product website visibility.", actorType: "admin", metadata: { productId } });
-  revalidatePath("/");
-  revalidatePath("/admin");
+  revalidateProductPages();
 }

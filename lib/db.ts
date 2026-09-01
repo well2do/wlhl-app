@@ -119,7 +119,10 @@ async function initialize() {
   }
 
   const productCount = Number((await client.execute("SELECT COUNT(*) AS count FROM products")).rows[0].count);
-  if (productCount === 0) {
+  const productWasDeleted = (await client.execute(
+    "SELECT 1 FROM activity_logs WHERE activity_type = 'product_deleted' LIMIT 1",
+  )).rows.length > 0;
+  if (productCount === 0 && !productWasDeleted) {
     await client.batch(
       [
         { sql: "INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Daily Vitality Tea", "Caffeine-free herbal blend with ginger, hibiscus, and warming spices.", 18, "Wellness", "Member favorite", 1] },
