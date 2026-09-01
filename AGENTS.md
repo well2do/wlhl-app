@@ -1,5 +1,7 @@
-# Repository workflow
+# Repository Working Agreements
 
-- After every completed code, content, or configuration change, run the relevant validation, commit the change, and push the current branch to `origin`.
-- Include all files changed for the requested task in that commit, while preserving unrelated user changes.
-- If a push cannot be completed, report the blocker clearly before ending the task.
+- Write source code, comments, commit messages, and technical documentation in English.
+- Communicate with the user in Chinese unless the user asks for another language.
+- After completing and verifying any file change in this repository, create a Git commit and push the current branch to `origin` before reporting completion.
+- Never commit secrets, credentials, `.env.local`, local databases, generated build output, or other ignored files.
+- If committing or pushing fails, preserve the completed local changes and clearly report the failure instead of claiming the work was published.
