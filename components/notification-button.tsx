@@ -9,7 +9,15 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from(window.atob(base64), (character) => character.charCodeAt(0));
 }
 
-export function NotificationButton({ publicKey, locale = "en" }: { publicKey?: string; locale?: "en" | "cn" }) {
+export function NotificationButton({
+  publicKey,
+  locale = "en",
+  labels,
+}: {
+  publicKey?: string;
+  locale?: "en" | "cn";
+  labels?: { idle: string; loading: string; enabled: string; error: string };
+}) {
   const [status, setStatus] = useState<"idle" | "loading" | "on" | "error">("idle");
   const cn = locale === "cn";
 
@@ -43,9 +51,9 @@ export function NotificationButton({ publicKey, locale = "en" }: { publicKey?: s
     <div className="notification-control">
       <button className="button button-light" onClick={subscribe} disabled={status === "loading" || status === "on"}>
         {status === "loading" ? <LoaderCircle className="spin" size={18} /> : status === "on" ? <BellRing size={18} /> : <Bell size={18} />}
-        {status === "on" ? (cn ? "通知已开启" : "Notifications are on") : status === "loading" ? (cn ? "正在设置…" : "Setting up…") : (cn ? "开启活动通知" : "Turn on notifications")}
+        {status === "on" ? (cn ? "通知已开启" : labels?.enabled ?? "Notifications are on") : status === "loading" ? (cn ? "正在设置…" : labels?.loading ?? "Setting up…") : (cn ? "开启活动通知" : labels?.idle ?? "Turn on notifications")}
       </button>
-      {status === "error" && <small>{cn ? "暂时无法开启浏览器通知，您仍可通过电子邮件接收更新。" : "Notifications aren’t available yet. You can still receive email updates."}</small>}
+      {status === "error" && <small>{cn ? "暂时无法开启浏览器通知，您仍可通过电子邮件接收更新。" : labels?.error ?? "Notifications aren’t available yet. You can still receive email updates."}</small>}
     </div>
   );
 }

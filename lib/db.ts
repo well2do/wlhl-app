@@ -1,5 +1,6 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
 import type { ActivityLog, Announcement, Attendance, ClubEvent, EventRegistration, Member, Product } from "./types";
+import { defaultLandingPageContent, type LandingPageContent } from "./landing-page-content";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -84,6 +85,13 @@ async function initialize() {
       `CREATE TABLE IF NOT EXISTS push_subscriptions (
         endpoint TEXT PRIMARY KEY, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
         member_id TEXT, created_at TEXT NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS landing_page_content (
+        locale TEXT PRIMARY KEY, content_json TEXT NOT NULL, updated_at TEXT NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS landing_page_assets (
+        slot TEXT PRIMARY KEY, mime_type TEXT NOT NULL, file_name TEXT NOT NULL,
+        data BLOB NOT NULL, updated_at TEXT NOT NULL
       )`,
       `CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date)`,
       `CREATE INDEX IF NOT EXISTS idx_attendance_member ON attendance(member_id)`,
@@ -196,6 +204,37 @@ export async function getAnnouncements(limit = 10) {
 export async function getProducts(activeOnly = true) {
   const result = await execute(`SELECT * FROM products ${activeOnly ? "WHERE active = 1" : ""} ORDER BY active DESC, name ASC`);
   return result.rows as unknown as Product[];
+}
+
+export async function getLandingPageContent(): Promise<LandingPageContent> {
+  const result = await execute("SELECT content_json FROM landing_page_content WHERE locale = 'en' LIMIT 1");
+  if (!result.rows[0]?.content_json) return { ...defaultLandingPageContent };
+
+  try {
+    const stored = JSON.parse(String(result.rows[0].content_json)) as Record<string, unknown>;
+    const content = { ...defaultLandingPageContent } as LandingPageContent;
+    for (const key of Object.keys(defaultLandingPageContent) as (keyof LandingPageContent)[]) {
+      if (typeof stored[key] === "string") content[key] = stored[key];
+    }
+    return content;
+  } catch {
+    return { ...defaultLandingPageContent };
+  }
+}
+
+export type LandingPageAssetMetadata = {
+  slot: string;
+  mime_type: string;
+  file_name: string;
+  updated_at: string;
+  byte_size: number;
+};
+
+export async function getLandingPageAssetMetadata() {
+  const result = await execute(
+    "SELECT slot, mime_type, file_name, updated_at, length(data) AS byte_size FROM landing_page_assets ORDER BY slot",
+  );
+  return result.rows as unknown as LandingPageAssetMetadata[];
 }
 
 export async function getMembers() {

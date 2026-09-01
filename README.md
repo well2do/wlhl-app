@@ -78,6 +78,7 @@ Copy `.env.example` to `.env.local` and replace the example contact, Zelle, pass
 | `/member` | Member sign-in, reservations, and event history |
 | `/cn/member` | 中文会员中心、活动预约与历史记录 |
 | `/admin` | Club management, registrations, attendance, and activity logs |
+| `/admin/landing-page-editor` | Edit the English home page text, featured records, and uploaded images |
 | `/admin/database` | Authenticated, read-only browser for all database tables and raw records |
 | `/admin/members/[id]` | Complete member registration, engagement, and audit history |
 | `/api/admin/export` | Authenticated member CSV export |
@@ -96,6 +97,8 @@ The production SQLite database includes these operational tables:
 | `announcements` | Club news, promotions, and push notification content |
 | `products` | Public wellness product catalog |
 | `push_subscriptions` | Browser push notification subscriptions |
+| `landing_page_content` | Editable English home page labels, headings, descriptions, and calls to action |
+| `landing_page_assets` | Uploaded home page images stored as persistent database blobs |
 
 The September 7 forum registration flow creates or matches an `Event Guest` contact, writes the full form to `event_registrations`, adds an `attendance` record, and records the action in `activity_logs`.
 
