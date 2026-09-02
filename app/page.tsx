@@ -115,6 +115,7 @@ export default async function HomePage() {
             <p className="eyebrow">{content.introEyebrow}</p>
             <h2>{content.introTitleLine}<br /><em>{content.introTitleAccent}</em></h2>
             <p>{content.introDescription}</p>
+            <Link className="about-intro-link" href="/about">{content.introAboutButton}<ArrowRight size={15} /></Link>
           </div>
           <div className="benefit-grid">
             {benefits.map(({ icon: Icon, title, copy }, index) => (

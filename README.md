@@ -68,6 +68,8 @@ Copy `.env.example` to `.env.local` and replace the example contact, Zelle, pass
 | --- | --- |
 | `/` | Club website, announcements, products, payment details |
 | `/cn` | 中文俱乐部网站、公告、产品与付款说明 |
+| `/about` | Club mission, team, membership, and contact information |
+| `/cn/about` | 中文俱乐部宗旨、专家团队、会员方案与联系方式 |
 | `/events` | Public event calendar |
 | `/cn/events` | 中文活动日历 |
 | `/events/ai-health-wealth-forum` | Bilingual September 7 forum information and registration |

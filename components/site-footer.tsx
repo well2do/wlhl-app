@@ -16,6 +16,7 @@ export function SiteFooter({ locale = "en", content, logoSrc }: { locale?: "en" 
         </div>
         <div>
           <p className="footer-label">{isChinese ? "探索" : content?.footerExploreLabel ?? "Explore"}</p>
+          <Link href={`${prefix}/about`}>{isChinese ? "关于我们" : content?.navAbout ?? "About"}</Link>
           <Link href={`${prefix}/events`}>{isChinese ? "活动" : content?.footerEvents ?? "Events"}</Link>
           <Link href={`${prefix}/join`}>{isChinese ? "会员申请" : content?.footerMembership ?? "Membership"}</Link>
           <Link href={`${prefix}/#shop`}>{isChinese ? "健康产品" : content?.footerShop ?? "Wellness shop"}</Link>

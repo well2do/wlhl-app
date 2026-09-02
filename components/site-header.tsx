@@ -17,7 +17,7 @@ export function SiteHeader({ locale = "en", content, logoSrc }: { locale?: "en" 
           logoAlt={content ? `${content.brandName} logo` : ""}
         />
         <nav className="desktop-nav" aria-label="Primary navigation">
-          <Link href={`${prefix}/#about`}>{isChinese ? "关于我们" : content?.navAbout ?? "About"}</Link>
+          <Link href={`${prefix}/about`}>{isChinese ? "关于我们" : content?.navAbout ?? "About"}</Link>
           <Link href={`${prefix}/events`}>{isChinese ? "活动" : content?.navEvents ?? "Events"}</Link>
           <Link href={`${prefix}/#shop`}>{isChinese ? "健康产品" : content?.navShop ?? "Wellness shop"}</Link>
         </nav>

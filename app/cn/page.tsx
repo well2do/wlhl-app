@@ -77,7 +77,7 @@ export default async function ChineseHomePage() {
         </section>
 
         <section className="section section-intro" id="about">
-          <div className="section-heading centered-heading"><p className="eyebrow">健康生活，良友相伴</p><h2>人生这一程，可以成为<br /><em>最健康、最精彩的一程。</em></h2><p>WLHL 汇聚伙伴、实践方法与相互鼓励，让充满活力的生活触手可及。</p></div>
+          <div className="section-heading centered-heading"><p className="eyebrow">健康生活，良友相伴</p><h2>人生这一程，可以成为<br /><em>最健康、最精彩的一程。</em></h2><p>WLHL 汇聚伙伴、实践方法与相互鼓励，让充满活力的生活触手可及。</p><Link className="about-intro-link" href="/cn/about">进一步了解俱乐部 <ArrowRight size={15} /></Link></div>
           <div className="benefit-grid">{benefits.map(({ icon: Icon, title, copy }, index) => <article className="benefit-card" key={title}><span className={`benefit-icon benefit-${index + 1}`}><Icon size={24} /></span><span className="card-number">0{index + 1}</span><h3>{title}</h3><p>{copy}</p></article>)}</div>
         </section>
 
