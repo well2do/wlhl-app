@@ -15,7 +15,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
       <div className="access-brand"><Brand /></div>
       <section className="access-card admin-login-card">
         <span className="access-icon"><LockKeyhole size={25} /></span>
-        <p className="eyebrow">Private workspace</p><h1>Club administration</h1><p>Manage members, events, attendance, announcements, and products.</p>
+        <p className="eyebrow">Private workspace</p><h1>Club administration</h1><p>Manage members, events, attendance, announcements, products, and expert profiles.</p>
         <form action={adminLoginAction} className="stack-form"><label>Admin password<input type="password" name="password" autoComplete="current-password" required /></label>{params.error && <p className="form-error">{params.error}</p>}<button className="button button-dark button-full">Sign in</button></form>
         <Link className="back-link" href="/"><ArrowLeft size={15} />Back to club website</Link>
       </section>

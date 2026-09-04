@@ -13,11 +13,13 @@ import {
   Users,
 } from "lucide-react";
 import { aboutContent, clubRegistrationUrl, type AboutLocale } from "@/lib/about-content";
+import { getExpertProfiles } from "@/lib/db";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
-export function AboutPage({ locale }: { locale: AboutLocale }) {
+export async function AboutPage({ locale }: { locale: AboutLocale }) {
   const content = aboutContent[locale];
+  const experts = await getExpertProfiles();
   const cn = locale === "cn";
   const prefix = cn ? "/cn" : "";
 
@@ -91,21 +93,26 @@ export function AboutPage({ locale }: { locale: AboutLocale }) {
             <p>{content.expertsDescription}</p>
           </div>
           <div className="about-expert-list">
-            {content.experts.map((expert, index) => (
-              <details key={expert.name}>
-                <summary>
-                  <span className="about-expert-number">{String(index + 1).padStart(2, "0")}</span>
-                  <span><strong>{expert.name}</strong><small>{expert.role}</small></span>
-                  <span className="about-expert-toggle">+</span>
-                </summary>
-                <div className="about-expert-biography">
-                  <p>{expert.biography}</p>
-                  {"profileUrl" in expert && expert.profileUrl && (
-                    <a href={expert.profileUrl} target="_blank" rel="noreferrer">{cn ? "查看机构简介" : "View institutional profile"}<ExternalLink size={13} /></a>
-                  )}
-                </div>
-              </details>
-            ))}
+            {experts.map((expert, index) => {
+              const name = cn ? expert.name_cn : expert.name_en;
+              const role = cn ? expert.role_cn : expert.role_en;
+              const biography = cn ? expert.biography_cn : expert.biography_en;
+              return (
+                <details key={expert.id}>
+                  <summary>
+                    <span className="about-expert-number">{String(index + 1).padStart(2, "0")}</span>
+                    <span><strong>{name}</strong><small>{role}</small></span>
+                    <span className="about-expert-toggle">+</span>
+                  </summary>
+                  <div className="about-expert-biography">
+                    <p>{biography}</p>
+                    {expert.profile_url && (
+                      <a href={expert.profile_url} target="_blank" rel="noreferrer">{cn ? "查看机构简介" : "View institutional profile"}<ExternalLink size={13} /></a>
+                    )}
+                  </div>
+                </details>
+              );
+            })}
           </div>
         </section>
 

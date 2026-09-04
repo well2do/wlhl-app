@@ -1,5 +1,6 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
-import type { ActivityLog, Announcement, Attendance, ClubEvent, EventRegistration, Member, Product } from "./types";
+import type { ActivityLog, Announcement, Attendance, ClubEvent, EventRegistration, ExpertProfileRecord, Member, Product } from "./types";
+import { initialExpertProfiles } from "./expert-profiles";
 import { landingPageDefaults, type LandingPageContent, type LandingPageLocale } from "./landing-page-content";
 
 declare global {
@@ -109,12 +110,20 @@ async function initialize() {
         slot TEXT PRIMARY KEY, mime_type TEXT NOT NULL, file_name TEXT NOT NULL,
         data BLOB NOT NULL, updated_at TEXT NOT NULL
       )`,
+      `CREATE TABLE IF NOT EXISTS expert_profiles (
+        id TEXT PRIMARY KEY, name_en TEXT NOT NULL, name_cn TEXT NOT NULL,
+        role_en TEXT NOT NULL DEFAULT '', role_cn TEXT NOT NULL DEFAULT '',
+        biography_en TEXT NOT NULL DEFAULT '', biography_cn TEXT NOT NULL DEFAULT '',
+        profile_url TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0,
+        active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      )`,
       `CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date)`,
       `CREATE INDEX IF NOT EXISTS idx_attendance_member ON attendance(member_id)`,
       `CREATE INDEX IF NOT EXISTS idx_registrations_event ON event_registrations(event_id)`,
       `CREATE INDEX IF NOT EXISTS idx_registrations_member ON event_registrations(member_id)`,
       `CREATE INDEX IF NOT EXISTS idx_activity_member ON activity_logs(member_id)`,
       `CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_logs(created_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_expert_profiles_order ON expert_profiles(sort_order)`,
     ],
     "write",
   );
@@ -125,6 +134,25 @@ async function initialize() {
     ["products", ["name_cn", "description_cn", "category_cn", "badge_cn"]],
   ] as const) {
     for (const column of columns) await ensureTextColumn(client, table, column);
+  }
+
+  const expertCount = Number((await client.execute("SELECT COUNT(*) AS count FROM expert_profiles")).rows[0].count);
+  if (expertCount === 0) {
+    const expertSeedTime = new Date().toISOString();
+    await client.batch(
+      initialExpertProfiles.map((expert) => ({
+        sql: `INSERT OR IGNORE INTO expert_profiles
+          (id, name_en, name_cn, role_en, role_cn, biography_en, biography_cn,
+           profile_url, sort_order, active, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          expert.id, expert.name_en, expert.name_cn, expert.role_en, expert.role_cn,
+          expert.biography_en, expert.biography_cn, expert.profile_url,
+          expert.sort_order, expert.active, expertSeedTime, expertSeedTime,
+        ],
+      })),
+      "write",
+    );
   }
 
   const eventCount = Number((await client.execute("SELECT COUNT(*) AS count FROM events")).rows[0].count);
@@ -228,6 +256,14 @@ export async function getAnnouncements(limit = 10) {
 export async function getProducts(activeOnly = true) {
   const result = await execute(`SELECT * FROM products ${activeOnly ? "WHERE active = 1" : ""} ORDER BY active DESC, name ASC`);
   return result.rows as unknown as Product[];
+}
+
+export async function getExpertProfiles(activeOnly = true) {
+  const result = await execute(
+    `SELECT * FROM expert_profiles ${activeOnly ? "WHERE active = 1" : ""}
+     ORDER BY sort_order ASC, name_en ASC`,
+  );
+  return result.rows as unknown as ExpertProfileRecord[];
 }
 
 export async function getLandingPageContent(locale: LandingPageLocale = "en"): Promise<LandingPageContent> {

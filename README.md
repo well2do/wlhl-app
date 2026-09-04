@@ -31,6 +31,7 @@ Production Zelle and club contact details intentionally remain hidden until the 
 - Event creation, registration, check-in, and completion tracking
 - Announcement publishing with optional browser push delivery
 - Product management and direct product inquiry links
+- Bilingual expert-profile management with public display ordering and visibility controls
 - Installable PWA metadata and responsive layouts for phones, tablets, and desktops
 - Automatic schema creation and starter data
 
@@ -80,7 +81,7 @@ Copy `.env.example` to `.env.local` and replace the example contact, Zelle, pass
 | `/cn/join` | 中文会员申请 |
 | `/member` | Member sign-in, reservations, and event history |
 | `/cn/member` | 中文会员中心、活动预约与历史记录 |
-| `/admin` | Club management, registrations, attendance, and activity logs |
+| `/admin` | Club management, registrations, attendance, expert profiles, and activity logs |
 | `/admin/landing-page-editor` | Edit English and Chinese home page text, localized featured records, and shared uploaded images |
 | `/admin/database` | Authenticated, read-only browser for all database tables and raw records |
 | `/admin/members/[id]` | Complete member registration, engagement, and audit history |
@@ -102,6 +103,7 @@ The production SQLite database includes these operational tables:
 | `push_subscriptions` | Browser push notification subscriptions |
 | `landing_page_content` | Editable English home page labels, headings, descriptions, and calls to action |
 | `landing_page_assets` | Uploaded home page images stored as persistent database blobs |
+| `expert_profiles` | Editable English and Chinese expert biographies, public ordering, links, and visibility |
 
 The September 7 forum registration flow creates or matches an `Event Guest` contact, writes the full form to `event_registrations`, adds an `attendance` record, and records the action in `activity_logs`.
 

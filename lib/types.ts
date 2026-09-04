@@ -56,6 +56,21 @@ export type Product = {
   active: number;
 };
 
+export type ExpertProfileRecord = {
+  id: string;
+  name_en: string;
+  name_cn: string;
+  role_en: string;
+  role_cn: string;
+  biography_en: string;
+  biography_cn: string;
+  profile_url: string;
+  sort_order: number;
+  active: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Attendance = {
   id: string;
   member_id: string;

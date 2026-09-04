@@ -455,3 +455,122 @@ export async function toggleProductAction(formData: FormData) {
   await writeActivityLog({ activityType: "product_visibility_updated", description: "Changed product website visibility.", actorType: "admin", metadata: { productId } });
   revalidateProductPages();
 }
+
+function expertAdminRedirect(kind: "saved" | "error", message: string, expertId?: string): never {
+  const params = new URLSearchParams({ view: "experts", [kind]: message });
+  if (expertId) params.set("editExpert", expertId);
+  redirect(`/admin?${params.toString()}`);
+}
+
+function readExpertForm(formData: FormData, expertId?: string) {
+  const nameEn = text(formData, "nameEn");
+  const nameCn = text(formData, "nameCn");
+  const roleEn = text(formData, "roleEn");
+  const roleCn = text(formData, "roleCn");
+  const biographyEn = text(formData, "biographyEn");
+  const biographyCn = text(formData, "biographyCn");
+  const profileUrl = text(formData, "profileUrl");
+  const sortOrderText = text(formData, "sortOrder");
+  const sortOrder = Number(sortOrderText);
+
+  let profileUrlIsValid = true;
+  if (profileUrl) {
+    try {
+      const parsedUrl = new URL(profileUrl);
+      profileUrlIsValid = parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+    } catch {
+      profileUrlIsValid = false;
+    }
+  }
+
+  if (
+    nameEn.length < 2 || nameEn.length > 120
+    || nameCn.length < 2 || nameCn.length > 120
+    || roleEn.length < 2 || roleEn.length > 200
+    || roleCn.length < 2 || roleCn.length > 200
+    || biographyEn.length < 8 || biographyEn.length > 8000
+    || biographyCn.length < 8 || biographyCn.length > 8000
+    || !profileUrlIsValid || profileUrl.length > 500
+    || sortOrderText.length === 0 || !Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 10000
+  ) {
+    expertAdminRedirect("error", "Please complete the expert profile fields.", expertId);
+  }
+
+  return { nameEn, nameCn, roleEn, roleCn, biographyEn, biographyCn, profileUrl, sortOrder };
+}
+
+function revalidateExpertPages() {
+  revalidatePath("/about");
+  revalidatePath("/cn/about");
+  revalidatePath("/admin");
+}
+
+export async function createExpertAction(formData: FormData) {
+  await requireAdmin();
+  const expert = readExpertForm(formData);
+  const expertId = crypto.randomUUID();
+  const now = new Date().toISOString();
+  await execute(
+    `INSERT INTO expert_profiles
+     (id, name_en, name_cn, role_en, role_cn, biography_en, biography_cn,
+      profile_url, sort_order, active, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+    [
+      expertId, expert.nameEn, expert.nameCn, expert.roleEn, expert.roleCn,
+      expert.biographyEn, expert.biographyCn, expert.profileUrl, expert.sortOrder, now, now,
+    ],
+  );
+  await writeActivityLog({
+    activityType: "expert_created",
+    description: `Added expert profile: ${expert.nameEn}`,
+    actorType: "admin",
+    metadata: { expertId },
+  });
+  revalidateExpertPages();
+  expertAdminRedirect("saved", "Expert profile added");
+}
+
+export async function updateExpertAction(formData: FormData) {
+  await requireAdmin();
+  const expertId = text(formData, "expertId");
+  if (!expertId) expertAdminRedirect("error", "Expert profile not found.");
+  const expert = readExpertForm(formData, expertId);
+  const existing = await execute("SELECT id FROM expert_profiles WHERE id = ? LIMIT 1", [expertId]);
+  if (existing.rows.length === 0) expertAdminRedirect("error", "Expert profile not found.");
+
+  await execute(
+    `UPDATE expert_profiles SET name_en = ?, name_cn = ?, role_en = ?, role_cn = ?,
+     biography_en = ?, biography_cn = ?, profile_url = ?, sort_order = ?, updated_at = ?
+     WHERE id = ?`,
+    [
+      expert.nameEn, expert.nameCn, expert.roleEn, expert.roleCn,
+      expert.biographyEn, expert.biographyCn, expert.profileUrl,
+      expert.sortOrder, new Date().toISOString(), expertId,
+    ],
+  );
+  await writeActivityLog({
+    activityType: "expert_updated",
+    description: `Updated expert profile: ${expert.nameEn}`,
+    actorType: "admin",
+    metadata: { expertId },
+  });
+  revalidateExpertPages();
+  expertAdminRedirect("saved", "Expert profile updated");
+}
+
+export async function toggleExpertAction(formData: FormData) {
+  await requireAdmin();
+  const expertId = text(formData, "expertId");
+  if (!expertId) expertAdminRedirect("error", "Expert profile not found.");
+  await execute(
+    "UPDATE expert_profiles SET active = CASE active WHEN 1 THEN 0 ELSE 1 END, updated_at = ? WHERE id = ?",
+    [new Date().toISOString(), expertId],
+  );
+  await writeActivityLog({
+    activityType: "expert_visibility_updated",
+    description: "Changed expert profile website visibility.",
+    actorType: "admin",
+    metadata: { expertId },
+  });
+  revalidateExpertPages();
+}

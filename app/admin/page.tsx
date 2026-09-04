@@ -16,6 +16,7 @@ import {
   Pencil,
   Plus,
   ScrollText,
+  Stethoscope,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -23,20 +24,23 @@ import {
   adminLogoutAction,
   createAnnouncementAction,
   createEventAction,
+  createExpertAction,
   createProductAction,
   deleteProductAction,
   recordAttendanceAction,
+  toggleExpertAction,
   toggleProductAction,
+  updateExpertAction,
   updateMemberStatusAction,
   updateProductAction,
 } from "@/app/actions";
 import { Brand } from "@/components/brand";
 import { DeleteProductButton } from "@/components/delete-product-button";
 import { isAdmin } from "@/lib/auth";
-import { getActivityLogs, getAllAttendance, getAnnouncements, getDashboardStats, getEventRegistrations, getEvents, getMembers, getProducts } from "@/lib/db";
+import { getActivityLogs, getAllAttendance, getAnnouncements, getDashboardStats, getEventRegistrations, getEvents, getExpertProfiles, getMembers, getProducts } from "@/lib/db";
 import { formatCurrency, formatEventDate, formatEventTime, initials } from "@/lib/format";
 
-type View = "overview" | "members" | "registrations" | "events" | "attendance" | "activity" | "announcements" | "products";
+type View = "overview" | "members" | "registrations" | "events" | "attendance" | "activity" | "announcements" | "products" | "experts";
 const navItems = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
   { view: "members", label: "Members", icon: Users },
@@ -46,19 +50,21 @@ const navItems = [
   { view: "activity", label: "Activity log", icon: ScrollText },
   { view: "announcements", label: "Announcements", icon: BellRing },
   { view: "products", label: "Products", icon: Package },
+  { view: "experts", label: "Experts", icon: Stethoscope },
 ] as const;
 
 export const metadata = { title: "Admin Dashboard" };
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ view?: string; saved?: string; error?: string; editProduct?: string }> }) {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ view?: string; saved?: string; error?: string; editProduct?: string; editExpert?: string }> }) {
   if (!(await isAdmin())) redirect("/admin/login");
   const params = await searchParams;
   const allowed = navItems.map((item) => item.view);
   const view = (allowed.includes(params.view as View) ? params.view : "overview") as View;
-  const [stats, members, events, attendance, announcements, products, registrations, activityLogs] = await Promise.all([
-    getDashboardStats(), getMembers(), getEvents(true), getAllAttendance(), getAnnouncements(50), getProducts(false), getEventRegistrations(), getActivityLogs(),
+  const [stats, members, events, attendance, announcements, products, registrations, activityLogs, experts] = await Promise.all([
+    getDashboardStats(), getMembers(), getEvents(true), getAllAttendance(), getAnnouncements(50), getProducts(false), getEventRegistrations(), getActivityLogs(), getExpertProfiles(false),
   ]);
   const editingProduct = view === "products" ? products.find((product) => product.id === params.editProduct) : undefined;
+  const editingExpert = view === "experts" ? experts.find((expert) => expert.id === params.editExpert) : undefined;
 
   return (
     <div className="admin-shell">
@@ -177,6 +183,56 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <div className={editingProduct ? "product-editor-actions" : undefined}>
                   <button className="button button-dark button-full">{editingProduct ? "Save changes" : "Add product"}</button>
                   {editingProduct && <Link className="button button-outline button-full" href="/admin?view=products">Cancel</Link>}
+                </div>
+              </form>
+            </section>
+          </div>
+        )}
+
+        {view === "experts" && (
+          <div className="admin-two-col admin-editor-grid">
+            <section className="admin-panel">
+              <div className="admin-panel-heading"><div><h2>Expert team</h2><p>{experts.length} bilingual profiles shown in website order</p></div></div>
+              <div className="manage-product-list">
+                {experts.map((expert) => (
+                  <article className={editingExpert?.id === expert.id ? "is-editing" : undefined} key={expert.id}>
+                    <span><Stethoscope size={20} /></span>
+                    <div><small>Order {expert.sort_order} · {expert.role_en}</small><h3>{expert.name_en} / {expert.name_cn}</h3><p>{expert.role_cn}</p></div>
+                    <div className="manage-product-actions">
+                      <form action={toggleExpertAction}>
+                        <input type="hidden" name="expertId" value={expert.id} />
+                        <button className={`table-status ${expert.active ? "status-active" : "status-paused"}`} aria-label={expert.active ? `Hide ${expert.name_en}` : `Show ${expert.name_en}`} title={expert.active ? `Hide ${expert.name_en}` : `Show ${expert.name_en}`}>{expert.active ? "Active" : "Hidden"}</button>
+                      </form>
+                      <Link className="product-edit-link" href={`/admin?view=experts&editExpert=${encodeURIComponent(expert.id)}`} aria-label={`Edit ${expert.name_en}`}><Pencil size={12} />Edit</Link>
+                    </div>
+                  </article>
+                ))}
+                {experts.length === 0 && <p className="admin-empty">Expert profiles you add will appear here.</p>}
+              </div>
+            </section>
+            <section className="admin-panel editor-panel">
+              <span className="editor-icon">{editingExpert ? <Pencil size={20} /> : <Stethoscope size={20} />}</span>
+              <h2>{editingExpert ? "Edit expert" : "Add an expert"}</h2>
+              <p>Manage the English and Chinese profile displayed on both About pages.</p>
+              <form action={editingExpert ? updateExpertAction : createExpertAction} className="stack-form" key={editingExpert?.id || "new-expert"}>
+                {editingExpert && <input type="hidden" name="expertId" value={editingExpert.id} />}
+                <div className="form-row two-columns">
+                  <label>English name<input name="nameEn" defaultValue={editingExpert?.name_en} minLength={2} maxLength={120} required /></label>
+                  <label>中文姓名<input name="nameCn" defaultValue={editingExpert?.name_cn} minLength={2} maxLength={120} required /></label>
+                </div>
+                <div className="form-row two-columns">
+                  <label>English role<input name="roleEn" defaultValue={editingExpert?.role_en} minLength={2} maxLength={200} required /></label>
+                  <label>中文职务<input name="roleCn" defaultValue={editingExpert?.role_cn} minLength={2} maxLength={200} required /></label>
+                </div>
+                <label>English biography<textarea name="biographyEn" rows={6} defaultValue={editingExpert?.biography_en} minLength={8} maxLength={8000} required /></label>
+                <label>中文简介<textarea name="biographyCn" rows={6} defaultValue={editingExpert?.biography_cn} minLength={8} maxLength={8000} required /></label>
+                <div className="form-row two-columns">
+                  <label>Display order<input name="sortOrder" type="number" min={0} max={10000} step={1} defaultValue={editingExpert?.sort_order ?? (experts.length + 1) * 10} required /></label>
+                  <label>Profile URL <span className="label-note">Optional</span><input name="profileUrl" type="url" defaultValue={editingExpert?.profile_url} maxLength={500} placeholder="https://…" /></label>
+                </div>
+                <div className={editingExpert ? "product-editor-actions" : undefined}>
+                  <button className="button button-dark button-full">{editingExpert ? "Save changes" : "Add expert"}</button>
+                  {editingExpert && <Link className="button button-outline button-full" href="/admin?view=experts">Cancel</Link>}
                 </div>
               </form>
             </section>

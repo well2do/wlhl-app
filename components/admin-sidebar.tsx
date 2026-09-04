@@ -9,6 +9,7 @@ import {
   LogOut,
   Package,
   ScrollText,
+  Stethoscope,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -24,6 +25,7 @@ export const adminNavItems = [
   { id: "activity", label: "Activity log", href: "/admin?view=activity", icon: ScrollText },
   { id: "announcements", label: "Announcements", href: "/admin?view=announcements", icon: BellRing },
   { id: "products", label: "Products", href: "/admin?view=products", icon: Package },
+  { id: "experts", label: "Experts", href: "/admin?view=experts", icon: Stethoscope },
   { id: "landing-page", label: "Landing page", href: "/admin/landing-page-editor", icon: Image },
   { id: "database", label: "Database", href: "/admin/database", icon: Database },
 ] as const;
