@@ -63,6 +63,9 @@ export function AboutPage({ locale }: { locale: AboutLocale }) {
             <article><span><Activity size={21} /></span><small>{content.memberPracticeLabel}</small><p>{content.memberPractice}</p></article>
             <article><span><Check size={21} /></span><small>{content.standardLabel}</small><p>{content.standard}</p></article>
           </div>
+          <div className="about-section-action">
+            <Link className="button button-dark" href={`${prefix}/join`}>{content.joinButton}<ArrowRight size={17} /></Link>
+          </div>
         </section>
 
         <section className="about-organization">
@@ -75,6 +78,9 @@ export function AboutPage({ locale }: { locale: AboutLocale }) {
               <article><span><Building2 size={23} /></span><div><small>{content.operatingModelLabel}</small><p>{content.operatingModel}</p></div></article>
               <article><span><Stethoscope size={23} /></span><div><small>{content.expertTeamLabel}</small><p>{content.expertTeamDescription}</p></div></article>
               <article className="about-operations-card"><span><Users size={23} /></span><div><small>{content.operationsLabel}</small><p>{content.operations.join(" · ")}</p></div></article>
+            </div>
+            <div className="about-section-action">
+              <Link className="button button-coral" href={`${prefix}/join`}>{content.joinButton}<ArrowRight size={17} /></Link>
             </div>
           </div>
         </section>
@@ -111,7 +117,12 @@ export function AboutPage({ locale }: { locale: AboutLocale }) {
             </div>
             <div className="about-plan-grid">
               {content.plans.map((plan) => (
-                <article key={plan.name}><small>{plan.name}</small><strong>{plan.price}</strong><p>{plan.detail}</p></article>
+                <article key={plan.name}>
+                  <small>{plan.name}</small>
+                  <strong>{plan.price}</strong>
+                  <p>{plan.detail}</p>
+                  <Link className="about-plan-link" href={`${prefix}/join`}>{content.joinButton}<ArrowRight size={13} /></Link>
+                </article>
               ))}
             </div>
             <div className="about-watch-card">
