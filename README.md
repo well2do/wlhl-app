@@ -46,7 +46,7 @@ Production Zelle and club contact details intentionally remain hidden until the 
 
 ## Run locally
 
-Requirements: Node.js 20.9 or newer.
+Prerequisite: Node.js 20.9 or newer.
 
 ```bash
 npm install
