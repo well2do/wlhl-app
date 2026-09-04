@@ -26,13 +26,14 @@ export function JoinForm({ locale = "en" }: { locale?: "en" | "cn" }) {
         <p className="eyebrow">{cn ? "申请已收到" : "Application received"}</p>
         <h2>{cn ? "欢迎加入我们的健康社区。" : "You’re part of something good."}</h2>
         <p>{cn ? "您的 WLHL 会员申请已提交。我们将很快与您联系，确认会员及付款信息。" : `${state.message} We’ll follow up with membership and payment details shortly.`}</p>
-        <Link href="/member" className="button button-dark">{cn ? "进入会员中心" : "Open member home"} <ArrowRight size={16} /></Link>
+        <Link href={cn ? "/cn/member" : "/member"} className="button button-dark">{cn ? "进入会员中心" : "Open member home"} <ArrowRight size={16} /></Link>
       </div>
     );
   }
 
   return (
     <form action={action} className="join-form">
+      <input type="hidden" name="locale" value={locale} />
       <div className="form-row two-columns">
         <label>{cn ? "名字" : "First name"}<input name="firstName" autoComplete="given-name" required /></label>
         <label>{cn ? "姓氏" : "Last name"}<input name="lastName" autoComplete="family-name" required /></label>

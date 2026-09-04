@@ -29,6 +29,7 @@ const memberSchema = z.object({
 });
 
 export async function joinClubAction(_state: FormState, formData: FormData): Promise<FormState> {
+  const cn = text(formData, "locale") === "cn";
   const parsed = memberSchema.safeParse({
     firstName: text(formData, "firstName"),
     lastName: text(formData, "lastName"),
@@ -39,7 +40,7 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
   });
 
   if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0]?.message || "Please review your information." };
+    return { status: "error", message: cn ? "请检查并完整填写申请信息。" : parsed.error.issues[0]?.message || "Please review your information." };
   }
 
   try {
@@ -66,14 +67,15 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
     await writeActivityLog({ memberId: id, activityType: "membership_application", description: "Submitted a WLHL membership application.", actorType: "member" });
     await createMemberSession(id);
     revalidatePath("/");
+    revalidatePath("/cn");
     revalidatePath("/admin");
-    return { status: "success", message: `Welcome, ${data.firstName}! Your WLHL membership application is in.` };
+    return { status: "success", message: cn ? `${data.firstName}，您的 WLHL 会员申请已提交。` : `Welcome, ${data.firstName}! Your WLHL membership application is in.` };
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.toLowerCase().includes("unique")) {
-      return { status: "error", message: "That email is already registered. Use Member access to view your account." };
+      return { status: "error", message: cn ? "该电子邮箱已经登记，请前往会员中心查看账户。" : "That email is already registered. Use Member access to view your account." };
     }
-    return { status: "error", message: "We couldn't save your application. Please try again." };
+    return { status: "error", message: cn ? "暂时无法保存申请，请稍后重试。" : "We couldn't save your application. Please try again." };
   }
 }
 
@@ -110,6 +112,7 @@ async function writeActivityLog(input: {
 }
 
 export async function forumRegistrationAction(_state: FormState, formData: FormData): Promise<FormState> {
+  const cn = text(formData, "locale") === "cn";
   const parsed = forumRegistrationSchema.safeParse({
     firstName: text(formData, "firstName"),
     lastName: text(formData, "lastName"),
@@ -123,7 +126,7 @@ export async function forumRegistrationAction(_state: FormState, formData: FormD
   });
 
   if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0]?.message || "Please review your registration." };
+    return { status: "error", message: cn ? "请检查并完整填写报名信息。" : parsed.error.issues[0]?.message || "Please review your registration." };
   }
 
   const eventId = "forum-2026-09-07";
@@ -195,11 +198,12 @@ export async function forumRegistrationAction(_state: FormState, formData: FormD
     });
     await createMemberSession(memberId);
     revalidatePath("/events/ai-health-wealth-forum");
+    revalidatePath("/cn/events/ai-health-wealth-forum");
     revalidatePath("/admin");
     revalidatePath("/member");
-    return { status: "success", message: `Thank you, ${data.firstName}. Your seat is registered for September 7.` };
+    return { status: "success", message: cn ? `${data.firstName}，您已成功报名 9 月 7 日的活动。` : `Thank you, ${data.firstName}. Your seat is registered for September 7.` };
   } catch {
-    return { status: "error", message: "We couldn't complete your registration. Please try again or contact an organizer." };
+    return { status: "error", message: cn ? "暂时无法完成报名，请重试或联系活动负责人。" : "We couldn't complete your registration. Please try again or contact an organizer." };
   }
 }
 
@@ -291,7 +295,7 @@ export async function createAnnouncementAction(formData: FormData) {
   const message = text(formData, "message");
   const kind = text(formData, "kind") || "community";
   if (title.length < 3 || message.length < 8) return;
-  await execute("INSERT INTO announcements VALUES (?, ?, ?, ?, ?, ?)", [
+  await execute("INSERT INTO announcements (id, title, message, kind, published_at, featured) VALUES (?, ?, ?, ?, ?, ?)", [
     crypto.randomUUID(), title, message, kind, new Date().toISOString(), checked(formData, "featured"),
   ]);
   await writeActivityLog({ activityType: "announcement_published", description: `Published announcement: ${title}`, actorType: "admin" });
@@ -305,7 +309,7 @@ export async function createEventAction(formData: FormData) {
   await requireAdmin();
   const eventDate = text(formData, "eventDate");
   const eventId = crypto.randomUUID();
-  await execute("INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'upcoming')", [
+  await execute("INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'upcoming')", [
     eventId,
     text(formData, "title"),
     text(formData, "description"),
@@ -325,7 +329,7 @@ export async function createEventAction(formData: FormData) {
 export async function createProductAction(formData: FormData) {
   await requireAdmin();
   const product = readProductForm(formData);
-  await execute("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, 1)", [
+  await execute("INSERT INTO products (id, name, description, price, category, badge, active) VALUES (?, ?, ?, ?, ?, ?, 1)", [
     crypto.randomUUID(),
     product.name,
     product.description,

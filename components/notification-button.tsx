@@ -51,9 +51,9 @@ export function NotificationButton({
     <div className="notification-control">
       <button className="button button-light" onClick={subscribe} disabled={status === "loading" || status === "on"}>
         {status === "loading" ? <LoaderCircle className="spin" size={18} /> : status === "on" ? <BellRing size={18} /> : <Bell size={18} />}
-        {status === "on" ? (cn ? "通知已开启" : labels?.enabled ?? "Notifications are on") : status === "loading" ? (cn ? "正在设置…" : labels?.loading ?? "Setting up…") : (cn ? "开启活动通知" : labels?.idle ?? "Turn on notifications")}
+        {status === "on" ? (labels?.enabled ?? (cn ? "通知已开启" : "Notifications are on")) : status === "loading" ? (labels?.loading ?? (cn ? "正在设置…" : "Setting up…")) : (labels?.idle ?? (cn ? "开启活动通知" : "Turn on notifications"))}
       </button>
-      {status === "error" && <small>{cn ? "暂时无法开启浏览器通知，您仍可通过电子邮件接收更新。" : labels?.error ?? "Notifications aren’t available yet. You can still receive email updates."}</small>}
+      {status === "error" && <small>{labels?.error ?? (cn ? "暂时无法开启浏览器通知，您仍可通过电子邮件接收更新。" : "Notifications aren’t available yet. You can still receive email updates.")}</small>}
     </div>
   );
 }

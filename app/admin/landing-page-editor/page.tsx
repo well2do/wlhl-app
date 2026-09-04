@@ -11,6 +11,7 @@ import {
 } from "./actions";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { isAdmin } from "@/lib/auth";
+import { chineseAnnouncement, chineseEvent, chineseProduct } from "@/lib/chinese";
 import {
   getAnnouncements,
   getEvents,
@@ -36,12 +37,14 @@ function ImageUploadCard({
   description,
   alt,
   asset,
+  locale,
 }: {
   slot: string;
   title: string;
   description: string;
   alt: string;
   asset?: LandingPageAssetMetadata;
+  locale: "en" | "cn";
 }) {
   return (
     <article className="landing-image-card">
@@ -57,6 +60,7 @@ function ImageUploadCard({
       </div>
       <form action={uploadLandingPageImageAction} className="landing-upload-form" encType="multipart/form-data">
         <input type="hidden" name="slot" value={slot} />
+        <input type="hidden" name="locale" value={locale} />
         <label>
           <span>Choose image</span>
           <input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required />
@@ -66,6 +70,7 @@ function ImageUploadCard({
       {asset && (
         <form action={removeLandingPageImageAction}>
           <input type="hidden" name="slot" value={slot} />
+          <input type="hidden" name="locale" value={locale} />
           <button className="landing-remove-image">Restore default artwork</button>
         </form>
       )}
@@ -76,20 +81,24 @@ function ImageUploadCard({
 export default async function LandingPageEditor({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ locale?: string; saved?: string; error?: string }>;
 }) {
   if (!(await isAdmin())) redirect("/admin/login");
   const params = await searchParams;
+  const locale = params.locale === "cn" ? "cn" : "en";
+  const editingChinese = locale === "cn";
+  const previewPath = editingChinese ? "/cn" : "/";
   const [content, assets, events, announcements, products] = await Promise.all([
-    getLandingPageContent(),
+    getLandingPageContent(locale),
     getLandingPageAssetMetadata(),
     getEvents(),
     getAnnouncements(2),
     getProducts(),
   ]);
   const assetMap = new Map(assets.map((asset) => [asset.slot, asset]));
-  const nextEvent = events[0];
-  const visibleProducts = products.slice(0, 3);
+  const nextEvent = events[0] ? (editingChinese ? chineseEvent(events[0]) : events[0]) : undefined;
+  const visibleAnnouncements = editingChinese ? announcements.map(chineseAnnouncement) : announcements;
+  const visibleProducts = (editingChinese ? products.map(chineseProduct) : products).slice(0, 3);
 
   return (
     <div className="admin-shell">
@@ -97,21 +106,27 @@ export default async function LandingPageEditor({
       <main className="admin-main landing-editor-main">
         <header className="admin-topbar landing-editor-topbar">
           <div><p className="eyebrow">Website content</p><h1>Landing page editor</h1></div>
-          <Link className="button button-outline button-small" href="/" target="_blank"><ExternalLink size={15} />Open live page</Link>
+          <Link className="button button-outline button-small" href={previewPath} target="_blank"><ExternalLink size={15} />Open live page</Link>
         </header>
 
         {params.saved && <div className="saved-toast"><CheckCircle2 size={17} />{params.saved}</div>}
         {params.error && <div className="editor-error-toast"><TriangleAlert size={17} />{params.error}</div>}
 
+        <nav className="landing-locale-tabs" aria-label="Choose landing page language">
+          <Link className={locale === "en" ? "active" : ""} href="/admin/landing-page-editor?locale=en">English</Link>
+          <Link className={locale === "cn" ? "active" : ""} href="/admin/landing-page-editor?locale=cn">中文</Link>
+        </nav>
+
         <section className="landing-editor-note">
           <Info size={19} />
-          <div><strong>Edit the English home page</strong><p>Save a text section or upload an image, then refresh the live preview. Event, announcement, and product changes also update their public detail pages.</p></div>
+          <div><strong>{editingChinese ? "编辑中文首页" : "Edit the English home page"}</strong><p>{editingChinese ? "下方字段中的中文内容会显示在 /cn。保存文字或上传图片后，请刷新右侧预览。" : "Save a text section or upload an image, then refresh the live preview. Event, announcement, and product changes also update their public detail pages."}</p></div>
         </section>
 
         <div className="landing-editor-workspace">
           <form action={updateLandingPageContentAction} className="landing-copy-form">
+            <input type="hidden" name="locale" value={locale} />
             <div className="landing-form-heading">
-              <div><h2>Page copy</h2><p>Every fixed English label, heading, description, button, and footer line on the home page.</p></div>
+              <div><h2>{editingChinese ? "中文页面文字" : "Page copy"}</h2><p>{editingChinese ? "编辑中文首页的导航、标题、说明、按钮和页脚文字。" : "Every fixed English label, heading, description, button, and footer line on the home page."}</p></div>
               <button className="button button-dark button-small"><Save size={15} />Save all text</button>
             </div>
             {landingPageFieldGroups.map((group, index) => (
@@ -133,8 +148,8 @@ export default async function LandingPageEditor({
           </form>
 
           <aside className="landing-preview-panel">
-            <div><strong>Live page preview</strong><a href="/" target="_blank">Open full size <ExternalLink size={13} /></a></div>
-            <iframe src="/" title="Current landing page preview" />
+            <div><strong>{editingChinese ? "中文页面预览" : "Live page preview"}</strong><a href={previewPath} target="_blank">Open full size <ExternalLink size={13} /></a></div>
+            <iframe src={previewPath} title={`${editingChinese ? "Chinese" : "English"} landing page preview`} />
             <p>The preview shows the last saved version. Refresh it after saving.</p>
           </aside>
         </div>
@@ -142,10 +157,10 @@ export default async function LandingPageEditor({
         <section className="admin-panel landing-media-panel" id="images">
           <div className="admin-panel-heading"><div><h2>Page images</h2><p>Upload optimized landscape images. JPG, PNG, WebP, or GIF; maximum 4 MB each.</p></div></div>
           <div className="landing-image-grid">
-            <ImageUploadCard slot="logo" title="Brand logo" description="Replaces the leaf mark in the home page header and footer." alt={`${content.brandName} logo`} asset={assetMap.get("logo")} />
-            <ImageUploadCard slot="hero" title="Hero image" description="Main visual at the top of the page. Portrait or 4:5 images work best." alt={content.heroImageAlt} asset={assetMap.get("hero")} />
-            <ImageUploadCard slot="notification" title="Notification image" description="Replaces the phone mockup in the notification section." alt={content.notificationImageAlt} asset={assetMap.get("notification")} />
-            <ImageUploadCard slot="membership" title="Membership background" description="Background image behind the final membership invitation." alt={content.membershipImageAlt} asset={assetMap.get("membership")} />
+            <ImageUploadCard locale={locale} slot="logo" title="Brand logo" description="Replaces the leaf mark in the home page header and footer." alt={`${content.brandName} logo`} asset={assetMap.get("logo")} />
+            <ImageUploadCard locale={locale} slot="hero" title="Hero image" description="Main visual at the top of the page. Portrait or 4:5 images work best." alt={content.heroImageAlt} asset={assetMap.get("hero")} />
+            <ImageUploadCard locale={locale} slot="notification" title="Notification image" description="Replaces the phone mockup in the notification section." alt={content.notificationImageAlt} asset={assetMap.get("notification")} />
+            <ImageUploadCard locale={locale} slot="membership" title="Membership background" description="Background image behind the final membership invitation." alt={content.membershipImageAlt} asset={assetMap.get("membership")} />
           </div>
         </section>
 
@@ -158,13 +173,16 @@ export default async function LandingPageEditor({
               <div className="landing-record-grid">
                 <form action={updateLandingEventAction} className="stack-form landing-record-form">
                   <input type="hidden" name="eventId" value={nextEvent.id} />
+                  <input type="hidden" name="locale" value={locale} />
                   <label>Event title<input name="title" defaultValue={nextEvent.title} required /></label>
                   <label>Description<textarea name="description" rows={4} defaultValue={nextEvent.description} required /></label>
                   <label>Location<input name="location" defaultValue={nextEvent.location} required /></label>
+                  <label>Category<input name="category" defaultValue={nextEvent.category} required /></label>
                   <p className="landing-derived-copy">Date shown on the page: <strong>{formatEventDate(nextEvent.event_date, true)} at {formatEventTime(nextEvent.event_date)}</strong></p>
                   <button className="button button-dark button-small">Save featured event</button>
                 </form>
                 <ImageUploadCard
+                  locale={locale}
                   slot={`event-${nextEvent.id}`}
                   title="Featured event image"
                   description="Replaces the green and gold event artwork on the home page."
@@ -178,9 +196,10 @@ export default async function LandingPageEditor({
           <div className="landing-record-section">
             <div className="landing-record-heading"><div><span>News strip</span><h3>The two announcements currently shown</h3></div><Link href="/admin?view=announcements">Manage all announcements</Link></div>
             <div className="landing-record-cards two-up">
-              {announcements.map((announcement) => (
+              {visibleAnnouncements.map((announcement) => (
                 <form action={updateLandingAnnouncementAction} className="stack-form landing-record-form" key={announcement.id}>
                   <input type="hidden" name="announcementId" value={announcement.id} />
+                  <input type="hidden" name="locale" value={locale} />
                   <label>Headline<input name="title" defaultValue={announcement.title} required /></label>
                   <label>Message<textarea name="message" rows={4} defaultValue={announcement.message} required /></label>
                   <label>Type<select name="kind" defaultValue={announcement.kind}><option value="community">Community</option><option value="event">Event</option><option value="promotion">Promotion</option></select></label>
@@ -188,7 +207,7 @@ export default async function LandingPageEditor({
                   <button className="button button-dark button-small">Save announcement</button>
                 </form>
               ))}
-              {announcements.length === 0 && <p className="admin-empty">Publish an announcement to populate the news strip.</p>}
+              {visibleAnnouncements.length === 0 && <p className="admin-empty">Publish an announcement to populate the news strip.</p>}
             </div>
           </div>
 
@@ -199,6 +218,7 @@ export default async function LandingPageEditor({
                 <article className="landing-product-editor" key={product.id}>
                   <form action={updateLandingProductAction} className="stack-form landing-record-form">
                     <input type="hidden" name="productId" value={product.id} />
+                    <input type="hidden" name="locale" value={locale} />
                     <label>Product name<input name="name" defaultValue={product.name} required /></label>
                     <label>Description<textarea name="description" rows={4} defaultValue={product.description} required /></label>
                     <div className="form-row two-columns"><label>Price<input name="price" type="number" min="0" step="0.01" defaultValue={Number(product.price)} required /></label><label>Category<input name="category" defaultValue={product.category} required /></label></div>
@@ -207,6 +227,7 @@ export default async function LandingPageEditor({
                     <button className="button button-dark button-small">Save product</button>
                   </form>
                   <ImageUploadCard
+                    locale={locale}
                     slot={`product-${product.id}`}
                     title={`${product.name} image`}
                     description="Replaces this product card’s default icon artwork."

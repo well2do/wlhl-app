@@ -22,6 +22,10 @@ export type ClubEvent = {
   end_date: string | null;
   location: string;
   category: string;
+  title_cn?: string;
+  description_cn?: string;
+  location_cn?: string;
+  category_cn?: string;
   capacity: number;
   status: "upcoming" | "completed" | "cancelled";
   attendee_count?: number;
@@ -31,6 +35,8 @@ export type Announcement = {
   id: string;
   title: string;
   message: string;
+  title_cn?: string;
+  message_cn?: string;
   kind: "event" | "promotion" | "community";
   published_at: string;
   featured: number;
@@ -43,6 +49,10 @@ export type Product = {
   price: number;
   category: string;
   badge: string;
+  name_cn?: string;
+  description_cn?: string;
+  category_cn?: string;
+  badge_cn?: string;
   active: number;
 };
 

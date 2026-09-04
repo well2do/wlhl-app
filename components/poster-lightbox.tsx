@@ -30,7 +30,7 @@ export function PosterLightbox({ locale = "en" }: { locale?: "en" | "cn" }) {
           height={1934}
           priority
           quality={90}
-          alt="September 7 AI, Health and Wealth Legacy Forum event poster"
+          alt={cn ? "9月7日 AI 时代健康与财富传承论坛活动海报" : "September 7 AI, Health and Wealth Legacy Forum event poster"}
         />
         <span className="forum-poster-expand"><Expand size={16} />{cn ? "点击查看高清大图" : "View high-resolution poster"}</span>
       </button>
@@ -55,7 +55,7 @@ export function PosterLightbox({ locale = "en" }: { locale?: "en" | "cn" }) {
           height={1934}
           quality={100}
           sizes="(max-width: 900px) 96vw, 1280px"
-          alt="September 7 AI, Health and Wealth Legacy Forum event poster, high-resolution view"
+          alt={cn ? "9月7日 AI 时代健康与财富传承论坛活动海报高清大图" : "September 7 AI, Health and Wealth Legacy Forum event poster, high-resolution view"}
         />
       </dialog>
     </>

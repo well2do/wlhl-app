@@ -1,6 +1,6 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
 import type { ActivityLog, Announcement, Attendance, ClubEvent, EventRegistration, Member, Product } from "./types";
-import { defaultLandingPageContent, type LandingPageContent } from "./landing-page-content";
+import { landingPageDefaults, type LandingPageContent, type LandingPageLocale } from "./landing-page-content";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -26,6 +26,17 @@ function futureDate(days: number, hour: number) {
   return date.toISOString();
 }
 
+async function ensureTextColumn(client: Client, table: string, column: string) {
+  const columns = await client.execute(`PRAGMA table_info(${table})`);
+  if (!columns.rows.some((row) => String(row.name) === column)) {
+    try {
+      await client.execute(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT NOT NULL DEFAULT ''`);
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+    }
+  }
+}
+
 async function initialize() {
   const client = getClient();
   await client.batch(
@@ -42,7 +53,9 @@ async function initialize() {
         id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL,
         event_date TEXT NOT NULL, end_date TEXT, location TEXT NOT NULL,
         category TEXT NOT NULL, capacity INTEGER NOT NULL DEFAULT 30,
-        status TEXT NOT NULL DEFAULT 'upcoming'
+        status TEXT NOT NULL DEFAULT 'upcoming', title_cn TEXT NOT NULL DEFAULT '',
+        description_cn TEXT NOT NULL DEFAULT '', location_cn TEXT NOT NULL DEFAULT '',
+        category_cn TEXT NOT NULL DEFAULT ''
       )`,
       `CREATE TABLE IF NOT EXISTS attendance (
         id TEXT PRIMARY KEY, member_id TEXT NOT NULL, event_id TEXT NOT NULL,
@@ -75,12 +88,15 @@ async function initialize() {
       `CREATE TABLE IF NOT EXISTS announcements (
         id TEXT PRIMARY KEY, title TEXT NOT NULL, message TEXT NOT NULL,
         kind TEXT NOT NULL DEFAULT 'community', published_at TEXT NOT NULL,
-        featured INTEGER NOT NULL DEFAULT 0
+        featured INTEGER NOT NULL DEFAULT 0, title_cn TEXT NOT NULL DEFAULT '',
+        message_cn TEXT NOT NULL DEFAULT ''
       )`,
       `CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL,
         price REAL NOT NULL, category TEXT NOT NULL, badge TEXT NOT NULL DEFAULT '',
-        active INTEGER NOT NULL DEFAULT 1
+        active INTEGER NOT NULL DEFAULT 1, name_cn TEXT NOT NULL DEFAULT '',
+        description_cn TEXT NOT NULL DEFAULT '', category_cn TEXT NOT NULL DEFAULT '',
+        badge_cn TEXT NOT NULL DEFAULT ''
       )`,
       `CREATE TABLE IF NOT EXISTS push_subscriptions (
         endpoint TEXT PRIMARY KEY, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
@@ -103,13 +119,21 @@ async function initialize() {
     "write",
   );
 
+  for (const [table, columns] of [
+    ["events", ["title_cn", "description_cn", "location_cn", "category_cn"]],
+    ["announcements", ["title_cn", "message_cn"]],
+    ["products", ["name_cn", "description_cn", "category_cn", "badge_cn"]],
+  ] as const) {
+    for (const column of columns) await ensureTextColumn(client, table, column);
+  }
+
   const eventCount = Number((await client.execute("SELECT COUNT(*) AS count FROM events")).rows[0].count);
   if (eventCount === 0) {
     await client.batch(
       [
-        { sql: "INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Morning Mobility & Tai Chi", "A gentle, energizing class focused on balance, flexibility, and everyday strength.", futureDate(6, 9), futureDate(6, 10), "Rock Creek Community Center", "Movement", 30, "upcoming"] },
-        { sql: "INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Longevity Nutrition Workshop", "Practical guidance for building colorful, heart-healthy meals that fit your life.", futureDate(13, 11), futureDate(13, 12), "WLHL Club Room", "Nutrition", 24, "upcoming"] },
-        { sql: "INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Community Wellness Walk", "Connect with neighbors on an easy-paced, two-mile guided walk through the gardens.", futureDate(20, 9), futureDate(20, 10), "U.S. National Arboretum", "Community", 40, "upcoming"] },
+        { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Morning Mobility & Tai Chi", "A gentle, energizing class focused on balance, flexibility, and everyday strength.", futureDate(6, 9), futureDate(6, 10), "Rock Creek Community Center", "Movement", 30, "upcoming"] },
+        { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Longevity Nutrition Workshop", "Practical guidance for building colorful, heart-healthy meals that fit your life.", futureDate(13, 11), futureDate(13, 12), "WLHL Club Room", "Nutrition", 24, "upcoming"] },
+        { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Community Wellness Walk", "Connect with neighbors on an easy-paced, two-mile guided walk through the gardens.", futureDate(20, 9), futureDate(20, 10), "U.S. National Arboretum", "Community", 40, "upcoming"] },
       ],
       "write",
     );
@@ -119,8 +143,8 @@ async function initialize() {
   if (announcementCount === 0) {
     await client.batch(
       [
-        { sql: "INSERT INTO announcements VALUES (?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "A healthier season starts together", "Our fall calendar is open. Reserve your place in movement, nutrition, and community wellness events.", "event", new Date().toISOString(), 1] },
-        { sql: "INSERT INTO announcements VALUES (?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Member wellness bundle", "Members save $12 on our tea, journal, and resistance-band wellness bundle this month.", "promotion", futureDate(-1, 10), 0] },
+        { sql: "INSERT INTO announcements (id, title, message, kind, published_at, featured) VALUES (?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "A healthier season starts together", "Our fall calendar is open. Reserve your place in movement, nutrition, and community wellness events.", "event", new Date().toISOString(), 1] },
+        { sql: "INSERT INTO announcements (id, title, message, kind, published_at, featured) VALUES (?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Member wellness bundle", "Members save $12 on our tea, journal, and resistance-band wellness bundle this month.", "promotion", futureDate(-1, 10), 0] },
       ],
       "write",
     );
@@ -133,9 +157,9 @@ async function initialize() {
   if (productCount === 0 && !productWasDeleted) {
     await client.batch(
       [
-        { sql: "INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Daily Vitality Tea", "Caffeine-free herbal blend with ginger, hibiscus, and warming spices.", 18, "Wellness", "Member favorite", 1] },
-        { sql: "INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Strong for Life Bands", "Three resistance levels for safe, progressive strength sessions at home.", 24, "Movement", "New", 1] },
-        { sql: "INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "90-Day Wellness Journal", "Simple daily prompts for movement, hydration, sleep, and gratitude.", 16, "Mindfulness", "", 1] },
+        { sql: "INSERT INTO products (id, name, description, price, category, badge, active) VALUES (?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Daily Vitality Tea", "Caffeine-free herbal blend with ginger, hibiscus, and warming spices.", 18, "Wellness", "Member favorite", 1] },
+        { sql: "INSERT INTO products (id, name, description, price, category, badge, active) VALUES (?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Strong for Life Bands", "Three resistance levels for safe, progressive strength sessions at home.", 24, "Movement", "New", 1] },
+        { sql: "INSERT INTO products (id, name, description, price, category, badge, active) VALUES (?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "90-Day Wellness Journal", "Simple daily prompts for movement, hydration, sleep, and gratitude.", 16, "Mindfulness", "", 1] },
       ],
       "write",
     );
@@ -206,19 +230,20 @@ export async function getProducts(activeOnly = true) {
   return result.rows as unknown as Product[];
 }
 
-export async function getLandingPageContent(): Promise<LandingPageContent> {
-  const result = await execute("SELECT content_json FROM landing_page_content WHERE locale = 'en' LIMIT 1");
-  if (!result.rows[0]?.content_json) return { ...defaultLandingPageContent };
+export async function getLandingPageContent(locale: LandingPageLocale = "en"): Promise<LandingPageContent> {
+  const defaults = landingPageDefaults[locale];
+  const result = await execute("SELECT content_json FROM landing_page_content WHERE locale = ? LIMIT 1", [locale]);
+  if (!result.rows[0]?.content_json) return { ...defaults };
 
   try {
     const stored = JSON.parse(String(result.rows[0].content_json)) as Record<string, unknown>;
-    const content = { ...defaultLandingPageContent } as LandingPageContent;
-    for (const key of Object.keys(defaultLandingPageContent) as (keyof LandingPageContent)[]) {
+    const content = { ...defaults } as LandingPageContent;
+    for (const key of Object.keys(defaults) as (keyof LandingPageContent)[]) {
       if (typeof stored[key] === "string") content[key] = stored[key];
     }
     return content;
   } catch {
-    return { ...defaultLandingPageContent };
+    return { ...defaults };
   }
 }
 

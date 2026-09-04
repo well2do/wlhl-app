@@ -27,7 +27,15 @@ const productByName: Record<string, Partial<Product>> = {
 };
 
 export function chineseEvent(event: ClubEvent): ClubEvent {
-  return { ...event, ...(eventByTitle[event.title] || {}), ...(eventCopy[event.id] || {}) };
+  const fallback = { ...(eventByTitle[event.title] || {}), ...(eventCopy[event.id] || {}) };
+  return {
+    ...event,
+    ...fallback,
+    title: event.title_cn || fallback.title || event.title,
+    description: event.description_cn || fallback.description || event.description,
+    location: event.location_cn || fallback.location || event.location,
+    category: event.category_cn || fallback.category || event.category,
+  };
 }
 
 export function chineseEventTitle(title: string) {
@@ -36,11 +44,25 @@ export function chineseEventTitle(title: string) {
 }
 
 export function chineseAnnouncement(item: Announcement): Announcement {
-  return { ...item, ...(announcementByTitle[item.title] || {}) };
+  const fallback = announcementByTitle[item.title] || {};
+  return {
+    ...item,
+    ...fallback,
+    title: item.title_cn || fallback.title || item.title,
+    message: item.message_cn || fallback.message || item.message,
+  };
 }
 
 export function chineseProduct(product: Product): Product {
-  return { ...product, ...(productByName[product.name] || {}) };
+  const fallback = productByName[product.name] || {};
+  return {
+    ...product,
+    ...fallback,
+    name: product.name_cn || fallback.name || product.name,
+    description: product.description_cn || fallback.description || product.description,
+    category: product.category_cn || fallback.category || product.category,
+    badge: product.badge_cn || fallback.badge || product.badge,
+  };
 }
 
 export function formatChineseEventDate(value: string, includeYear = false) {

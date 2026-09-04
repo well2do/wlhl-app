@@ -75,12 +75,13 @@ Copy `.env.example` to `.env.local` and replace the example contact, Zelle, pass
 | `/events/ai-health-wealth-forum` | Bilingual September 7 forum information and registration |
 | `/cn/events/ai-health-wealth-forum` | 9月7日论坛中文入口与报名 |
 | `/september-7` | Short redirect to the September 7 registration page |
+| `/cn/september-7` | Chinese short redirect to the September 7 registration page |
 | `/join` | Membership application |
 | `/cn/join` | 中文会员申请 |
 | `/member` | Member sign-in, reservations, and event history |
 | `/cn/member` | 中文会员中心、活动预约与历史记录 |
 | `/admin` | Club management, registrations, attendance, and activity logs |
-| `/admin/landing-page-editor` | Edit the English home page text, featured records, and uploaded images |
+| `/admin/landing-page-editor` | Edit English and Chinese home page text, localized featured records, and shared uploaded images |
 | `/admin/database` | Authenticated, read-only browser for all database tables and raw records |
 | `/admin/members/[id]` | Complete member registration, engagement, and audit history |
 | `/api/admin/export` | Authenticated member CSV export |

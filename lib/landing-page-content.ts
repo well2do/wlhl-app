@@ -96,6 +96,108 @@ export const defaultLandingPageContent = {
 
 export type LandingPageContentKey = keyof typeof defaultLandingPageContent;
 export type LandingPageContent = { [Key in LandingPageContentKey]: string };
+export type LandingPageLocale = "en" | "cn";
+
+export const defaultChineseLandingPageContent: LandingPageContent = {
+  brandName: "WLHL",
+  brandTagline: "华盛顿长寿康养俱乐部",
+
+  navAbout: "关于我们",
+  navEvents: "活动",
+  navShop: "健康产品",
+  navMember: "会员中心",
+  navJoin: "加入俱乐部",
+
+  heroEyebrow: "华盛顿地区健康生活社区",
+  heroTitleLine: "让每一年",
+  heroTitleAccent: "都更有生命力。",
+  heroDescription: "一个温暖友善的俱乐部，陪伴您保持活力、连接社区，让健康生活成为值得期待的日常。",
+  heroPrimaryButton: "申请成为会员",
+  heroSecondaryButton: "查看活动",
+  heroTrustTitle: "一起成长，更有力量",
+  heroTrustText: "扎根华盛顿社区",
+  heroAvatarOne: "健",
+  heroAvatarTwo: "康",
+  heroAvatarThree: "友",
+  heroAvatarFour: "+42",
+  heroImageAlt: "充满活力的健康社区",
+  heroTopCardTitle: "全方位健康生活",
+  heroTopCardText: "运动 · 营养 · 社区连接",
+  heroNextEventLabel: "下一场活动",
+  heroNextEventFallback: "即将公布",
+  heroCaption: "健康，让生活更美好。",
+
+  announcementLabel: "俱乐部公告",
+
+  introEyebrow: "健康生活，良友相伴",
+  introTitleLine: "人生这一程，可以成为",
+  introTitleAccent: "最健康、最精彩的一程。",
+  introDescription: "WLHL 汇聚伙伴、实践方法与相互鼓励，让充满活力的生活触手可及。",
+  introAboutButton: "进一步了解俱乐部",
+  benefitOneTitle: "志同道合的伙伴",
+  benefitOneDescription: "认识同样重视健康、活力与社区连接的朋友，让健康生活更轻松、更快乐。",
+  benefitTwoTitle: "实用的健康知识",
+  benefitTwoDescription: "获得运动、营养、睡眠和健康长寿方面友善、可实践的日常建议。",
+  benefitThreeTitle: "丰富的社区活动",
+  benefitThreeDescription: "通过讲座、工作坊、步行与庆祝活动，把健康和连接放进您的日程。",
+
+  eventArtworkSmallText: "轻松运动。",
+  eventArtworkLargeText: "活力生活。",
+  eventImageAlt: "俱乐部会员参加精选活动",
+  eventEyebrow: "WLHL 下一场活动",
+  eventPrimaryButton: "预约席位",
+  eventSecondaryButton: "查看全部活动",
+
+  shopEyebrow: "健康生活精选",
+  shopTitleLine: "小小选择，成就",
+  shopTitleAccent: "更好的每一天。",
+  shopDescription: "由社区精心挑选，帮助您建立简单、可持续的健康习惯。",
+  paymentTitle: "使用 Zelle 直接付款，简单方便",
+  paymentConfiguredText: "请汇款至 {{recipient}}，账号 {{handle}}，并在备注中填写姓名与产品。俱乐部会直接确认每一笔订单。",
+  paymentFallbackText: "付款前请先联系俱乐部负责人。我们会直接提供已确认的 Zelle 收款人和订单总额。",
+
+  notificationEyebrow: "不错过每一次精彩",
+  notificationTitleLine: "好活动，",
+  notificationTitleAccent: "值得准时参加。",
+  notificationDescription: "新活动、优惠或俱乐部公告发布时，及时收到温馨提醒。",
+  notificationButtonIdle: "开启通知",
+  notificationButtonLoading: "正在设置…",
+  notificationButtonEnabled: "通知已开启",
+  notificationError: "暂时无法启用通知，您仍可接收电子邮件更新。",
+  notificationImageAlt: "俱乐部通知预览",
+  notificationPreviewTime: "9:41",
+  notificationPreviewApp: "WLHL · 刚刚",
+  notificationPreviewTitle: "明天一起健康步行",
+  notificationPreviewMessage: "上午 9 点在植物园集合，期待见到您！",
+
+  membershipEyebrow: "诚邀您的加入",
+  membershipTitleLine: "更健康的生活，",
+  membershipTitleAccent: "更丰富的日程。",
+  membershipDescription: "加入一个帮助您同时拥有两者的社区。",
+  membershipBenefitOne: "本地活动与健康讲座",
+  membershipBenefitTwo: "会员专属产品优惠",
+  membershipBenefitThree: "个人活动参与记录",
+  membershipBenefitFour: "俱乐部新闻与提醒",
+  membershipButton: "开始会员申请",
+  membershipNote: "申请免费。付款前会向您确认会员费用。",
+  membershipImageAlt: "会员一起享受健康生活",
+
+  footerDescription: "华盛顿地区温暖友善的健康生活社区，让每个年龄阶段都能更健康、更有活力、更有连接。",
+  footerExploreLabel: "探索",
+  footerEvents: "活动",
+  footerMembership: "会员申请",
+  footerShop: "健康产品",
+  footerConnectLabel: "联系我们",
+  footerContactFallback: "联系信息即将公布",
+  footerMemberPortal: "会员中心",
+  footerCopyright: "华盛顿长寿康养俱乐部",
+  footerAdmin: "俱乐部管理",
+};
+
+export const landingPageDefaults: Record<LandingPageLocale, LandingPageContent> = {
+  en: defaultLandingPageContent,
+  cn: defaultChineseLandingPageContent,
+};
 
 export type LandingPageField = {
   key: LandingPageContentKey;
