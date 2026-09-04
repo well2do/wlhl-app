@@ -2,6 +2,7 @@
 
 - Write source code, comments, commit messages, and technical documentation in English.
 - Communicate with the user in Chinese unless the user asks for another language.
+- The only canonical GitHub remote is `origin` at `https://github.com/well2do/wlhl-app.git`.
 - After completing and verifying any file change in this repository, create a Git commit and push the current branch to `origin` before reporting completion.
 - After each pushed change, deploy the current branch to Vercel production and verify that the production deployment completed successfully before reporting completion.
 - Never commit secrets, credentials, `.env.local`, local databases, generated build output, or other ignored files.
