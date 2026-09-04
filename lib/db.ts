@@ -1,6 +1,6 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
 import type { ActivityLog, Announcement, Attendance, ClubEvent, EventRegistration, ExpertProfileRecord, Member, Product } from "./types";
-import { initialExpertProfiles } from "./expert-profiles";
+import { initialExpertProfiles, shenPeihongPlaceholderBiographyCn, shenPeihongProfile } from "./expert-profiles";
 import { landingPageDefaults, type LandingPageContent, type LandingPageLocale } from "./landing-page-content";
 
 declare global {
@@ -154,6 +154,18 @@ async function initialize() {
       "write",
     );
   }
+
+  await client.execute({
+    sql: `UPDATE expert_profiles SET name_en = ?, name_cn = ?, role_en = ?, role_cn = ?,
+      biography_en = ?, biography_cn = ?, updated_at = ?
+      WHERE id = ? AND biography_cn = ?`,
+    args: [
+      shenPeihongProfile.name_en, shenPeihongProfile.name_cn,
+      shenPeihongProfile.role_en, shenPeihongProfile.role_cn,
+      shenPeihongProfile.biography_en, shenPeihongProfile.biography_cn,
+      new Date().toISOString(), shenPeihongProfile.id, shenPeihongPlaceholderBiographyCn,
+    ],
+  });
 
   const eventCount = Number((await client.execute("SELECT COUNT(*) AS count FROM events")).rows[0].count);
   if (eventCount === 0) {

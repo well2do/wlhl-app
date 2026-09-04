@@ -105,7 +105,7 @@ export async function AboutPage({ locale }: { locale: AboutLocale }) {
                     <span className="about-expert-toggle">+</span>
                   </summary>
                   <div className="about-expert-biography">
-                    <p>{biography}</p>
+                    {biography.split(/\n{2,}/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                     {expert.profile_url && (
                       <a href={expert.profile_url} target="_blank" rel="noreferrer">{cn ? "查看机构简介" : "View institutional profile"}<ExternalLink size={13} /></a>
                     )}
