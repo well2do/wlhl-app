@@ -64,12 +64,12 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
         checked(formData, "smsOptIn"),
       ],
     );
-    await writeActivityLog({ memberId: id, activityType: "membership_application", description: "Submitted a WLHL membership application.", actorType: "member" });
+    await writeActivityLog({ memberId: id, activityType: "membership_application", description: "Submitted a CAUCC membership application.", actorType: "member" });
     await createMemberSession(id);
     revalidatePath("/");
     revalidatePath("/cn");
     revalidatePath("/admin");
-    return { status: "success", message: cn ? `${data.firstName}，您的 WLHL 会员申请已提交。` : `Welcome, ${data.firstName}! Your WLHL membership application is in.` };
+    return { status: "success", message: cn ? `${data.firstName}，您的 CAUCC 会员申请已提交。` : `Welcome, ${data.firstName}! Your CAUCC membership application is in.` };
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.toLowerCase().includes("unique")) {

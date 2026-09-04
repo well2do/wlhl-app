@@ -60,7 +60,7 @@
 
   .still { grid-template-columns: 1fr; }
   .stillRail { display: none; }
-  .stillNav::before { content: "WLHL"; font: 700 17px Georgia, serif; }
+  .stillNav::before { content: "CAUCC"; font: 700 17px Georgia, serif; }
   .stillCopy > p { font-size: 13px; }
   .stillArt { width: 100%; }
   .stillManifesto, .stillEvent { padding: 38px 20px; grid-template-columns: 1fr; gap: 24px; }

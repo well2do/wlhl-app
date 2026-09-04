@@ -13,7 +13,7 @@ export default async function ChineseEventsPage() {
     <>
       <SiteHeader locale="cn" />
       <main lang="zh-CN">
-        <section className="page-hero events-hero"><div><p className="eyebrow eyebrow-light">WLHL 活动日历</p><h1>让每一次相聚<br /><em>都滋养身心。</em></h1><p>轻松前来，带着更多力量、知识与连接回家。</p></div></section>
+        <section className="page-hero events-hero"><div><p className="eyebrow eyebrow-light">CAUCC 活动日历</p><h1>让每一次相聚<br /><em>都滋养身心。</em></h1><p>轻松前来，带着更多力量、知识与连接回家。</p></div></section>
         <section className="section event-list-section">
           <div className="section-heading split-heading compact-heading"><div><p className="eyebrow">即将举行</p><h2>预约您的席位。</h2></div><p>会员可以通过个人会员中心预约。第一次来到这里？几分钟即可申请加入俱乐部。</p></div>
           <div className="event-list">{events.map((event, index) => <article className="event-row" key={event.id}>
@@ -24,7 +24,7 @@ export default async function ChineseEventsPage() {
           </article>)}</div>
           {events.length === 0 && <div className="empty-state"><CalendarDays size={30} /><h3>新的活动即将发布。</h3><p>请在首页开启通知，活动发布时我们会第一时间告诉您。</p></div>}
         </section>
-        <section className="simple-cta"><div><p className="eyebrow eyebrow-light">成为社区的一员</p><h2>归属感，从<br /><em>每一次参与开始。</em></h2></div><Link className="button button-coral" href="/cn/join">加入 WLHL <ArrowRight size={17} /></Link></section>
+        <section className="simple-cta"><div><p className="eyebrow eyebrow-light">成为社区的一员</p><h2>归属感，从<br /><em>每一次参与开始。</em></h2></div><Link className="button button-coral" href="/cn/join">加入 CAUCC <ArrowRight size={17} /></Link></section>
       </main>
       <SiteFooter locale="cn" />
     </>

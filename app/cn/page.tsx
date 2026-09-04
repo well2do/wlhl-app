@@ -24,8 +24,8 @@ import { formatCurrency } from "@/lib/format";
 import { fillLandingTemplate, landingImageUrl } from "@/lib/landing-page-content";
 
 export const metadata = {
-  title: "华盛顿长寿康养俱乐部",
-  description: "WLHL 华盛顿长寿康养俱乐部中文网站：会员、健康活动、社区公告及健康产品。",
+  title: "美国中美联合商会",
+  description: "CAUCC 美国中美联合商会中文网站：会员、健康活动、社区公告及健康产品。",
 };
 
 export default async function ChineseHomePage() {
@@ -121,7 +121,7 @@ export default async function ChineseHomePage() {
           <div className="section-heading split-heading"><div><p className="eyebrow">{content.shopEyebrow}</p><h2>{content.shopTitleLine}<br /><em>{content.shopTitleAccent}</em></h2></div><p>{content.shopDescription}</p></div>
           <div className="product-grid">{products.slice(0, 3).map((product, index) => {
             const productImage = imageFor(`product-${product.id}`);
-            return <article className="product-card" key={product.id}><div className={`product-art product-art-${index + 1} ${productImage ? "has-upload" : ""}`}>{productImage ? <img className="landing-cover-image" src={productImage} alt={product.name} /> : index === 0 ? <Leaf size={70} /> : index === 1 ? <MoveUpRight size={66} /> : <Quote size={62} />}{product.badge && <span className="product-badge">{product.badge}</span>}</div><div className="product-copy"><small>{product.category}</small><h3>{product.name}</h3><p>{product.description}</p><div><strong>{formatCurrency(Number(product.price))}</strong><a href={clubEmail ? `mailto:${clubEmail}?subject=${encodeURIComponent(`WLHL 产品咨询：${product.name}`)}` : "/cn/join"} aria-label={`咨询购买${product.name}`}><ShoppingBag size={17} /></a></div></div></article>;
+            return <article className="product-card" key={product.id}><div className={`product-art product-art-${index + 1} ${productImage ? "has-upload" : ""}`}>{productImage ? <img className="landing-cover-image" src={productImage} alt={product.name} /> : index === 0 ? <Leaf size={70} /> : index === 1 ? <MoveUpRight size={66} /> : <Quote size={62} />}{product.badge && <span className="product-badge">{product.badge}</span>}</div><div className="product-copy"><small>{product.category}</small><h3>{product.name}</h3><p>{product.description}</p><div><strong>{formatCurrency(Number(product.price))}</strong><a href={clubEmail ? `mailto:${clubEmail}?subject=${encodeURIComponent(`CAUCC 产品咨询：${product.name}`)}` : "/cn/join"} aria-label={`咨询购买${product.name}`}><ShoppingBag size={17} /></a></div></div></article>;
           })}</div>
           <div className="payment-note"><ShieldCheck size={22} /><div><strong>{content.paymentTitle}</strong><span>{zelleHandle && zelleRecipient ? fillLandingTemplate(content.paymentConfiguredText, { recipient: zelleRecipient, handle: zelleHandle }) : content.paymentFallbackText}</span></div></div>
         </section>

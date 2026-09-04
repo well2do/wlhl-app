@@ -25,7 +25,7 @@ export function JoinForm({ locale = "en" }: { locale?: "en" | "cn" }) {
         <span className="success-icon"><CheckCircle2 size={32} /></span>
         <p className="eyebrow">{cn ? "申请已收到" : "Application received"}</p>
         <h2>{cn ? "欢迎加入我们的健康社区。" : "You’re part of something good."}</h2>
-        <p>{cn ? "您的 WLHL 会员申请已提交。我们将很快与您联系，确认会员及付款信息。" : `${state.message} We’ll follow up with membership and payment details shortly.`}</p>
+        <p>{cn ? "您的 CAUCC 会员申请已提交。我们将很快与您联系，确认会员及付款信息。" : `${state.message} We’ll follow up with membership and payment details shortly.`}</p>
         <Link href={cn ? "/cn/member" : "/member"} className="button button-dark">{cn ? "进入会员中心" : "Open member home"} <ArrowRight size={16} /></Link>
       </div>
     );
@@ -64,7 +64,7 @@ export function JoinForm({ locale = "en" }: { locale?: "en" | "cn" }) {
       <button className="button button-coral button-full" disabled={pending}>
         {pending ? (cn ? "提交中…" : "Submitting…") : (cn ? "提交会员申请" : "Submit membership application")}<ArrowRight size={17} />
       </button>
-      <p className="form-fineprint">{cn ? "提交申请即表示您同意 WLHL 就会员事项与您联系。您可以随时取消推广信息。" : "By applying, you agree that WLHL may contact you about your membership. You can opt out of promotional messages at any time."}</p>
+      <p className="form-fineprint">{cn ? "提交申请即表示您同意 CAUCC 就会员事项与您联系。您可以随时取消推广信息。" : "By applying, you agree that CAUCC may contact you about your membership. You can opt out of promotional messages at any time."}</p>
     </form>
   );
 }

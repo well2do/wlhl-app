@@ -1,6 +1,6 @@
 export const defaultLandingPageContent = {
-  brandName: "WLHL",
-  brandTagline: "Washington Longevity Health Life Club",
+  brandName: "CAUCC",
+  brandTagline: "Chinese American United Chamber of Commerce",
 
   navAbout: "About",
   navEvents: "Events",
@@ -32,7 +32,7 @@ export const defaultLandingPageContent = {
   introEyebrow: "Well-being with good company",
   introTitleLine: "This chapter can be your",
   introTitleAccent: "healthiest one yet.",
-  introDescription: "WLHL brings together the people, practices, and encouragement that make a vibrant life feel possible.",
+  introDescription: "CAUCC brings together the people, practices, and encouragement that make a vibrant life feel possible.",
   introAboutButton: "Learn about the club",
   benefitOneTitle: "People who get you",
   benefitOneDescription: "Meet neighbors who believe that feeling better is easier—and more joyful—together.",
@@ -44,7 +44,7 @@ export const defaultLandingPageContent = {
   eventArtworkSmallText: "Move gently.",
   eventArtworkLargeText: "Live fully.",
   eventImageAlt: "Club members enjoying the featured event",
-  eventEyebrow: "Up next at WLHL",
+  eventEyebrow: "Up next at CAUCC",
   eventPrimaryButton: "Reserve your spot",
   eventSecondaryButton: "See all upcoming events",
 
@@ -66,7 +66,7 @@ export const defaultLandingPageContent = {
   notificationError: "Notifications aren’t available yet. You can still receive email updates.",
   notificationImageAlt: "A club notification preview",
   notificationPreviewTime: "9:41",
-  notificationPreviewApp: "WLHL · now",
+  notificationPreviewApp: "CAUCC · now",
   notificationPreviewTitle: "Wellness walk tomorrow",
   notificationPreviewMessage: "We’ll meet at the Arboretum at 9 AM. See you there!",
 
@@ -90,7 +90,7 @@ export const defaultLandingPageContent = {
   footerConnectLabel: "Connect",
   footerContactFallback: "Contact details coming soon",
   footerMemberPortal: "Member portal",
-  footerCopyright: "Washington Longevity Healthy Life Club",
+  footerCopyright: "Chinese American United Chamber of Commerce",
   footerAdmin: "Club administration",
 } as const satisfies Record<string, string>;
 
@@ -99,8 +99,8 @@ export type LandingPageContent = { [Key in LandingPageContentKey]: string };
 export type LandingPageLocale = "en" | "cn";
 
 export const defaultChineseLandingPageContent: LandingPageContent = {
-  brandName: "WLHL",
-  brandTagline: "华盛顿长寿康养俱乐部",
+  brandName: "CAUCC",
+  brandTagline: "美国中美联合商会",
 
   navAbout: "关于我们",
   navEvents: "活动",
@@ -132,7 +132,7 @@ export const defaultChineseLandingPageContent: LandingPageContent = {
   introEyebrow: "健康生活，良友相伴",
   introTitleLine: "人生这一程，可以成为",
   introTitleAccent: "最健康、最精彩的一程。",
-  introDescription: "WLHL 汇聚伙伴、实践方法与相互鼓励，让充满活力的生活触手可及。",
+  introDescription: "CAUCC 汇聚伙伴、实践方法与相互鼓励，让充满活力的生活触手可及。",
   introAboutButton: "进一步了解俱乐部",
   benefitOneTitle: "志同道合的伙伴",
   benefitOneDescription: "认识同样重视健康、活力与社区连接的朋友，让健康生活更轻松、更快乐。",
@@ -144,7 +144,7 @@ export const defaultChineseLandingPageContent: LandingPageContent = {
   eventArtworkSmallText: "轻松运动。",
   eventArtworkLargeText: "活力生活。",
   eventImageAlt: "俱乐部会员参加精选活动",
-  eventEyebrow: "WLHL 下一场活动",
+  eventEyebrow: "CAUCC 下一场活动",
   eventPrimaryButton: "预约席位",
   eventSecondaryButton: "查看全部活动",
 
@@ -166,7 +166,7 @@ export const defaultChineseLandingPageContent: LandingPageContent = {
   notificationError: "暂时无法启用通知，您仍可接收电子邮件更新。",
   notificationImageAlt: "俱乐部通知预览",
   notificationPreviewTime: "9:41",
-  notificationPreviewApp: "WLHL · 刚刚",
+  notificationPreviewApp: "CAUCC · 刚刚",
   notificationPreviewTitle: "明天一起健康步行",
   notificationPreviewMessage: "上午 9 点在植物园集合，期待见到您！",
 
@@ -190,7 +190,7 @@ export const defaultChineseLandingPageContent: LandingPageContent = {
   footerConnectLabel: "联系我们",
   footerContactFallback: "联系信息即将公布",
   footerMemberPortal: "会员中心",
-  footerCopyright: "华盛顿长寿康养俱乐部",
+  footerCopyright: "美国中美联合商会",
   footerAdmin: "俱乐部管理",
 };
 
@@ -198,6 +198,30 @@ export const landingPageDefaults: Record<LandingPageLocale, LandingPageContent> 
   en: defaultLandingPageContent,
   cn: defaultChineseLandingPageContent,
 };
+
+const legacyBrandReplacements = [
+  ["Washington Longevity Healthy Life Club", "Chinese American United Chamber of Commerce"],
+  ["Washington Longevity Health Life Club", "Chinese American United Chamber of Commerce"],
+  ["华盛顿长寿康养俱乐部", "美国中美联合商会"],
+  ["WLHL", "CAUCC"],
+] as const;
+
+export function applyCauccBrandingToText(value: string): string {
+  return legacyBrandReplacements.reduce(
+    (brandedValue, [legacyBrand, cauccBrand]) => brandedValue.replaceAll(legacyBrand, cauccBrand),
+    value,
+  );
+}
+
+export function applyCauccBranding(content: LandingPageContent): LandingPageContent {
+  const brandedContent: LandingPageContent = { ...content };
+
+  for (const key of Object.keys(brandedContent) as LandingPageContentKey[]) {
+    brandedContent[key] = applyCauccBrandingToText(brandedContent[key]);
+  }
+
+  return brandedContent;
+}
 
 export type LandingPageField = {
   key: LandingPageContentKey;

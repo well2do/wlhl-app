@@ -1,7 +1,13 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
 import type { ActivityLog, Announcement, Attendance, ClubEvent, EventRegistration, ExpertProfileRecord, Member, Product } from "./types";
 import { initialExpertProfiles, shenPeihongPlaceholderBiographyCn, shenPeihongProfile } from "./expert-profiles";
-import { landingPageDefaults, type LandingPageContent, type LandingPageLocale } from "./landing-page-content";
+import {
+  applyCauccBranding,
+  applyCauccBrandingToText,
+  landingPageDefaults,
+  type LandingPageContent,
+  type LandingPageLocale,
+} from "./landing-page-content";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -172,7 +178,7 @@ async function initialize() {
     await client.batch(
       [
         { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Morning Mobility & Tai Chi", "A gentle, energizing class focused on balance, flexibility, and everyday strength.", futureDate(6, 9), futureDate(6, 10), "Rock Creek Community Center", "Movement", 30, "upcoming"] },
-        { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Longevity Nutrition Workshop", "Practical guidance for building colorful, heart-healthy meals that fit your life.", futureDate(13, 11), futureDate(13, 12), "WLHL Club Room", "Nutrition", 24, "upcoming"] },
+        { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Longevity Nutrition Workshop", "Practical guidance for building colorful, heart-healthy meals that fit your life.", futureDate(13, 11), futureDate(13, 12), "CAUCC Meeting Room", "Nutrition", 24, "upcoming"] },
         { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Community Wellness Walk", "Connect with neighbors on an easy-paced, two-mile guided walk through the gardens.", futureDate(20, 9), futureDate(20, 10), "U.S. National Arboretum", "Community", 40, "upcoming"] },
       ],
       "write",
@@ -250,6 +256,17 @@ export async function execute(sql: string, args: InValue[] = []) {
   return (await db()).execute({ sql, args });
 }
 
+function applyCauccBrandingToRow<Row>(row: Row): Row {
+  if (typeof row !== "object" || row === null) return row;
+
+  return Object.fromEntries(
+    Object.entries(row as Record<string, unknown>).map(([key, value]) => [
+      key,
+      typeof value === "string" ? applyCauccBrandingToText(value) : value,
+    ]),
+  ) as Row;
+}
+
 export async function getEvents(includePast = false) {
   const result = await execute(
     `SELECT e.*, COUNT(a.id) AS attendee_count FROM events e
@@ -257,17 +274,17 @@ export async function getEvents(includePast = false) {
      ${includePast ? "" : "WHERE e.status = 'upcoming' AND e.event_date >= datetime('now')"}
      GROUP BY e.id ORDER BY e.event_date ASC`,
   );
-  return result.rows as unknown as ClubEvent[];
+  return result.rows.map((row) => applyCauccBrandingToRow(row)) as unknown as ClubEvent[];
 }
 
 export async function getAnnouncements(limit = 10) {
   const result = await execute("SELECT * FROM announcements ORDER BY featured DESC, published_at DESC LIMIT ?", [limit]);
-  return result.rows as unknown as Announcement[];
+  return result.rows.map((row) => applyCauccBrandingToRow(row)) as unknown as Announcement[];
 }
 
 export async function getProducts(activeOnly = true) {
   const result = await execute(`SELECT * FROM products ${activeOnly ? "WHERE active = 1" : ""} ORDER BY active DESC, name ASC`);
-  return result.rows as unknown as Product[];
+  return result.rows.map((row) => applyCauccBrandingToRow(row)) as unknown as Product[];
 }
 
 export async function getExpertProfiles(activeOnly = true) {
@@ -275,13 +292,13 @@ export async function getExpertProfiles(activeOnly = true) {
     `SELECT * FROM expert_profiles ${activeOnly ? "WHERE active = 1" : ""}
      ORDER BY sort_order ASC, name_en ASC`,
   );
-  return result.rows as unknown as ExpertProfileRecord[];
+  return result.rows.map((row) => applyCauccBrandingToRow(row)) as unknown as ExpertProfileRecord[];
 }
 
 export async function getLandingPageContent(locale: LandingPageLocale = "en"): Promise<LandingPageContent> {
   const defaults = landingPageDefaults[locale];
   const result = await execute("SELECT content_json FROM landing_page_content WHERE locale = ? LIMIT 1", [locale]);
-  if (!result.rows[0]?.content_json) return { ...defaults };
+  if (!result.rows[0]?.content_json) return applyCauccBranding({ ...defaults });
 
   try {
     const stored = JSON.parse(String(result.rows[0].content_json)) as Record<string, unknown>;
@@ -289,9 +306,9 @@ export async function getLandingPageContent(locale: LandingPageLocale = "en"): P
     for (const key of Object.keys(defaults) as (keyof LandingPageContent)[]) {
       if (typeof stored[key] === "string") content[key] = stored[key];
     }
-    return content;
+    return applyCauccBranding(content);
   } catch {
-    return { ...defaults };
+    return applyCauccBranding({ ...defaults });
   }
 }
 

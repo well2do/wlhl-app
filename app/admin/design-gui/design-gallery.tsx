@@ -55,7 +55,7 @@ const concepts = [
     name: "Pulse",
     mood: "Performance bento",
     summary: "Confident, active, and modern",
-    bestFor: "Positioning WLHL as a measurable, energetic longevity program.",
+    bestFor: "Positioning CAUCC as a measurable, energetic longevity program.",
     signature: "Dark bento dashboard, bold metrics, and neon action cues.",
     colors: ["#0D1010", "#C7F36B", "#8A74FF", "#F4F6F1"],
   },
@@ -131,7 +131,7 @@ export function DesignGallery({ content }: { content: DesignGalleryContent }) {
         <div className={styles.studioHeading}>
           <Link href="/admin" className={styles.backLink}><ArrowLeft size={16} /> Dashboard</Link>
           <div>
-            <p>WLHL creative room <span>6 directions</span></p>
+            <p>CAUCC creative room <span>6 directions</span></p>
             <h1>Homepage design studio</h1>
           </div>
         </div>
@@ -183,7 +183,7 @@ export function DesignGallery({ content }: { content: DesignGalleryContent }) {
             <div className={styles.browserFrame}>
               <div className={styles.browserChrome} aria-hidden="true">
                 <span /><span /><span />
-                <p>wlhl.org</p>
+                <p>CAUCC COMMUNITY</p>
               </div>
               <div className={styles.prototype} id="homepage-preview" role="tabpanel" aria-labelledby={`concept-tab-${activeConcept + 1}`}>
                 <ActiveConcept content={content} />
@@ -206,7 +206,7 @@ export function DesignGallery({ content }: { content: DesignGalleryContent }) {
 }
 
 function ConceptBrand({ compact = false }: { compact?: boolean }) {
-  return <span className={`${styles.conceptBrand} ${compact ? styles.conceptBrandCompact : ""}`}><i><Leaf size={17} /></i><b>WLHL</b>{!compact && <small>Washington Longevity<br />Healthy Life Club</small>}</span>;
+  return <span className={`${styles.conceptBrand} ${compact ? styles.conceptBrandCompact : ""}`}><i><Leaf size={17} /></i><b>CAUCC</b>{!compact && <small>Chinese American United<br />Chamber of Commerce</small>}</span>;
 }
 
 function FlourishConcept({ content }: ConceptProps) {
@@ -340,7 +340,7 @@ function StillConcept({ content }: ConceptProps) {
 
         <section className={styles.stillHero}>
           <div className={styles.stillCopy}>
-            <p>WASHINGTON LONGEVITY HEALTHY LIFE CLUB</p>
+            <p>CHINESE AMERICAN UNITED CHAMBER OF COMMERCE</p>
             <h2>Live well,<br /><em>together.</em></h2>
             <p>Good health is not a finish line. It is a rhythm—made gentler, richer, and more lasting in good company.</p>
             <Link href="/join">Begin here <MoveRight size={19} /></Link>
@@ -366,7 +366,7 @@ function DispatchConcept({ content }: ConceptProps) {
   return (
     <article className={`${styles.conceptPage} ${styles.dispatch}`}>
       <div className={styles.dispatchUtility}><span>WASHINGTON, D.C. · VOL. 01</span><span>HEALTHY LIVING FOR THE WHOLE COMMUNITY</span><span>EN / 中文</span></div>
-      <header className={styles.dispatchMasthead}><div><Leaf size={31} /><span>WLHL</span></div><h2>The Healthy Life<br /><b>Dispatch</b></h2><Link href="/join">BECOME A MEMBER</Link></header>
+      <header className={styles.dispatchMasthead}><div><Leaf size={31} /><span>CAUCC</span></div><h2>The Healthy Life<br /><b>Dispatch</b></h2><Link href="/join">BECOME A MEMBER</Link></header>
       <nav className={styles.dispatchNav}><span>TODAY</span><span>EVENTS</span><span>MOVE</span><span>EAT WELL</span><span>COMMUNITY</span><span>SHOP</span></nav>
 
       <section className={styles.dispatchLead}>
@@ -397,7 +397,7 @@ function HorizonConcept({ content }: ConceptProps) {
       <header className={styles.horizonNav}>
         <ConceptBrand compact />
         <nav><span>Discover</span><span>Gather</span><span>Thrive</span></nav>
-        <div><span>EN · 中</span><Link href="/join">Join WLHL <ArrowUpRight size={14} /></Link></div>
+        <div><span>EN · 中</span><Link href="/join">Join CAUCC <ArrowUpRight size={14} /></Link></div>
       </header>
 
       <section className={styles.horizonHero}>

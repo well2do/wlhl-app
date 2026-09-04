@@ -24,7 +24,7 @@ export function ForumPageContent({ locale = "en" }: { locale?: "en" | "cn" }) {
         <Brand inverse href={cn ? "/cn" : "/"} />
         <div className="forum-nav-actions">
           <LanguageSwitcher locale={locale} inverse />
-          <Link href={cn ? "/cn/events" : "/events"}><ArrowLeft size={15} />{cn ? "全部 WLHL 活动" : "All WLHL events"}</Link>
+          <Link href={cn ? "/cn/events" : "/events"}><ArrowLeft size={15} />{cn ? "全部 CAUCC 活动" : "All CAUCC events"}</Link>
         </div>
       </header>
 
@@ -77,7 +77,7 @@ export function ForumPageContent({ locale = "en" }: { locale?: "en" | "cn" }) {
         <div className="forum-register-aside">
           <p className="forum-kicker gold">{cn ? "9月7日 · 洛克维尔" : "September 7 · Rockville"}</p>
           <h2>{cn ? <>加入这场<br /><em>精彩对话。</em></> : <>Join the<br /><em>conversation.</em></>}</h2>
-          <p>{cn ? "席位有限，请立即报名。活动信息将保存在您的 WLHL 会员中心。" : "Seats are limited. Register now and we’ll keep your event details together in your WLHL member home."}</p>
+          <p>{cn ? "席位有限，请立即报名。活动信息将保存在您的 CAUCC 会员中心。" : "Seats are limited. Register now and we’ll keep your event details together in your CAUCC member home."}</p>
           <div className="forum-detail-stack">
             <div><CalendarDays size={18} /><span><strong>{cn ? "2026年9月7日，星期一" : "Monday, September 7, 2026"}</strong></span></div>
             <div><Clock3 size={18} /><span><strong>{cn ? "下午 2:00–5:00" : "2:00–5:00 PM"}</strong></span></div>

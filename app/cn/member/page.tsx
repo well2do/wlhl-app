@@ -44,7 +44,7 @@ export default async function ChineseMemberPage({ searchParams }: { searchParams
             {params.error && <p className="form-error">{params.error}</p>}
             <button className="button button-dark button-full">进入会员中心 <ArrowRight size={17} /></button>
           </form>
-          <p className="access-help">还不是会员？ <Link href="/cn/join">申请加入 WLHL</Link></p>
+          <p className="access-help">还不是会员？ <Link href="/cn/join">申请加入 CAUCC</Link></p>
           <div className="member-login-language"><LanguageSwitcher locale="cn" /></div>
         </section>
       </main>

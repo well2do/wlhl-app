@@ -14,7 +14,7 @@ export default async function EventsPage() {
       <SiteHeader />
       <main>
         <section className="page-hero events-hero">
-          <div><p className="eyebrow eyebrow-light">The WLHL calendar</p><h1>Plans that make you<br /><em>feel good.</em></h1><p>Come as you are. Leave a little stronger, wiser, or more connected than you arrived.</p></div>
+          <div><p className="eyebrow eyebrow-light">The CAUCC calendar</p><h1>Plans that make you<br /><em>feel good.</em></h1><p>Come as you are. Leave a little stronger, wiser, or more connected than you arrived.</p></div>
         </section>
         <section className="section event-list-section">
           <div className="section-heading split-heading compact-heading">
@@ -36,7 +36,7 @@ export default async function EventsPage() {
           </div>
           {events.length === 0 && <div className="empty-state"><CalendarDays size={30} /><h3>Fresh events are on the way.</h3><p>Turn on notifications from the home page and we’ll let you know first.</p></div>}
         </section>
-        <section className="simple-cta"><div><p className="eyebrow eyebrow-light">Make yourself a regular</p><h2>Belonging starts with<br /><em>showing up.</em></h2></div><Link className="button button-coral" href="/join">Join WLHL <ArrowRight size={17} /></Link></section>
+        <section className="simple-cta"><div><p className="eyebrow eyebrow-light">Make yourself a regular</p><h2>Belonging starts with<br /><em>showing up.</em></h2></div><Link className="button button-coral" href="/join">Join CAUCC <ArrowRight size={17} /></Link></section>
       </main>
       <SiteFooter />
     </>

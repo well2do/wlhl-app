@@ -13,5 +13,5 @@ export async function GET() {
   const members = await getMembers();
   const header = ["First name", "Last name", "Email", "Phone", "Birthday", "Interests", "Membership tier", "Status", "Joined", "Email opt-in", "SMS opt-in", "Notes"];
   const lines = [header.map(csvCell).join(","), ...members.map((member) => [member.first_name, member.last_name, member.email, member.phone, member.birthday, member.interests, member.membership_tier, member.membership_status, member.joined_at, member.email_opt_in ? "Yes" : "No", member.sms_opt_in ? "Yes" : "No", member.notes].map(csvCell).join(","))];
-  return new NextResponse(lines.join("\n"), { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="wlhl-members-${new Date().toISOString().slice(0, 10)}.csv"` } });
+  return new NextResponse(lines.join("\n"), { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="caucc-members-${new Date().toISOString().slice(0, 10)}.csv"` } });
 }

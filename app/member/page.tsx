@@ -42,7 +42,7 @@ export default async function MemberPage({ searchParams }: { searchParams: Promi
             {params.error && <p className="form-error">{params.error}</p>}
             <button className="button button-dark button-full">Open my member home <ArrowRight size={17} /></button>
           </form>
-          <p className="access-help">Not a member yet? <Link href="/join">Join WLHL</Link></p>
+          <p className="access-help">Not a member yet? <Link href="/join">Join CAUCC</Link></p>
         </section>
       </main>
     );

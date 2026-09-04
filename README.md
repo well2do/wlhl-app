@@ -1,10 +1,12 @@
-# WLHL Membership App
+# CAUCC Membership App
 
-A complete, mobile-friendly membership and community management app for the **Washington Longevity Healthy Life Club**.
+A complete, mobile-friendly membership and community management app for the **Chinese American United Chamber of Commerce (CAUCC)**.
 
 ## Production
 
 The application is deployed at **[https://wlhl.vercel.app](https://wlhl.vercel.app)**.
+
+This CAUCC copy intentionally keeps the existing Vercel project, Turso database, production region, and legacy infrastructure identifiers so it uses the same server and data as the original application.
 
 - Vercel project: `musical-basics/wlhl`
 - Turso database: `wlhl`

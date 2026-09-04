@@ -1,6 +1,6 @@
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
-  event.waitUntil(self.registration.showNotification(data.title || "WLHL Club", {
+  event.waitUntil(self.registration.showNotification(data.title || "CAUCC", {
     body: data.body || "There’s something new at the club.",
     icon: "/icon.svg",
     badge: "/icon.svg",

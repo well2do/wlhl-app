@@ -6,9 +6,9 @@ const sans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const serif = Fraunces({ subsets: ["latin"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: { default: "WLHL | Washington Longevity Healthy Life Club", template: "%s | WLHL" },
+  title: { default: "CAUCC | Chinese American United Chamber of Commerce", template: "%s | CAUCC" },
   description: "Washington, D.C.'s community for movement, wellness, healthy aging, and meaningful connection.",
-  applicationName: "WLHL Healthy Life Club",
+  applicationName: "CAUCC Membership App",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
 };

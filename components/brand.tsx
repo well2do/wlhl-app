@@ -4,8 +4,8 @@ import { Leaf } from "lucide-react";
 export function Brand({
   inverse = false,
   href = "/",
-  name = "WLHL",
-  tagline = "Washington Longevity Health Life Club",
+  name = "CAUCC",
+  tagline = "Chinese American United Chamber of Commerce",
   logoSrc,
   logoAlt = "",
 }: {

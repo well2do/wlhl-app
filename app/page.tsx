@@ -174,7 +174,7 @@ export default async function HomePage() {
                     <small>{product.category}</small>
                     <h3>{product.name}</h3>
                     <p>{product.description}</p>
-                    <div><strong>{formatCurrency(Number(product.price))}</strong><a href={clubEmail ? `mailto:${clubEmail}?subject=${encodeURIComponent(`WLHL order: ${product.name}`)}` : "/join"} aria-label={`Ask to buy ${product.name}`}><ShoppingBag size={17} /></a></div>
+                    <div><strong>{formatCurrency(Number(product.price))}</strong><a href={clubEmail ? `mailto:${clubEmail}?subject=${encodeURIComponent(`CAUCC order: ${product.name}`)}` : "/join"} aria-label={`Ask to buy ${product.name}`}><ShoppingBag size={17} /></a></div>
                   </div>
                 </article>
               );

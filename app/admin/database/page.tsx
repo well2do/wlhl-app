@@ -90,7 +90,7 @@ export default async function AdminDatabasePage({
 
       <main className={`admin-main ${styles.main}`}>
         <header className="admin-topbar">
-          <div><p className="eyebrow">WLHL operations</p><h1>Database</h1></div>
+          <div><p className="eyebrow">CAUCC operations</p><h1>Database</h1></div>
           <div className="admin-date">Read-only table browser</div>
         </header>
 

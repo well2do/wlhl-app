@@ -51,14 +51,14 @@ export function ForumRegistrationForm({ locale = "en" }: { locale?: "en" | "cn" 
           <select name="languagePreference" defaultValue={locale === "cn" ? "中文" : "Bilingual"}><option value="English">{locale === "cn" ? "英文" : "English"}</option><option value="中文">中文</option><option value="Bilingual">{locale === "cn" ? "中英双语" : "Bilingual"}</option></select>
         </label>
         <label>{locale === "cn" ? "如何得知活动" : "How did you hear about us?"}
-          <select name="referralSource" defaultValue=""><option value="">{locale === "cn" ? "请选择" : "Select"}</option><option value="Friend or colleague">{locale === "cn" ? "朋友或同事" : "Friend or colleague"}</option><option value="WeChat">微信</option><option value="WLHL Club">WLHL 俱乐部</option><option value="Partner organization">{locale === "cn" ? "合作机构" : "Partner organization"}</option><option value="Social media">{locale === "cn" ? "社交媒体" : "Social media"}</option><option value="Other">{locale === "cn" ? "其他" : "Other"}</option></select>
+          <select name="referralSource" defaultValue=""><option value="">{locale === "cn" ? "请选择" : "Select"}</option><option value="Friend or colleague">{locale === "cn" ? "朋友或同事" : "Friend or colleague"}</option><option value="WeChat">微信</option><option value="CAUCC">CAUCC</option><option value="Partner organization">{locale === "cn" ? "合作机构" : "Partner organization"}</option><option value="Social media">{locale === "cn" ? "社交媒体" : "Social media"}</option><option value="Other">{locale === "cn" ? "其他" : "Other"}</option></select>
         </label>
       </div>
       <label>{locale === "cn" ? "无障碍需求或其他备注" : "Accessibility or other notes"}<textarea name="accessibilityNotes" rows={3} placeholder={locale === "cn" ? "选填" : "Optional"} /></label>
 
       <label className="forum-consent">
         <input type="checkbox" name="marketingOptIn" defaultChecked />
-        <span>{locale === "cn" ? "接收 WLHL 今后的活动与社区通知。" : "Send me future WLHL event and community updates."}</span>
+        <span>{locale === "cn" ? "接收 CAUCC 今后的活动与社区通知。" : "Send me future CAUCC event and community updates."}</span>
       </label>
 
       {state.status === "error" && <p className="forum-form-error" role="alert">{state.message}</p>}
