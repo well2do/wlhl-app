@@ -4,11 +4,11 @@ A complete, mobile-friendly membership and community management app for the **Ch
 
 ## Production
 
-The application is deployed at **[https://wlhl.vercel.app](https://wlhl.vercel.app)**.
+The application is deployed at **[https://caucc.vercel.app](https://caucc.vercel.app)**.
 
-This CAUCC copy intentionally keeps the existing Vercel project, Turso database, production region, and legacy infrastructure identifiers so it uses the same server and data as the original application.
+This CAUCC deployment keeps the existing Vercel project ID, Turso database, production region, and legacy infrastructure identifiers so it continues to use the same server and data as the original application.
 
-- Vercel project: `musical-basics/wlhl`
+- Vercel project: `musical-basics/caucc`
 - Turso database: `wlhl`
 - Production region: AWS US East
 - Browser push credentials: configured
