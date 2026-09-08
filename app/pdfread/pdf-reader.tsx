@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import { PdfPage, type PdfEngine } from "./pdf-page";
+import { PdfPrintButton } from "./pdf-print-button";
 import styles from "./pdf-reader.module.css";
 
 type OpenDocument = { pdf: PDFDocumentProxy; engine: PdfEngine; name: string; size: number };
@@ -263,6 +264,7 @@ export function PdfReader() {
               <button className={styles.iconButton} onClick={() => changeZoom(1)} disabled={zoom === 3} aria-label="Zoom in" title="Zoom in (+)"><Plus size={17} /></button>
             </div>
             <span className={styles.divider} />
+            <PdfPrintButton pdf={opened.pdf} engine={opened.engine} filename={opened.name} onError={setError} />
             <button className={styles.iconButton} onClick={() => setRotation((value) => (value + 90) % 360)} aria-label="Rotate clockwise" title="Rotate clockwise"><RotateCw size={17} /></button>
             <button className={styles.iconButton} onClick={() => void toggleFullscreen()} aria-label="Toggle full screen" title="Full screen"><Maximize size={17} /></button>
             <button className={styles.iconButton} onClick={closeDocument} aria-label="Close PDF" title="Close PDF"><X size={18} /></button>

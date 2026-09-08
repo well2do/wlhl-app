@@ -94,7 +94,9 @@ Copy `.env.example` to `.env.local` and replace the example contact, Zelle, pass
 
 Open [PDFRead](https://caucc.vercel.app/pdfread) and choose or drop a PDF (up to 100 MB). Documents are processed in browser memory and are never uploaded or saved by PDFRead. Closing or reloading the page releases the document.
 
-The reader supports page navigation, selectable text, zoom, fit width, rotation, full screen where supported, and password-protected documents. Existing form values and annotations are rendered as part of the page, with no editing controls. Arrow keys turn pages; `+` / `-` change zoom; `Ctrl` / `Cmd` + `O` opens the file picker when focus is outside a control.
+The reader supports page navigation, selectable text, zoom, fit width, rotation, printing, full screen where supported, and password-protected documents. Existing form values and annotations are rendered as part of the page, with no editing controls. Arrow keys turn pages; `+` / `-` change zoom; `Ctrl` / `Cmd` + `O` opens the file picker when focus is outside a control.
+
+Choose **Print** or press `Ctrl` / `Cmd` + `P` after opening a document. PDFRead prepares every page locally, then opens the system print dialog for printer selection, page ranges, and Save as PDF. Preparation can be canceled. Printing uses the original page dimensions and orientations, independently of the reading zoom or rotation, and honors the PDF's print permissions and printable annotations. Pages are rendered at 150 dpi (lower for unusually large pages to bound memory); final paper sizes depend on the browser and printer settings. The original file is never modified or uploaded.
 
 When installed through desktop Chrome, PDFRead registers as a `.pdf` reader in the operating system's **Open With** menu. File launches are handled through the [File Handling API](https://developer.chrome.com/docs/capabilities/web-apis/file-handling), using read-only file access and the same validation as the in-app picker. Multiple files launch separate reader windows. Browsers without this API, including Safari, can use the in-app picker or drag and drop.
 
