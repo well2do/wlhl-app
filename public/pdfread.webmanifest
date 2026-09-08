@@ -1,0 +1,12 @@
+{
+  "id": "/pdfread",
+  "name": "pdfread",
+  "short_name": "pdfread",
+  "description": "Your quiet, read-only PDF reader.",
+  "start_url": "/pdfread",
+  "scope": "/pdfread",
+  "display": "standalone",
+  "background_color": "#f8f9f5",
+  "theme_color": "#203d36",
+  "icons": [{ "src": "/pdfread-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

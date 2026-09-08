@@ -48,7 +48,7 @@ Production Zelle and club contact details intentionally remain hidden until the 
 
 ## Run locally
 
-Prerequisite: Node.js 20.9 or newer.
+Prerequisite: Node.js 24.x (also used by the production Vercel project).
 
 ```bash
 npm install
@@ -70,6 +70,7 @@ Copy `.env.example` to `.env.local` and replace the example contact, Zelle, pass
 | Route | Purpose |
 | --- | --- |
 | `/` | Club website, announcements, products, payment details |
+| `/pdfread` | PDFRead: private, read-only local PDF reader |
 | `/cn` | 中文俱乐部网站、公告、产品与付款说明 |
 | `/about` | Club mission, team, membership, and contact information |
 | `/cn/about` | 中文俱乐部宗旨、专家团队、会员方案与联系方式 |
@@ -88,6 +89,14 @@ Copy `.env.example` to `.env.local` and replace the example contact, Zelle, pass
 | `/admin/database` | Authenticated, read-only browser for all database tables and raw records |
 | `/admin/members/[id]` | Complete member registration, engagement, and audit history |
 | `/api/admin/export` | Authenticated member CSV export |
+
+## PDFRead
+
+Open [PDFRead](https://caucc.vercel.app/pdfread) and choose or drop a PDF (up to 100 MB). Documents are processed in browser memory and are never uploaded or saved by PDFRead. Closing or reloading the page releases the document.
+
+The reader supports page navigation, selectable text, zoom, fit width, rotation, full screen where supported, and password-protected documents. Existing form values and annotations are rendered as part of the page, with no editing controls. Arrow keys turn pages; `+` / `-` change zoom; `Ctrl` / `Cmd` + `O` opens the file picker when focus is outside a control.
+
+PDFRead uses [Mozilla PDF.js](https://mozilla.github.io/pdf.js/) with a self-hosted worker, fonts, character maps, and image codecs. `npm run dev` and `npm run build` prepare versioned assets automatically through `scripts/prepare-pdf-assets.mjs`. These generated files are ignored by Git. Use the npm scripts rather than calling Next.js directly when starting development or building a deployment.
 
 ## Data model
 

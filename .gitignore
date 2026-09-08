@@ -8,4 +8,5 @@ data/*.db-*
 npm-debug.log*
 .DS_Store
 *.tsbuildinfo
+/public/pdfread-assets/
 .env*.local
