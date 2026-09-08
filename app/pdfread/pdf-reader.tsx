@@ -12,6 +12,10 @@ import styles from "./pdf-reader.module.css";
 
 type OpenDocument = { pdf: PDFDocumentProxy; engine: PdfEngine; name: string; size: number };
 type PasswordRequest = { update: (password: string) => void; incorrect: boolean };
+type FileLaunch = { files?: readonly Pick<FileSystemFileHandle, "getFile">[] };
+type FileLaunchWindow = Window & {
+  launchQueue?: { setConsumer: (consumer: (launch: FileLaunch) => void) => void };
+};
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 function fileSize(bytes: number) {
@@ -75,7 +79,7 @@ export function PdfReader() {
     }
   }, [passwordRequest]);
 
-  async function openFile(file?: File) {
+  const openFile = useCallback(async (file?: File) => {
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".pdf") && file.type !== "application/pdf") {
       setError("Choose a PDF document (.pdf) to start reading.");
@@ -134,7 +138,40 @@ export function PdfReader() {
     } finally {
       if (id === requestId.current) setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const queue = (window as FileLaunchWindow).launchQueue;
+    if (!queue) return;
+    let active = true;
+    let latestLaunch = 0;
+
+    queue.setConsumer(async ({ files }) => {
+      if (!files?.length) return;
+      const launch = ++latestLaunch;
+      const currentRequest = requestId.current;
+      if (files.length > 1) {
+        setError("Please open one PDF at a time.");
+        return;
+      }
+      try {
+        // Read the file supplied by the operating system without requesting write access.
+        const file = await files[0].getFile();
+        if (active && launch === latestLaunch && currentRequest === requestId.current) {
+          await openFile(file);
+        }
+      } catch {
+        if (active && launch === latestLaunch && currentRequest === requestId.current) {
+          setError("This file could not be read. Click Open PDF to choose it again.");
+        }
+      }
+    });
+
+    return () => {
+      active = false;
+      queue.setConsumer(() => {});
+    };
+  }, [openFile]);
 
   const goToPage = useCallback((value: number) => {
     if (!opened) return;

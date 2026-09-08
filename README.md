@@ -96,6 +96,10 @@ Open [PDFRead](https://caucc.vercel.app/pdfread) and choose or drop a PDF (up to
 
 The reader supports page navigation, selectable text, zoom, fit width, rotation, full screen where supported, and password-protected documents. Existing form values and annotations are rendered as part of the page, with no editing controls. Arrow keys turn pages; `+` / `-` change zoom; `Ctrl` / `Cmd` + `O` opens the file picker when focus is outside a control.
 
+When installed through desktop Chrome, PDFRead registers as a `.pdf` reader in the operating system's **Open With** menu. File launches are handled through the [File Handling API](https://developer.chrome.com/docs/capabilities/web-apis/file-handling), using read-only file access and the same validation as the in-app picker. Multiple files launch separate reader windows. Browsers without this API, including Safari, can use the in-app picker or drag and drop.
+
+For an existing Chrome installation, restart Chrome, open PDFRead once, then close all PDFRead windows so Chrome can apply the updated file association. This follows [Chrome's manifest update workflow](https://web.dev/articles/manifest-updates). The first file opened from Finder may prompt for permission to read it. The app still needs a network connection to load; installation does not provide offline startup.
+
 PDFRead uses [Mozilla PDF.js](https://mozilla.github.io/pdf.js/) with a self-hosted worker, fonts, character maps, and image codecs. `npm run dev` and `npm run build` prepare versioned assets automatically through `scripts/prepare-pdf-assets.mjs`. These generated files are ignored by Git. Use the npm scripts rather than calling Next.js directly when starting development or building a deployment.
 
 ## Data model
