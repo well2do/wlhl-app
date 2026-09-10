@@ -21,7 +21,7 @@ export async function SiteHeader({ locale = "en", content, logoSrc }: { locale?:
         <nav className="desktop-nav" aria-label="Primary navigation">
           <Link href={`${prefix}/about`}>{pageContent.navAbout}</Link>
           <Link href={`${prefix}/events`}>{pageContent.navEvents}</Link>
-          <Link href={`${prefix}/#shop`}>{pageContent.navShop}</Link>
+          <Link href={`${prefix}/shop`}>{pageContent.navShop}</Link>
         </nav>
         <div className="nav-actions">
           <LanguageSwitcher locale={locale} />

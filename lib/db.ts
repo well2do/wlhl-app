@@ -99,6 +99,12 @@ async function initialize() {
         description_cn TEXT NOT NULL DEFAULT '', category_cn TEXT NOT NULL DEFAULT '',
         badge_cn TEXT NOT NULL DEFAULT ''
       )`,
+      `CREATE TABLE IF NOT EXISTS shop_orders (
+        stripe_session_id TEXT PRIMARY KEY, product_id TEXT NOT NULL,
+        product_name TEXT NOT NULL, amount_total INTEGER NOT NULL,
+        currency TEXT NOT NULL, payment_status TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )`,
       `CREATE TABLE IF NOT EXISTS push_subscriptions (
         endpoint TEXT PRIMARY KEY, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
         member_id TEXT, created_at TEXT NOT NULL

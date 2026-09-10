@@ -10,6 +10,7 @@ const preferredTableOrder = [
   "activity_logs",
   "announcements",
   "products",
+  "shop_orders",
   "push_subscriptions",
 ] as const;
 

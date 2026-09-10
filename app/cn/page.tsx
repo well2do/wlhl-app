@@ -52,7 +52,6 @@ export default async function ChineseHomePage() {
   const membershipImage = imageFor("membership");
   const zelleHandle = process.env.NEXT_PUBLIC_ZELLE_HANDLE;
   const zelleRecipient = process.env.NEXT_PUBLIC_ZELLE_RECIPIENT;
-  const clubEmail = process.env.NEXT_PUBLIC_CLUB_EMAIL;
   const benefits = [
     { icon: Users, title: content.benefitOneTitle, copy: content.benefitOneDescription },
     { icon: Salad, title: content.benefitTwoTitle, copy: content.benefitTwoDescription },
@@ -121,7 +120,7 @@ export default async function ChineseHomePage() {
           <div className="section-heading split-heading"><div><p className="eyebrow">{content.shopEyebrow}</p><h2>{content.shopTitleLine}<br /><em>{content.shopTitleAccent}</em></h2></div><p>{content.shopDescription}</p></div>
           <div className="product-grid">{products.slice(0, 3).map((product, index) => {
             const productImage = imageFor(`product-${product.id}`);
-            return <article className="product-card" key={product.id}><div className={`product-art product-art-${index + 1} ${productImage ? "has-upload" : ""}`}>{productImage ? <img className="landing-cover-image" src={productImage} alt={product.name} /> : index === 0 ? <Leaf size={70} /> : index === 1 ? <MoveUpRight size={66} /> : <Quote size={62} />}{product.badge && <span className="product-badge">{product.badge}</span>}</div><div className="product-copy"><small>{product.category}</small><h3>{product.name}</h3><p>{product.description}</p><div><strong>{formatCurrency(Number(product.price))}</strong><a href={clubEmail ? `mailto:${clubEmail}?subject=${encodeURIComponent(`WLHL 产品咨询：${product.name}`)}` : "/cn/join"} aria-label={`咨询购买${product.name}`}><ShoppingBag size={17} /></a></div></div></article>;
+            return <article className="product-card" key={product.id}><div className={`product-art product-art-${index + 1} ${productImage ? "has-upload" : ""}`}>{productImage ? <img className="landing-cover-image" src={productImage} alt={product.name} /> : index === 0 ? <Leaf size={70} /> : index === 1 ? <MoveUpRight size={66} /> : <Quote size={62} />}{product.badge && <span className="product-badge">{product.badge}</span>}</div><div className="product-copy"><small>{product.category}</small><h3><Link className="product-title-link" href={`/cn/shop/${encodeURIComponent(product.id)}`}>{product.name}</Link></h3><p>{product.description}</p><div><strong>{formatCurrency(Number(product.price))}</strong><Link href={`/cn/shop/${encodeURIComponent(product.id)}`} aria-label={`查看${product.name}`}><ShoppingBag size={17} /></Link></div></div></article>;
           })}</div>
           <div className="payment-note"><ShieldCheck size={22} /><div><strong>{content.paymentTitle}</strong><span>{zelleHandle && zelleRecipient ? fillLandingTemplate(content.paymentConfiguredText, { recipient: zelleRecipient, handle: zelleHandle }) : content.paymentFallbackText}</span></div></div>
         </section>

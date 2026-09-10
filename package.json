@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "stripe:sync": "tsx scripts/stripe-sync.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "test:integration": "tsx --test tests/shop.integration.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -14,6 +17,8 @@
     "next": "^16.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "server-only": "^0.0.1",
+    "stripe": "^22.6.2",
     "web-push": "^3.6.7",
     "zod": "^4.5.4"
   },
@@ -22,6 +27,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.3",
     "@types/web-push": "^3.6.4",
+    "tsx": "^4.23.13",
     "typescript": "^5.9.3"
   },
   "engines": {

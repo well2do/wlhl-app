@@ -21,7 +21,7 @@ export async function SiteFooter({ locale = "en", content, logoSrc }: { locale?:
           <Link href={`${prefix}/about`}>{pageContent.navAbout}</Link>
           <Link href={`${prefix}/events`}>{pageContent.footerEvents}</Link>
           <Link href={`${prefix}/join`}>{pageContent.footerMembership}</Link>
-          <Link href={`${prefix}/#shop`}>{pageContent.footerShop}</Link>
+          <Link href={`${prefix}/shop`}>{pageContent.footerShop}</Link>
         </div>
         <div>
           <p className="footer-label">{pageContent.footerConnectLabel}</p>

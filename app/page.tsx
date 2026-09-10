@@ -43,7 +43,6 @@ export default async function HomePage() {
   const membershipImage = imageFor("membership");
   const zelleHandle = process.env.NEXT_PUBLIC_ZELLE_HANDLE;
   const zelleRecipient = process.env.NEXT_PUBLIC_ZELLE_RECIPIENT;
-  const clubEmail = process.env.NEXT_PUBLIC_CLUB_EMAIL;
   const benefits = [
     { icon: Users, title: content.benefitOneTitle, copy: content.benefitOneDescription },
     { icon: Salad, title: content.benefitTwoTitle, copy: content.benefitTwoDescription },
@@ -172,9 +171,9 @@ export default async function HomePage() {
                   </div>
                   <div className="product-copy">
                     <small>{product.category}</small>
-                    <h3>{product.name}</h3>
+                    <h3><Link className="product-title-link" href={`/shop/${encodeURIComponent(product.id)}`}>{product.name}</Link></h3>
                     <p>{product.description}</p>
-                    <div><strong>{formatCurrency(Number(product.price))}</strong><a href={clubEmail ? `mailto:${clubEmail}?subject=${encodeURIComponent(`WLHL order: ${product.name}`)}` : "/join"} aria-label={`Ask to buy ${product.name}`}><ShoppingBag size={17} /></a></div>
+                    <div><strong>{formatCurrency(Number(product.price))}</strong><Link href={`/shop/${encodeURIComponent(product.id)}`} aria-label={`View ${product.name}`}><ShoppingBag size={17} /></Link></div>
                   </div>
                 </article>
               );

@@ -30,12 +30,54 @@ Production Zelle and club contact details intentionally remain hidden until the 
 - Member approval/status management and CSV export
 - Event creation, registration, check-in, and completion tracking
 - Announcement publishing with optional browser push delivery
-- Product management and direct product inquiry links
+- Product management, bilingual product pages, and Stripe test Checkout
 - Bilingual expert-profile management with public display ordering and visibility controls
 - Installable PWA metadata and responsive layouts for phones, tablets, and desktops
 - Automatic schema creation and starter data
 
-## Technology
+## Stripe test shop
+
+The shop is available at `/shop` and `/cn/shop`. Every active database product has
+its own `/shop/{id}` page and a hosted Stripe Checkout button. The existing tea,
+resistance bands, and wellness journal are suitable test products. Prices are USD.
+This integration deliberately rejects live keys and never enables real payments.
+
+1. Save `STRIPE_SECRET_KEY=sk_test_...` in `.env.local`. A publishable key is not
+   needed for hosted Checkout. Never commit or share the secret key.
+2. Run `npm run stripe:sync` to create/reuse Stripe test Products and Prices for
+   the local database. After deployment, run
+   `npm run stripe:sync -- --site https://wlhl.vercel.app` to sync the production
+   site's catalog, whose product IDs may differ from local records.
+3. Add the same test secret to Vercel Production. Register the test webhook URL
+   `https://wlhl.vercel.app/api/stripe/webhook` in Stripe for
+   `checkout.session.completed` and `checkout.session.async_payment_succeeded`.
+   Add its signing secret as `STRIPE_WEBHOOK_SECRET` in Vercel, then redeploy.
+4. For local webhook testing, run
+   `stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded --forward-to localhost:3000/api/stripe/webhook`
+   and save the printed signing secret as `STRIPE_WEBHOOK_SECRET` locally.
+5. Open a product, select **Test checkout**, and use Stripe's test card
+   `4242 4242 4242 4242`, any future expiry, and any three-digit CVC. Use
+   `4000 0000 0000 0002` to test a decline. Do not use real card information.
+
+The server derives the price from the database, creates/reuses the corresponding
+Stripe Price, and charges one item. Price edits create a new Price without
+modifying existing sessions. Canceled checkouts return to the product page.
+The success page retrieves the session from Stripe before showing confirmation.
+Signed webhooks and the verified success page insert paid test orders into
+`shop_orders` idempotently. Administrators can inspect that table in
+`/admin/database`. No fulfillment, shipping, taxes, discounts, or live payments
+are enabled. Existing in-flight checkouts keep their original price snapshot.
+
+Run `npm test`, `npm run typecheck`, and `npm run build` for local verification.
+After building, run `npm run test:integration` to verify the HTTP routes and signed
+webhook handling against a temporary database with local fixture credentials.
+These checks do not make a Stripe payment; an actual test Checkout still needs
+valid Stripe credentials and the test-card flow above.
+References: [Stripe Checkout](https://docs.stripe.com/payments/checkout/how-checkout-works),
+[webhook signatures](https://docs.stripe.com/webhooks), and
+[test cards](https://docs.stripe.com/testing).
+
+## Technology stack
 
 - Next.js 16 App Router and React 19
 - TypeScript
