@@ -25,6 +25,7 @@ const memberSchema = z.object({
   email: z.email("Please enter a valid email address."),
   phone: z.string().min(7, "Please enter a valid phone number."),
   birthday: z.string().optional(),
+  membershipTier: z.enum(["Annual Membership (2026 Promotion)", "2026 Annual Renewal", "Lifetime Membership"]),
   interests: z.string().optional(),
 });
 
@@ -36,6 +37,7 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
     email: text(formData, "email").toLowerCase(),
     phone: text(formData, "phone"),
     birthday: text(formData, "birthday"),
+    membershipTier: text(formData, "membershipTier"),
     interests: formData.getAll("interests").join(", "),
   });
 
@@ -48,9 +50,9 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
     const data = parsed.data;
     await execute(
       `INSERT INTO members
-       (id, first_name, last_name, email, phone, birthday, interests, membership_status,
-        joined_at, email_opt_in, sms_opt_in, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, '')`,
+       (id, first_name, last_name, email, phone, birthday, interests, membership_tier,
+        membership_status, joined_at, email_opt_in, sms_opt_in, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, '')`,
       [
         id,
         data.firstName,
@@ -59,12 +61,19 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
         data.phone,
         data.birthday || null,
         data.interests || "",
+        data.membershipTier,
         new Date().toISOString(),
         checked(formData, "emailOptIn"),
         checked(formData, "smsOptIn"),
       ],
     );
-    await writeActivityLog({ memberId: id, activityType: "membership_application", description: "Submitted a WLHL membership application.", actorType: "member" });
+    await writeActivityLog({
+      memberId: id,
+      activityType: "membership_application",
+      description: "Submitted a WLHL membership application.",
+      actorType: "member",
+      metadata: { membershipTier: data.membershipTier },
+    });
     await createMemberSession(id);
     revalidatePath("/");
     revalidatePath("/cn");

@@ -14,6 +14,30 @@ const interests = [
   { value: "Wellness products", en: "Wellness products", cn: "健康产品" },
 ];
 
+const membershipOptions = [
+  {
+    value: "Annual Membership (2026 Promotion)",
+    en: "Annual membership",
+    cn: "年度会员",
+    priceEn: "$360/year · 2026 half-price offer: $180/year",
+    priceCn: "$360/年 · 2026年半价优惠：$180/年",
+  },
+  {
+    value: "2026 Annual Renewal",
+    en: "2026 annual renewal",
+    cn: "2026年度续费",
+    priceEn: "$66 for 2026",
+    priceCn: "2026年度 $66",
+  },
+  {
+    value: "Lifetime Membership",
+    en: "Lifetime membership",
+    cn: "终身会员",
+    priceEn: "$980 one-time",
+    priceCn: "一次性 $980",
+  },
+] as const;
+
 export function JoinForm({ locale = "en" }: { locale?: "en" | "cn" }) {
   const cn = locale === "cn";
   const initialFormState: FormState = { status: "idle", message: "" };
@@ -26,6 +50,10 @@ export function JoinForm({ locale = "en" }: { locale?: "en" | "cn" }) {
         <p className="eyebrow">{cn ? "申请已收到" : "Application received"}</p>
         <h2>{cn ? "欢迎加入我们的健康社区。" : "You’re part of something good."}</h2>
         <p>{cn ? "您的 WLHL 会员申请已提交。我们将很快与您联系，确认会员及付款信息。" : `${state.message} We’ll follow up with membership and payment details shortly.`}</p>
+        <div className="membership-payment-confirmation">
+          <strong>{cn ? "付款方式" : "Payment method"}</strong>
+          <span>{cn ? "请根据联系人确认的会员方案，通过 Zelle 支付至 240-498-4568。" : "Pay the amount confirmed for your membership option by Zelle to 240-498-4568."}</span>
+        </div>
         <Link href={cn ? "/cn/member" : "/member"} className="button button-dark">{cn ? "进入会员中心" : "Open member home"} <ArrowRight size={16} /></Link>
       </div>
     );
@@ -45,6 +73,24 @@ export function JoinForm({ locale = "en" }: { locale?: "en" | "cn" }) {
       <div className="form-row">
         <label>{cn ? "出生日期" : "Date of birth"} <span className="label-note">{cn ? "选填" : "Optional"}</span><input name="birthday" type="date" /></label>
       </div>
+      <fieldset className="membership-payment-fieldset">
+        <legend>{cn ? "俱乐部会员年费和支付方式" : "Club annual fee and payment"}</legend>
+        <p className="membership-payment-instructions">
+          <span>{cn ? "请根据联系人要求选择会员方案。" : "Select the membership option requested by your contact."}</span>
+          <strong>{cn ? "通过 Zelle 支付至：240-498-4568" : "Pay by Zelle to: 240-498-4568"}</strong>
+        </p>
+        <div className="membership-option-grid">
+          {membershipOptions.map((option) => (
+            <label className="membership-option" key={option.value}>
+              <input type="radio" name="membershipTier" value={option.value} required />
+              <span>
+                <strong>{cn ? option.cn : option.en}</strong>
+                <small>{cn ? option.priceCn : option.priceEn}</small>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
       <fieldset className="interest-fieldset">
         <legend>{cn ? "您对哪些内容感兴趣？" : "What interests you?"} <span className="label-note">{cn ? "可多选" : "Choose all that apply"}</span></legend>
         <div className="interest-grid">
