@@ -567,6 +567,25 @@ export async function updateExpertAction(formData: FormData) {
   expertAdminRedirect("saved", "Expert profile updated");
 }
 
+export async function deleteExpertAction(formData: FormData) {
+  await requireAdmin();
+  const expertId = text(formData, "expertId");
+  if (!expertId) expertAdminRedirect("error", "Expert profile not found.");
+  const existing = await execute("SELECT name_en FROM expert_profiles WHERE id = ? LIMIT 1", [expertId]);
+  if (existing.rows.length === 0) expertAdminRedirect("error", "Expert profile not found.");
+  const expertName = String(existing.rows[0].name_en);
+
+  await execute("DELETE FROM expert_profiles WHERE id = ?", [expertId]);
+  await writeActivityLog({
+    activityType: "expert_deleted",
+    description: `Deleted expert profile: ${expertName}`,
+    actorType: "admin",
+    metadata: { expertId },
+  });
+  revalidateExpertPages();
+  expertAdminRedirect("saved", "Expert profile deleted");
+}
+
 export async function toggleExpertAction(formData: FormData) {
   await requireAdmin();
   const expertId = text(formData, "expertId");

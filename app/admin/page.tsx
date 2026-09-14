@@ -26,6 +26,7 @@ import {
   createEventAction,
   createExpertAction,
   createProductAction,
+  deleteExpertAction,
   deleteProductAction,
   recordAttendanceAction,
   toggleExpertAction,
@@ -35,6 +36,7 @@ import {
   updateProductAction,
 } from "@/app/actions";
 import { Brand } from "@/components/brand";
+import { DeleteExpertButton } from "@/components/delete-expert-button";
 import { DeleteProductButton } from "@/components/delete-product-button";
 import { isAdmin } from "@/lib/auth";
 import { getActivityLogs, getAllAttendance, getAnnouncements, getDashboardStats, getEventRegistrations, getEvents, getExpertProfiles, getMembers, getProducts } from "@/lib/db";
@@ -100,7 +102,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         {view === "members" && (
           <section className="admin-panel full-panel">
             <div className="admin-panel-heading"><div><h2>Member directory</h2><p>{members.length} people in your club database</p></div><a className="button button-outline button-small" href="/api/admin/export"><Download size={15} />Export CSV</a></div>
-            <div className="table-wrap"><table><thead><tr><th>Member</th><th>Phone</th><th>Tier</th><th>Interests</th><th>Joined</th><th>Updates</th><th>Status</th><th>Profile</th></tr></thead><tbody>{members.map((member) => <tr key={member.id}><td><div className="table-person"><span className="member-avatar">{initials(member.first_name, member.last_name)}</span><p><strong>{member.first_name} {member.last_name}</strong><small>{member.email}</small></p></div></td><td>{member.phone}</td><td>{member.membership_tier}</td><td className="truncate-cell">{member.interests || "—"}</td><td>{new Date(member.joined_at).toLocaleDateString()}</td><td>{member.email_opt_in ? "Email" : "—"}{member.sms_opt_in ? " + SMS" : ""}</td><td><form action={updateMemberStatusAction} className="inline-form"><input type="hidden" name="memberId" value={member.id} /><select name="status" defaultValue={member.membership_status} aria-label={`Status for ${member.first_name}`}><option value="pending">Pending</option><option value="active">Active</option><option value="paused">Paused</option></select><button>Save</button></form></td><td><Link className="profile-link" href={`/admin/members/${member.id}`}><Eye size={14} />View</Link></td></tr>)}</tbody></table></div>
+            <div className="table-wrap"><table><thead><tr><th>Member</th><th>Phone</th><th>Tier</th><th>Interests</th><th>Joined</th><th>Updates</th><th>Approval / status</th><th>Profile</th></tr></thead><tbody>{members.map((member) => <tr key={member.id}><td><div className="table-person"><span className="member-avatar">{initials(member.first_name, member.last_name)}</span><p><strong>{member.first_name} {member.last_name}</strong><small>{member.email}</small></p></div></td><td>{member.phone}</td><td>{member.membership_tier}</td><td className="truncate-cell">{member.interests || "—"}</td><td>{new Date(member.joined_at).toLocaleDateString()}</td><td>{member.email_opt_in ? "Email" : "—"}{member.sms_opt_in ? " + SMS" : ""}</td><td><div className="member-status-actions">{member.membership_status === "pending" && <form action={updateMemberStatusAction}><input type="hidden" name="memberId" value={member.id} /><input type="hidden" name="status" value="active" /><button className="member-approve-button"><CheckCircle2 size={13} />Approve</button></form>}<form action={updateMemberStatusAction} className="inline-form"><input type="hidden" name="memberId" value={member.id} /><select name="status" defaultValue={member.membership_status} aria-label={`Status for ${member.first_name}`}><option value="pending">Pending</option><option value="active">Active</option><option value="paused">Paused</option></select><button>Save</button></form></div></td><td><Link className="profile-link" href={`/admin/members/${member.id}`}><Eye size={14} />View</Link></td></tr>)}</tbody></table></div>
             {members.length === 0 && <p className="admin-empty">Membership applications will appear here.</p>}
           </section>
         )}
@@ -235,6 +237,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   {editingExpert && <Link className="button button-outline button-full" href="/admin?view=experts">Cancel</Link>}
                 </div>
               </form>
+              {editingExpert && (
+                <form action={deleteExpertAction} className="expert-delete-form">
+                  <input type="hidden" name="expertId" value={editingExpert.id} />
+                  <DeleteExpertButton expertName={editingExpert.name_en} />
+                </form>
+              )}
             </section>
           </div>
         )}
