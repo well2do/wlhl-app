@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Events, announcements, and membership for the WLHL community.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f7f3ea",
-    theme_color: "#173f35",
+    background_color: "#f4f8fc",
+    theme_color: "#d9ecff",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
   };
 }

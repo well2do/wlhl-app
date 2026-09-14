@@ -1,17 +1,21 @@
 :root {
-  --ink: #18342d;
-  --green: #173f35;
-  --green-2: #235c4b;
-  --green-3: #3f7965;
-  --cream: #f7f3ea;
-  --paper: #fffdf8;
+  --ink: #102a43;
+  --green: #174a8b;
+  --green-2: #2f6fa3;
+  --green-3: #6aa1cf;
+  --cream: #f4f8fc;
+  --paper: #ffffff;
   --coral: #ef775f;
   --coral-dark: #d95f4a;
-  --gold: #e9a34d;
-  --mint: #c9dfd2;
-  --line: #deddd3;
-  --muted: #6f7c77;
-  --shadow: 0 24px 70px rgba(22, 61, 51, .12);
+  --gold: #174a8b;
+  --mint: #d9ecff;
+  --line: #d7e2ec;
+  --muted: #617487;
+  --light-blue: #d9ecff;
+  --light-blue-strong: #b9d9f5;
+  --light-blue-soft: #eef7ff;
+  --deep-blue: #174a8b;
+  --shadow: 0 24px 70px rgba(18, 63, 115, .12);
 }
 
 * { box-sizing: border-box; }
@@ -345,6 +349,230 @@ input:focus, textarea:focus, select:focus { border-color: var(--green-3); box-sh
   .manage-product-list article { grid-template-columns: 38px minmax(0,1fr); }
   .manage-product-actions { grid-column: 2; justify-content: flex-start; }
 }
+
+/* Sitewide blue palette: former green backgrounds are light blue; former yellow backgrounds are deep blue. */
+.button-dark,
+.hero,
+.mini-icon,
+.product-badge,
+.product-copy > div a,
+.notification-section,
+.membership-card,
+.site-footer,
+.about-hero,
+.about-principle-grid article,
+.about-organization,
+.about-expert-list details[open] .about-expert-toggle,
+.about-watch-card,
+.page-hero,
+.event-list-art span,
+.round-link:hover,
+.simple-cta,
+.join-intro,
+.membership-option input:checked + span::before,
+.choice-pill input:checked + span,
+.success-icon,
+.admin-sidebar,
+.landing-locale-tabs a.active,
+.profile-avatar,
+.pulse-dot::after,
+.avatar-stack span:last-child {
+  color: var(--deep-blue);
+  background: var(--light-blue);
+}
+
+.button-dark:hover { background: var(--light-blue-strong); }
+
+.hero-lede,
+.hero-trust p,
+.notification-copy > p,
+.membership-card > div > p:last-child,
+.about-hero-content > div:first-child > p:not(.eyebrow),
+.about-principle-grid p,
+.about-organization .split-heading > p,
+.about-organization-grid p,
+.about-watch-card div p,
+.page-hero > div > p:last-child,
+.join-intro-inner > p:not(.eyebrow) {
+  color: rgba(16, 42, 67, .7);
+}
+
+.hero-trust strong,
+.about-organization .split-heading h2,
+.about-hero h1,
+.page-hero h1,
+.simple-cta h2,
+.join-intro h1,
+.notification-section h2,
+.membership-card h2 {
+  color: var(--deep-blue);
+}
+
+.hero .eyebrow-light,
+.notification-section .eyebrow-light,
+.membership-card .eyebrow-light,
+.about-hero .eyebrow-light,
+.about-organization .eyebrow-light,
+.about-watch-card .eyebrow-light,
+.page-hero .eyebrow-light,
+.join-intro .eyebrow-light {
+  color: #315f8f;
+}
+
+.hero .button-ghost-light,
+.notification-section .button-ghost-light,
+.membership-card:not(.has-upload) .button-ghost-light,
+.about-hero .button-ghost-light,
+.about-organization .button-ghost-light,
+.about-watch-card .button-ghost-light,
+.page-hero .button-ghost-light,
+.join-intro .button-ghost-light {
+  border-color: rgba(23, 74, 139, .35);
+  color: var(--deep-blue);
+  background: rgba(255, 255, 255, .28);
+}
+
+.site-footer .brand-inverse,
+.admin-sidebar .brand-inverse { color: var(--deep-blue); }
+.site-footer .brand-inverse .brand-type small,
+.footer-grid > div:first-child p,
+.footer-grid a,
+.footer-pending,
+.footer-bottom,
+.admin-sidebar nav a,
+.admin-sidebar-bottom a,
+.admin-sidebar-bottom button { color: rgba(16, 42, 67, .68); }
+.footer-grid a:hover,
+.admin-sidebar nav a:hover,
+.admin-sidebar nav a.active { color: var(--deep-blue); }
+.footer-bottom,
+.admin-sidebar-bottom { border-color: rgba(23, 74, 139, .16); }
+.admin-sidebar nav a:hover,
+.admin-sidebar nav a.active { background: rgba(23, 74, 139, .1); }
+
+.membership-card::before,
+.about-hero-orbit,
+.page-hero::after { border-color: rgba(23, 74, 139, .13); }
+.membership-details {
+  border-color: rgba(23, 74, 139, .18);
+  background: rgba(255, 255, 255, .32);
+}
+.membership-details small { color: rgba(16, 42, 67, .58); }
+.membership-card.has-upload { color: white; }
+.membership-card.has-upload::after {
+  background: linear-gradient(90deg, rgba(10, 48, 94, .92), rgba(10, 48, 94, .62));
+}
+.membership-card.has-upload h2 { color: white; }
+.membership-card.has-upload > div > p:last-child,
+.membership-card.has-upload .membership-details small { color: rgba(255, 255, 255, .7); }
+.membership-card.has-upload .eyebrow-light,
+.membership-card.has-upload .membership-details p svg { color: var(--light-blue-strong); }
+.membership-card.has-upload .membership-details {
+  border-color: rgba(255, 255, 255, .18);
+  background: rgba(5, 30, 66, .24);
+}
+
+.pulse-dot,
+.benefit-1,
+.event-art,
+.product-art.has-upload,
+.product-art-1,
+.shop-test-notice,
+.payment-note,
+.phone-preview,
+.about-membership,
+.event-list-art,
+.step-chip,
+.membership-payment-fieldset,
+.membership-option input:checked + span,
+.consent-box,
+.membership-payment-confirmation,
+.status-active,
+.member-stat-icon.green,
+.portal-event-date,
+.reserved-chip,
+.news-event,
+.history-check,
+.admin-shell,
+.saved-toast,
+.admin-stat-grid article > span,
+.member-avatar,
+.table-status.status-active,
+.attendance-completed,
+.attendance-attended,
+.manage-date,
+.manage-product-list article > span,
+.landing-editor-note,
+.landing-image-preview,
+.actor-member,
+.profile-summary-grid article > span,
+.profile-engagement-stats span {
+  background: var(--light-blue-soft);
+}
+
+.benefit-1,
+.event-art,
+.product-art-1 { background: var(--light-blue-strong); }
+.notification-upload { background: var(--light-blue-strong); }
+.phone-preview { border-color: var(--deep-blue); }
+.phone-speaker { background: var(--deep-blue); }
+.portal-shell { background: var(--cream); }
+.about-health-disclaimer {
+  border-color: rgba(23, 74, 139, .16);
+  color: rgba(16, 42, 67, .68);
+  background: rgba(255, 255, 255, .36);
+}
+.event-art.has-upload::after,
+.product-art.has-upload::after,
+.hero-visual.has-upload::after {
+  background: linear-gradient(180deg, rgba(12, 55, 105, .05), rgba(12, 55, 105, .34));
+}
+.event-art.has-upload .event-art-copy,
+.about-hero-art > div { background: rgba(11, 53, 101, .82); }
+
+.hero-visual,
+.benefit-2,
+.event-art::after,
+.product-art-3,
+.shop-cancel-notice,
+.about-hero-art,
+.about-principle-grid article > span,
+.about-organization-grid article > span,
+.about-watch-icon,
+.art-tone-3,
+.join-art,
+.status-pending,
+.member-stat-icon.gold,
+.approval-chip,
+.news-community,
+.history-registered,
+.table-status.status-pending,
+.attendance-registered,
+.admin-stat-grid article:nth-child(3) > span,
+.actor-system,
+.forum-button.coral,
+.forum-audience-card > span {
+  color: white;
+  background: var(--deep-blue);
+}
+
+.hero-visual .botanical,
+.about-hero-art .about-leaf-one,
+.about-hero-art .about-leaf-two,
+.join-art,
+.join-art svg:first-child { color: var(--light-blue-strong); }
+.about-sun {
+  color: white;
+  background: rgba(98, 155, 207, .72);
+}
+.event-art-copy {
+  padding: 13px 18px;
+  border-radius: 6px;
+  color: white;
+  background: rgba(15, 55, 104, .78);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .25);
+}
+.status-pending span { background: var(--light-blue-strong); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
