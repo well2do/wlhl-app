@@ -1,4 +1,5 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
+import { databaseConfig } from "./database-config";
 import type { ActivityLog, Announcement, Attendance, ClubEvent, EventRegistration, ExpertProfileRecord, Member, Product } from "./types";
 import { initialExpertProfiles, shenPeihongPlaceholderBiographyCn, shenPeihongProfile } from "./expert-profiles";
 import { landingPageDefaults, type LandingPageContent, type LandingPageLocale } from "./landing-page-content";
@@ -12,10 +13,7 @@ declare global {
 
 function getClient() {
   if (!global.wlhlDatabase) {
-    global.wlhlDatabase = createClient({
-      url: process.env.TURSO_DATABASE_URL || "file:data/wlhl.db",
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    });
+    global.wlhlDatabase = createClient(databaseConfig());
   }
   return global.wlhlDatabase;
 }
@@ -247,7 +245,13 @@ async function initialize() {
 }
 
 async function db() {
-  if (!global.wlhlDatabaseReady) global.wlhlDatabaseReady = initialize();
+  if (!global.wlhlDatabaseReady) {
+    global.wlhlDatabaseReady = initialize().catch((error) => {
+      // A temporary connection failure must not poison every later request.
+      global.wlhlDatabaseReady = undefined;
+      throw error;
+    });
+  }
   await global.wlhlDatabaseReady;
   return getClient();
 }

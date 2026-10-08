@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "stripe:sync": "tsx scripts/stripe-sync.ts",
     "test": "tsx --test tests/*.test.ts",
-    "test:integration": "tsx --test tests/shop.integration.ts"
+    "test:integration": "tsx --test tests/*.integration.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

@@ -20,8 +20,8 @@ const text = (formData: FormData, key: string) => String(formData.get(key) || ""
 const checked = (formData: FormData, key: string) => (formData.get(key) ? 1 : 0);
 
 const memberSchema = z.object({
-  firstName: z.string().min(2, "Please enter your first name."),
-  lastName: z.string().min(2, "Please enter your last name."),
+  firstName: z.string().min(1, "Please enter your first name."),
+  lastName: z.string().min(1, "Please enter your last name."),
   email: z.email("Please enter a valid email address."),
   phone: z.string().min(7, "Please enter a valid phone number."),
   birthday: z.string().optional(),
@@ -89,8 +89,8 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
 }
 
 const forumRegistrationSchema = z.object({
-  firstName: z.string().min(2, "Please enter your first name."),
-  lastName: z.string().min(2, "Please enter your last name."),
+  firstName: z.string().min(1, "Please enter your first name."),
+  lastName: z.string().min(1, "Please enter your last name."),
   email: z.email("Please enter a valid email address."),
   phone: z.string().min(7, "Please enter a valid phone number."),
   organization: z.string().max(120).optional(),
@@ -210,6 +210,9 @@ export async function forumRegistrationAction(_state: FormState, formData: FormD
     revalidatePath("/cn/events/ai-health-wealth-forum");
     revalidatePath("/admin");
     revalidatePath("/member");
+    revalidatePath("/cn/member");
+    revalidatePath("/events");
+    revalidatePath("/cn/events");
     return { status: "success", message: cn ? `${data.firstName}，您已成功报名 9 月 7 日的活动。` : `Thank you, ${data.firstName}. Your seat is registered for September 7.` };
   } catch {
     return { status: "error", message: cn ? "暂时无法完成报名，请重试或联系活动负责人。" : "We couldn't complete your registration. Please try again or contact an organizer." };
@@ -310,6 +313,7 @@ export async function createAnnouncementAction(formData: FormData) {
   await writeActivityLog({ activityType: "announcement_published", description: `Published announcement: ${title}`, actorType: "admin" });
   await sendPushNotification(title, message);
   revalidatePath("/");
+  revalidatePath("/cn");
   revalidatePath("/admin");
   redirect("/admin?view=announcements&saved=Announcement+published");
 }
@@ -330,7 +334,11 @@ export async function createEventAction(formData: FormData) {
   ]);
   await writeActivityLog({ eventId, activityType: "event_created", description: `Created event: ${text(formData, "title")}`, actorType: "admin" });
   revalidatePath("/");
+  revalidatePath("/cn");
   revalidatePath("/events");
+  revalidatePath("/cn/events");
+  revalidatePath("/member");
+  revalidatePath("/cn/member");
   revalidatePath("/admin");
   redirect("/admin?view=events&saved=Event+created");
 }
@@ -434,6 +442,8 @@ export async function updateMemberStatusAction(formData: FormData) {
   await execute("UPDATE members SET membership_status = ? WHERE id = ?", [status, memberId]);
   await writeActivityLog({ memberId, activityType: "membership_status_updated", description: `Membership status changed to ${status}.`, actorType: "admin", metadata: { status } });
   revalidatePath("/admin");
+  revalidatePath("/member");
+  revalidatePath("/cn/member");
   redirect("/admin?view=members&saved=Member+updated");
 }
 
@@ -453,6 +463,7 @@ export async function recordAttendanceAction(formData: FormData) {
   await writeActivityLog({ memberId, eventId, activityType: "attendance_updated", description: `Event attendance changed to ${status}.`, actorType: "admin", metadata: { status } });
   revalidatePath("/admin");
   revalidatePath("/member");
+  revalidatePath("/cn/member");
   redirect("/admin?view=attendance&saved=Attendance+recorded");
 }
 

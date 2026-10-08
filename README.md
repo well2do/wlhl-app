@@ -103,7 +103,41 @@ The local admin workspace is at [http://localhost:3000/admin](http://localhost:3
 wlhl-admin
 ```
 
-Copy `.env.example` to `.env.local` and replace the example contact, Zelle, password, and secret values before using real member data.
+Copy `.env.example` to `.env.local` and replace the example contact, Zelle, password, and secret values before using real member data. Keep both Turso values empty for local SQLite, or set both to real remote database credentials. Next.js does not load `.env.example`; restart the server after editing `.env.local`.
+
+## Frontend and backend connection
+
+The frontend and backend run in the same Next.js application. Membership and event
+forms call Server Actions in `app/actions.ts`; the shop and push controls call
+same-origin `/api` routes. No separate API server, browser database credentials,
+or `NEXT_PUBLIC_API_URL` is needed.
+
+Local development uses `data/wlhl.db` unless both Turso variables are configured.
+Vercel uses its own Production environment variables and the hosted Turso database.
+These databases are separate: a local signup will not appear in the production
+admin workspace. To use a shared database, configure the same remote URL and token
+in the intended environments. Do not copy placeholder credentials or commit secrets.
+
+Public pages read database content at request time, so database changes appear on
+the next page load instead of using a build-time snapshot. Admin actions also
+invalidate the affected English and Chinese pages. A failed database initialization
+can retry on a later request without restarting the application.
+
+Check the running server and database together:
+
+```bash
+curl --fail http://localhost:3000/api/health
+curl --fail https://wlhl.vercel.app/api/health
+```
+
+Success returns `{"status":"ok","database":"connected"}`. Database failure returns
+HTTP 503 without exposing credentials. Vercel requires a remote database; missing
+credentials never silently fall back to an ephemeral SQLite file there.
+
+Stripe checkout separately requires `STRIPE_SECRET_KEY`, and signed webhook handling
+requires `STRIPE_WEBHOOK_SECRET`. A healthy database does not enable payments when
+those settings are absent. Email and SMS preferences are stored only; outbound
+email/SMS providers are not integrated.
 
 ## Main routes
 
@@ -207,6 +241,11 @@ Products and membership fees use direct Zelle payment. The public website displa
 ```bash
 npm run typecheck
 npm run build
+npm test
+npm run test:integration
 ```
 
-Both commands pass on the current implementation.
+The integration suite starts production-mode servers against temporary databases.
+It verifies live database reads, rendered membership and forum form submissions,
+member login, admin approval, bilingual event publishing, member reservations,
+shop routes, and signed webhook persistence without changing production data.
