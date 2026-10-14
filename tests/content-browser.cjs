@@ -1,0 +1,60 @@
+const { chromium } = require('playwright');
+const assert = require('node:assert/strict');
+const base = process.env.TEST_ORIGIN || 'http://127.0.0.1:3135';
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3ioAAAAASUVORK5CYII=', 'base64');
+(async () => {
+ const browser=await chromium.launch({channel:'chrome',headless:true});
+ const context=await browser.newContext({permissions:['clipboard-read','clipboard-write']});
+ context.setDefaultTimeout(15000);const errors=[];const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+ let saved=null;let uploads=0;let failUpload=false;
+ await context.addCookies([{name:'Access-Token',value:'isolated-browser-fixture',url:base}]);
+ await context.route('**/api/content-media/**',r=>r.fulfill({status:200,contentType:'image/png',body:png}));
+ await context.route('**/backendApi/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  let data={};
+  if(path.endsWith('/login/getInfo'))data={accountInfo:{accountName:'Fixture editor',merchantId:1,merchantName:'长寿康养俱乐部',storeId:0,storeName:'',avatar:''},roles:['admin'],permissions:['*:*:*']};
+  else if(path.endsWith('/login/getRouters'))data=[{path:'/content',component:'Layout',name:'Content',meta:{title:'内容管理'},children:[{path:'article',name:'Article',component:'content/article/index',meta:{title:'文章管理'}}]}];
+  else if(path.endsWith('/article/list'))data={dataList:{content:saved?[{...saved,id:501,image:'http://localhost:8080/static/uploadFiles/cover.png',status:'A'}]:[],totalElements:saved?1:0},imagePath:'https://parsley-easiest-qualify.ngrok-free.dev',storeList:[]};
+  else if(path.endsWith('/file/upload')){uploads++;assert.ok(route.request().headers()['access-token']);assert.equal(route.request().headers()['ngrok-skip-browser-warning'],'true');if(failUpload){await route.fulfill({json:{code:201,message:'Fixture upload failure'}});return;}data={url:'http://localhost:8080/static/uploadFiles/fixture.png',fileName:'/static/uploadFiles/fixture.png'};}
+  else if(path.endsWith('/article/save')){saved=route.request().postDataJSON();data={id:501};}
+  else if(path.includes('/article/info/')) data={articleInfo:{...saved,id:501},imagePath:'https://parsley-easiest-qualify.ngrok-free.dev'};
+  await route.fulfill({json:{code:200,data}});
+ });
+ await context.route('**/api/articles',route=>route.fulfill({json:{articles:saved?[{...saved,id:501,image:'/api/content-media/static/uploadFiles/cover.png'}]:[]}}));
+ await page.goto(base+'/wlhl-application/index.html#/content/article');
+ await page.locator('button').filter({hasText:'新增'}).last().click();
+ await page.getByPlaceholder('请输入文章标题').last().fill('Browser content verification');
+ const editor=page.locator('.ql-editor');await editor.waitFor({state:'visible'});
+ await editor.click();
+ await page.evaluate(()=>navigator.clipboard.writeText('Plain text paste: 康养俱乐部'));
+ await page.keyboard.press('ControlOrMeta+V');
+ await page.waitForFunction(()=>document.querySelector('.ql-editor').textContent.includes('Plain text paste'),null,{timeout:10000});
+ assert.equal((await editor.innerText()).split('Plain text paste').length-1,1,'Plain paste must not duplicate text');
+ await editor.evaluate(el=>{const data=new DataTransfer();data.setData('text/html','<div><strong>HTML paste works</strong><div>Second paragraph</div></div>');data.setData('text/plain','HTML paste works\nSecond paragraph');el.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));});
+ assert.match(await editor.innerHTML(),/<strong>HTML paste works<\/strong>/);
+ assert.match(await editor.innerText(),/Second paragraph/);
+ await editor.evaluate(el=>{const q=el.parentElement.__quill;q.setText('replace selected');q.setSelection(0,7);const data=new DataTransfer();data.setData('text/plain','UPDATED');el.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));});
+ assert.equal((await editor.innerText()).trim(),'UPDATED selected');
+ await editor.evaluate(el=>{const data=new DataTransfer();data.setData('text/html','<div><strong>Saved HTML</strong><div>Nested pasted text</div></div>');data.setData('text/plain','Saved HTML\nNested pasted text');el.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));});
+ const pasteImage=async()=>editor.evaluate((el,png)=>{const file=new File([Uint8Array.from(atob(png),c=>c.charCodeAt(0))],'pasted.png',{type:'image/png'});const data=new DataTransfer();data.items.add(file);el.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));},png.toString('base64'));
+ await pasteImage();await editor.locator('img').waitFor();
+ assert.match(await editor.locator('img').getAttribute('src'),/^\/api\/content-media\//);
+ assert.ok(await editor.locator('img').evaluate(el=>el.complete&&el.naturalWidth>0));
+ const cover=page.locator('.el-dialog .el-upload input[type=file]');await cover.setInputFiles({name:'cover.png',mimeType:'image/png',buffer:png});
+ await page.waitForFunction(()=>document.querySelector('.el-dialog .el-upload img')?.naturalWidth>0);
+ const beforeFailure=await editor.locator('img').count();failUpload=true;await pasteImage();
+ await page.getByText('Fixture upload failure',{exact:true}).waitFor();assert.equal(await editor.locator('img').count(),beforeFailure);failUpload=false;
+ await page.locator('button').filter({hasText:'确定'}).last().click();
+ await page.locator('.el-dialog').waitFor({state:'hidden'});
+ assert.match(saved.description,/Saved HTML/);assert.match(saved.description,/Nested pasted text/);assert.match(saved.description,/\/api\/content-media\/static\/uploadFiles\/fixture.png/);
+ assert.equal(saved.image,'/static/uploadFiles/fixture.png');
+ await page.locator('button').filter({hasText:'修改'}).last().click();await editor.waitFor({state:'visible'});assert.match(await editor.innerText(),/Saved HTML/);assert.ok(await editor.locator('img').evaluate(el=>el.complete&&el.naturalWidth>0));
+ await page.locator('button').filter({hasText:'取消'}).last().click();
+ await page.goto(base+'/cn/news/501');await page.getByRole('heading',{name:'Browser content verification'}).waitFor();
+ assert.match(await page.locator('.article-body').innerText(),/Nested pasted text/);
+ assert.ok(await page.locator('.article-body img').evaluate(el=>el.complete&&el.naturalWidth>0));
+ assert.deepEqual(errors,[]);
+ 
+ console.log(JSON.stringify({plainPaste:'passed',htmlPaste:'passed',replaceSelection:'passed',pastedImage:'passed',coverUpload:'passed',uploadFailure:'passed',saveAndReopen:'passed',publicDetail:'passed',uploads,pageErrors:errors,productionWrites:0}));
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

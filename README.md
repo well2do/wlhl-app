@@ -294,3 +294,52 @@ editor manages the Next.js website's content, not the external service's records
 actual rendered forms for public routes, both page languages, stale saves,
 unauthorized action replay, member ownership, and forum account protection.
 No production member data or real payments are used by these tests.
+
+### Content management articles and images
+
+Articles published in the standalone Fuint administration app appear in the home
+page's latest news section and at `/news` or `/cn/news`. Each article has a public
+detail page. Enabled articles are read without caching; switching back to the
+public browser tab refreshes the list. Within the same sort priority, the most
+recently updated article appears first. Disabled articles are excluded.
+
+The server reads the public Fuint article API using `FUINT_API_URL` (falling back
+to `NEXT_PUBLIC_FUINT_API`) and `FUINT_MERCHANT_NO` (default `10001`). It does not
+use or expose an administrator token. Rich text is sanitized before publication.
+`/api/content-media/static/...` serves only allowed media paths from the configured
+backend, adds the tunnel bypass header, and rejects non-media responses. Existing
+localhost image references are normalized when read, without altering stored
+article content. Missing source files still need to be restored or re-uploaded.
+
+The Fuint vendor source is maintained separately. This repository tracks the
+editor override and reproducible build integration, not generated application
+bundles. Build the administration app before deploying from a new checkout:
+
+```bash
+npm run build:content-admin -- /absolute/path/to/fuintAdmin
+```
+
+The source directory must have its own dependencies installed. The script uses
+an isolated staging directory, preserves the original source and configuration,
+and produces both existing administration entry points under `public/`. Previous
+chunks remain available for open browser tabs. Uploads still require the current
+Fuint account token and the backend's existing permissions. No account or password
+is created or modified by this build.
+
+The editor supports plain text, rich HTML, and image paste; screenshots and cover
+images are limited to 5 MB. Failed uploads display an error. Saving is disabled
+while an image upload is pending. `tests/content-browser.cjs` exercises paste,
+selection replacement, uploads, failure handling, save/reopen, and public rendering
+with intercepted fixture APIs, so it never writes production articles:
+
+```bash
+# Start a locally built application with an isolated local database first.
+TEST_ORIGIN=http://127.0.0.1:3135 npm run test:content-browser
+```
+
+The browser test uses an installed Chrome browser through Playwright.
+
+If a renamed merchant still shows its previous label in existing Fuint sessions,
+`scripts/refresh-fuint-merchant-label.lua` updates only that label while preserving
+the session token and expiration. Confirm the database name first, then invoke it
+with the merchant ID, old name, and new name through the authenticated Redis CLI.

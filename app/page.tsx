@@ -110,7 +110,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <LatestNews />
+        <LatestNews locale="en" />
 
         <section className="section section-intro" id="about">
           <div className="section-heading centered-heading">
