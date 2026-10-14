@@ -1,13 +1,16 @@
+import { landingImageUrl } from "@/lib/landing-page-content";
 import Link from "next/link";
 import { Brand } from "./brand";
 import { LanguageSwitcher } from "./language-switcher";
-import { getLandingPageContent } from "@/lib/db";
+import { getLandingPageContent, getLandingPageAssetMetadata } from "@/lib/db";
 import type { LandingPageContent } from "@/lib/landing-page-content";
 
 export async function SiteHeader({ locale = "en", content, logoSrc }: { locale?: "en" | "cn"; content?: LandingPageContent; logoSrc?: string }) {
   const isChinese = locale === "cn";
   const prefix = isChinese ? "/cn" : "";
   const pageContent = content ?? await getLandingPageContent(locale);
+  const logo = logoSrc ? undefined : (await getLandingPageAssetMetadata()).find((asset) => asset.slot === "logo");
+  const resolvedLogo = logoSrc ?? (logo ? landingImageUrl(logo.slot, logo.updated_at) : undefined);
   return (
     <header className="site-header">
       <div className="nav-shell">
@@ -15,7 +18,7 @@ export async function SiteHeader({ locale = "en", content, logoSrc }: { locale?:
           href={isChinese ? "/cn" : "/"}
           name={pageContent.brandName}
           tagline={pageContent.brandTagline}
-          logoSrc={logoSrc}
+          logoSrc={resolvedLogo}
           logoAlt={`${pageContent.brandName} logo`}
         />
         <nav className="desktop-nav" aria-label="Primary navigation">

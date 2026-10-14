@@ -55,7 +55,7 @@ const concepts = [
     name: "Pulse",
     mood: "Performance bento",
     summary: "Confident, active, and modern",
-    bestFor: "Positioning WLHL as a measurable, energetic longevity program.",
+    bestFor: "Positioning the club as a measurable, energetic longevity program.",
     signature: "Dark bento dashboard, bold metrics, and neon action cues.",
     colors: ["#0D1010", "#C7F36B", "#8A74FF", "#F4F6F1"],
   },
@@ -131,7 +131,7 @@ export function DesignGallery({ content }: { content: DesignGalleryContent }) {
         <div className={styles.studioHeading}>
           <Link href="/admin" className={styles.backLink}><ArrowLeft size={16} /> Dashboard</Link>
           <div>
-            <p>WLHL creative room <span>6 directions</span></p>
+            <p>俱乐部创意空间 <span>6 大方向</span></p>
             <h1>Homepage design studio</h1>
           </div>
         </div>
@@ -214,7 +214,7 @@ function FlourishConcept({ content }: ConceptProps) {
     <article className={`${styles.conceptPage} ${styles.flourish}`}>
       <header className={styles.flourishNav}>
         <ConceptBrand />
-        <nav><span>Our story</span><span>Gatherings</span><span>Wellness shop</span></nav>
+        <nav><span>Our story</span><span>Gatherings</span><span>Club picks</span></nav>
         <div><span>EN / 中</span><Link href="/join">Join the club <ArrowUpRight size={14} /></Link></div>
       </header>
 
@@ -397,7 +397,7 @@ function HorizonConcept({ content }: ConceptProps) {
       <header className={styles.horizonNav}>
         <ConceptBrand compact />
         <nav><span>Discover</span><span>Gather</span><span>Thrive</span></nav>
-        <div><span>EN · 中</span><Link href="/join">Join WLHL <ArrowUpRight size={14} /></Link></div>
+        <div><span>EN · 中</span><Link href="/join">加入俱乐部 <ArrowUpRight size={14} /></Link></div>
       </header>
 
       <section className={styles.horizonHero}>

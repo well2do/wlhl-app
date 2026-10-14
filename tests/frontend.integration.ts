@@ -21,6 +21,7 @@ before(async () => {
       ...process.env, VERCEL: "", TURSO_DATABASE_URL: url, TURSO_AUTH_TOKEN: "",
       ADMIN_PASSWORD: "local-integration-admin", SESSION_SECRET: "local-integration-session",
       STRIPE_SECRET_KEY: "", STRIPE_WEBHOOK_SECRET: "",
+      NEXT_PUBLIC_FUINT_API: "http://127.0.0.1:9",
       NEXT_PUBLIC_VAPID_PUBLIC_KEY: "", VAPID_PRIVATE_KEY: "",
     },
     stdio: ["ignore", "pipe", "pipe"],

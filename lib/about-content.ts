@@ -49,7 +49,7 @@ export const aboutContent = {
     expertsDescription: "Select a profile to read the background supplied by the club. Professional biographies are presented for informational purposes and do not constitute an endorsement or medical advice.",
     experts: [
       {
-        name: "Dr. Meichang Liu",
+        name: "Chair Meichang Liu",
         role: "Traditional Chinese medicine and acupuncture",
         biography: "Dr. Liu holds a doctorate in traditional Chinese medicine and has nearly four decades of clinical experience. Her supplied biography describes leadership roles in acupuncture education and professional organizations, years of service advising and examining for the former California Acupuncture Board, and more than 30 years of advocacy for acupuncture legislation, professional rights, consistent education standards, and the inclusion of acupuncture in mainstream U.S. healthcare.",
       },
@@ -88,6 +88,11 @@ export const aboutContent = {
         name: "Dr. Jinzhong Pang",
         role: "Holistic wellness, nutrition, and technology",
         biography: "Dr. Pang earned a physics doctorate from the University of Colorado Boulder and trained as an Institute for Integrative Nutrition health coach and AADP holistic health practitioner. He brings more than 24 years of nutrition, wellness, and health-product experience, alongside more than 20 years as a senior IT systems architect. His work brings together wellness coaching, AI, machine learning, data systems, and digital education.",
+      },
+      {
+        name: "Professor Peihong Shen",
+        role: "Clinical medicine, pathology, and cancer diagnostics",
+        biography: "Professor Peihong Shen is a professor of clinical medicine at Zhengzhou University, a chief physician in pathology, and a supervisor of master’s and doctoral students. She is a specially appointed academic discipline leader in medicine in Henan Province and has served as a visiting scholar at university-affiliated medical schools and hospitals in the United States and Australia. Her supplied biography notes service on pathology, oncology, AI-assisted diagnosis, and medical research committees, leadership in breast-cancer pathological diagnosis and treatment research, and consultation roles with national pathology programs.",
       },
       {
         name: "Julia Zhuqing Sun",
@@ -160,7 +165,7 @@ export const aboutContent = {
     expertsDescription: "点击姓名可查看俱乐部提供的个人简介。以下专业背景仅供信息参考，不构成医疗建议或专业背书。",
     experts: [
       {
-        name: "刘美嫦医生",
+        name: "刘美嫦主席",
         role: "中医与针灸",
         biography: "中医博士，美国中医针灸联盟主席、世界中医药大学校长、美国中医科学研究院主席、联合国中医发展基金会副主席。毕业于美国三藩市中医针灸大学、美国环球大学和加州南湾大学，师承杨日超教授，早期任教于三藩市中医针灸大学，曾任美国环球大学中医研究院院长。自1991年起多年参与加州针灸执照考试与顾问工作，拥有近四十年中医临床经验。三十多年来持续参与和推动针灸立法、专业权益、教育标准及中医针灸纳入美国主流医疗体系。",
       },
@@ -181,7 +186,7 @@ export const aboutContent = {
         profileUrl: "https://www.nibib.nih.gov/about-nibib/staff/albert-j-jin",
       },
       {
-        name: "王素华中西医医师",
+        name: "王素华医生",
         role: "中西医结合与针灸",
         biography: "美国执照针灸师，毕业于山西医科大学，获徐州医科大学硕士、青岛大学博士，曾在青岛大学附属医院工作十余年，自2016年起在美国中医诊所工作。拥有二十多年中西医临床经验，倡导个体化治疗。俱乐部提供的简介列举其关注领域包括急慢性痛症、癌症放化疗后调理、脑血管病与脑瘫、睡眠与情绪、更年期、面瘫、过敏、针灸美容、不孕不育及其他常见内外科问题。",
       },
@@ -199,6 +204,11 @@ export const aboutContent = {
         name: "庞锦忠博士",
         role: "整体健康、营养与科技",
         biography: "1995年获科罗拉多大学博尔德分校物理学博士，2013年获国家综合营养研究所（IIN）健康教练资质，2014年成为美国无药从业者协会（AADP）整体健康从业者，并持续学习冥想与疗愈实践。拥有二十四年以上营养咨询、整体健康和健康产品经验，同时在信息技术领域担任高级系统架构师超过二十年，熟悉人工智能、机器学习、数据系统和教育数字平台，致力于结合科技与健康。",
+      },
+      {
+        name: "申培红医生",
+        role: "临床医学、病理学与肿瘤诊断",
+        biography: "郑州大学临床医学教授、病理学主任医师、硕博研究生导师，河南省医学特聘学科带头人，美国和澳洲多所大学医学院附属医院访问学者。俱乐部提供的简介记载，其曾任中华医学会河南省病理专委会副主委、全国基因技术研究与应用专委会副主委、中国病理AI专委会常委等职，主持河南省科技厅乳腺癌病理诊断与治疗创新团队，多次获省厅市级个人先进，并担任多家杂志审稿专家及《河南医学研究杂志》常务编委。",
       },
       {
         name: "孙竹青医师",

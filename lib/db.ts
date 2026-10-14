@@ -110,6 +110,14 @@ async function initialize() {
       `CREATE TABLE IF NOT EXISTS landing_page_content (
         locale TEXT PRIMARY KEY, content_json TEXT NOT NULL, updated_at TEXT NOT NULL
       )`,
+      `CREATE TABLE IF NOT EXISTS page_content (
+        page TEXT NOT NULL, locale TEXT NOT NULL, content_json TEXT NOT NULL,
+        revision INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL,
+        PRIMARY KEY(page, locale)
+      )`,
+      `CREATE TABLE IF NOT EXISTS login_attempts (
+        key TEXT PRIMARY KEY, attempts INTEGER NOT NULL, reset_at INTEGER NOT NULL
+      )`,
       `CREATE TABLE IF NOT EXISTS landing_page_assets (
         slot TEXT PRIMARY KEY, mime_type TEXT NOT NULL, file_name TEXT NOT NULL,
         data BLOB NOT NULL, updated_at TEXT NOT NULL
@@ -140,24 +148,26 @@ async function initialize() {
     for (const column of columns) await ensureTextColumn(client, table, column);
   }
 
-  const expertCount = Number((await client.execute("SELECT COUNT(*) AS count FROM expert_profiles")).rows[0].count);
-  if (expertCount === 0) {
-    const expertSeedTime = new Date().toISOString();
-    await client.batch(
-      initialExpertProfiles.map((expert) => ({
-        sql: `INSERT OR IGNORE INTO expert_profiles
-          (id, name_en, name_cn, role_en, role_cn, biography_en, biography_cn,
-           profile_url, sort_order, active, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          expert.id, expert.name_en, expert.name_cn, expert.role_en, expert.role_cn,
-          expert.biography_en, expert.biography_cn, expert.profile_url,
-          expert.sort_order, expert.active, expertSeedTime, expertSeedTime,
-        ],
-      })),
-      "write",
-    );
-  }
+  // Add newly supplied experts without restoring profiles deliberately deleted by an administrator.
+  const expertSeedTime = new Date().toISOString();
+  await client.batch(
+    initialExpertProfiles.map((expert) => ({
+      sql: `INSERT OR IGNORE INTO expert_profiles
+        (id, name_en, name_cn, role_en, role_cn, biography_en, biography_cn,
+         profile_url, sort_order, active, created_at, updated_at)
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM activity_logs WHERE activity_type = 'expert_deleted'
+          AND json_extract(CASE WHEN json_valid(metadata) THEN metadata ELSE '{}' END, '$.expertId') = ?
+        )`,
+      args: [
+        expert.id, expert.name_en, expert.name_cn, expert.role_en, expert.role_cn,
+        expert.biography_en, expert.biography_cn, expert.profile_url,
+        expert.sort_order, expert.active, expertSeedTime, expertSeedTime, expert.id,
+      ],
+    })),
+    "write",
+  );
 
   await client.execute({
     sql: `UPDATE expert_profiles SET name_en = ?, name_cn = ?, role_en = ?, role_cn = ?,
@@ -176,7 +186,7 @@ async function initialize() {
     await client.batch(
       [
         { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Morning Mobility & Tai Chi", "A gentle, energizing class focused on balance, flexibility, and everyday strength.", futureDate(6, 9), futureDate(6, 10), "Rock Creek Community Center", "Movement", 30, "upcoming"] },
-        { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Longevity Nutrition Workshop", "Practical guidance for building colorful, heart-healthy meals that fit your life.", futureDate(13, 11), futureDate(13, 12), "WLHL Club Room", "Nutrition", 24, "upcoming"] },
+        { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Longevity Nutrition Workshop", "Practical guidance for building colorful, heart-healthy meals that fit your life.", futureDate(13, 11), futureDate(13, 12), "Club Activity Room", "Nutrition", 24, "upcoming"] },
         { sql: "INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [crypto.randomUUID(), "Community Wellness Walk", "Connect with neighbors on an easy-paced, two-mile guided walk through the gardens.", futureDate(20, 9), futureDate(20, 10), "U.S. National Arboretum", "Community", 40, "upcoming"] },
       ],
       "write",

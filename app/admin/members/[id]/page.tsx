@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Bell, CalendarCheck2, ClipboardList, Database, LogOut, Mail, Phone, ScrollText, UserRound } from "lucide-react";
 import { adminLogoutAction } from "@/app/actions";
+import { updateMemberDetailsAction } from "../actions";
 import { Brand } from "@/components/brand";
 import { isAdmin } from "@/lib/auth";
 import { getActivityLogs, getEventRegistrations, getMember, getMemberAttendance } from "@/lib/db";
@@ -9,9 +10,10 @@ import { formatEventDate, initials } from "@/lib/format";
 
 export const metadata = { title: "Member Profile" };
 
-export default async function AdminMemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminMemberProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string; error?: string }> }) {
   if (!(await isAdmin())) redirect("/admin/login");
   const { id } = await params;
+  const messages = await searchParams;
   const member = await getMember(id);
   if (!member) notFound();
 
@@ -34,6 +36,8 @@ export default async function AdminMemberProfilePage({ params }: { params: Promi
       </aside>
 
       <main className="admin-main member-profile-main">
+        {messages.saved && <p className="saved-toast" role="status">{messages.saved}</p>}
+        {messages.error && <p className="editor-error-toast" role="alert">{messages.error}</p>}
         <Link className="mobile-admin-back" href="/admin?view=members"><ArrowLeft size={15} />Back to members</Link>
         <section className="profile-identity">
           <span className="profile-avatar">{initials(member.first_name, member.last_name)}</span>
@@ -46,6 +50,26 @@ export default async function AdminMemberProfilePage({ params }: { params: Promi
           <article><span><Phone size={19} /></span><small>Mobile phone</small><strong>{member.phone}</strong></article>
           <article><span><UserRound size={19} /></span><small>Membership</small><strong>{member.membership_tier}</strong></article>
           <article><span><Bell size={19} /></span><small>Communication</small><strong>{member.email_opt_in ? "Email" : "No email"}{member.sms_opt_in ? " + SMS" : ""}</strong></article>
+        </section>
+
+        <section className="admin-panel editor-panel">
+          <h2>Edit member details</h2>
+          <form action={updateMemberDetailsAction} className="stack-form">
+            <input type="hidden" name="memberId" value={member.id} />
+            <div className="form-row two-columns">
+              <label>First name<input name="firstName" defaultValue={member.first_name} required maxLength={100} /></label>
+              <label>Last name<input name="lastName" defaultValue={member.last_name} required maxLength={100} /></label>
+            </div>
+            <div className="form-row two-columns">
+              <label>Email<input name="email" type="email" defaultValue={member.email} required maxLength={254} /></label>
+              <label>Phone<input name="phone" type="tel" defaultValue={member.phone} required maxLength={50} /></label>
+            </div>
+            <label>Membership plan<select name="membershipTier" defaultValue={member.membership_tier}>
+              {["Community", "Event Guest", "Annual Membership (2026 Promotion)", "2026 Annual Renewal", "Lifetime Membership"].map((tier) => <option key={tier}>{tier}</option>)}
+            </select></label>
+            <label>Staff notes<textarea name="notes" defaultValue={member.notes} maxLength={4000} rows={3} /></label>
+            <button className="button button-dark">Save member details</button>
+          </form>
         </section>
 
         <div className="profile-two-col">

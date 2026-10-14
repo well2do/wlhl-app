@@ -9,3 +9,8 @@ npm-debug.log*
 .DS_Store
 *.tsbuildinfo
 .env*.local
+
+# Locally supplied, prebuilt administration applications.
+/public/funit-application/
+/public/wlhl-application/
+/public/wlhl-application.bak.*/

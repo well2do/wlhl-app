@@ -1,9 +1,13 @@
 "use client";
 
+import { createCopy, type PageCopy } from "@/lib/page-copy";
+
+
 import { useState } from "react";
 import { ShoppingBag } from "lucide-react";
 
-export function CheckoutButton({ productId, locale, enabled }: { productId: string; locale: "en" | "cn"; enabled: boolean }) {
+export function CheckoutButton({productId, locale, enabled, copy = {}}: {productId: string; locale: "en" | "cn"; enabled: boolean; copy?: PageCopy}) {
+  const copyText = createCopy(copy);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const cn = locale === "cn";
@@ -25,9 +29,9 @@ export function CheckoutButton({ productId, locale, enabled }: { productId: stri
   }
   return <div>
     <button type="button" className="button button-dark button-full" disabled={!enabled || pending} onClick={checkout}>
-      <ShoppingBag size={18} />{pending ? (cn ? "正在打开结账页面…" : "Opening checkout…") : (cn ? "测试结账" : "Test checkout")}
+      <ShoppingBag size={18} />{pending ? (cn ? copyText("正在打开结账页面…") : copyText("Opening checkout…")) : (cn ? copyText("测试结账") : copyText("Test checkout"))}
     </button>
-    {!enabled && <p className="checkout-message">{cn ? "测试结账正在配置中。" : "Test checkout is being configured."}</p>}
+    {!enabled && <p className="checkout-message">{cn ? copyText("测试结账正在配置中。") : copyText("Test checkout is being configured.")}</p>}
     {error && <p className="checkout-message" role="alert">{error}</p>}
   </div>;
 }

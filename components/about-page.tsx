@@ -1,3 +1,5 @@
+import { createCopy, translateCopy } from "@/lib/page-copy";
+import { getPageCopy } from "@/lib/page-copy-store";
 import Link from "next/link";
 import {
   Activity,
@@ -18,7 +20,9 @@ import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
 export async function AboutPage({ locale }: { locale: AboutLocale }) {
-  const content = aboutContent[locale];
+  const copy = await getPageCopy("about", locale);
+  const content = translateCopy(aboutContent[locale], copy);
+  const copyText = createCopy(copy);
   const experts = await getExpertProfiles();
   const cn = locale === "cn";
   const prefix = cn ? "/cn" : "";
@@ -36,7 +40,7 @@ export async function AboutPage({ locale }: { locale: AboutLocale }) {
               <p>{content.introduction}</p>
               <div className="about-hero-actions">
                 <Link className="button button-coral" href={`${prefix}/join`}>{content.joinButton}<ArrowRight size={17} /></Link>
-                <a className="button button-ghost-light" href={clubRegistrationUrl} target="_blank" rel="noreferrer">{content.registrationButton}<ExternalLink size={15} /></a>
+                <a className="button button-ghost-light" href={copyText(clubRegistrationUrl)} target="_blank" rel="noreferrer">{content.registrationButton}<ExternalLink size={15} /></a>
               </div>
             </div>
             <div className="about-hero-art" aria-hidden="true">
@@ -107,7 +111,7 @@ export async function AboutPage({ locale }: { locale: AboutLocale }) {
                   <div className="about-expert-biography">
                     {biography.split(/\n{2,}/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                     {expert.profile_url && (
-                      <a href={expert.profile_url} target="_blank" rel="noreferrer">{cn ? "查看机构简介" : "View institutional profile"}<ExternalLink size={13} /></a>
+                      <a href={expert.profile_url} target="_blank" rel="noreferrer">{cn ? copyText("查看机构简介") : copyText("View institutional profile")}<ExternalLink size={13} /></a>
                     )}
                   </div>
                 </details>

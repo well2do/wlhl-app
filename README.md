@@ -249,3 +249,48 @@ The integration suite starts production-mode servers against temporary databases
 It verifies live database reads, rendered membership and forum form submissions,
 member login, admin approval, bilingual event publishing, member reservations,
 shop routes, and signed webhook persistence without changing production data.
+
+## Website editing and access
+
+Sign in at `/admin/login`, then open **Website pages** at `/admin/pages`.
+The existing administrator credential grants access to site content; a member
+session never grants administration access.
+
+| Content | Editing location | Who can save |
+| --- | --- | --- |
+| Home, navigation, footer, contact details and payment instructions | `/admin/landing-page-editor` | Administrator |
+| About, events, join form, member portal, shop and checkout copy, forum | `/admin/pages` (English / 中文 tabs) | Administrator |
+| Every event, announcement and product, including past events and hidden products | Club records in `/admin/landing-page-editor` | Administrator |
+| Event dates, capacity and status; product prices and translations | Club records in `/admin/landing-page-editor` | Administrator |
+| Home and product images, shared logo, forum poster | Image forms in `/admin/landing-page-editor` | Administrator |
+| Expert biographies, order and visibility | `/admin?view=experts` | Administrator |
+| Member contact details and membership plan | `/admin/members/{id}` | Administrator |
+| Member approval and attendance | Members and Attendance in `/admin` | Administrator |
+| Own name, interests and notification preferences | Profile form in `/member` or `/cn/member` | Signed-in account owner |
+
+The page editor saves plain text to `page_content` and escapes it on rendering.
+Each language has a separate revision, and stale forms cannot overwrite newer
+page edits. All administrative Server Actions check the administrator session
+before reading submitted fields or writing data. Profile updates derive the
+member ID from the verified session and ignore submitted identity or privilege
+fields. An existing member must sign in before submitting a public forum form
+for their email. Registration cannot reset staff-recorded attendance.
+
+Sessions include a signed role and server-checked expiry. The session format
+change requires existing members and administrators to sign in again. Production
+cannot use the development signing fallback. Sign-in attempts are limited to ten
+per fifteen minutes per member email or administrator source address. Membership
+sign-in still uses the existing email and phone-suffix method; this is not a
+password or MFA system.
+
+The optional external news/member service and prebuilt applications under
+`public/funit-application` and `public/wlhl-application` use their own backend
+accounts and permissions, separate from the website's administrator session.
+Their generated bundles are not committed. Existing bundles must be supplied
+separately when deploying a checkout that needs those applications. This page
+editor manages the Next.js website's content, not the external service's records.
+
+`npm run test:integration` includes an isolated temporary database and exercises
+actual rendered forms for public routes, both page languages, stale saves,
+unauthorized action replay, member ownership, and forum account protection.
+No production member data or real payments are used by these tests.

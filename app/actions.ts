@@ -4,15 +4,20 @@ import webpush from "web-push";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { headers } from "next/headers";
+import { allowLoginAttempt } from "@/lib/login-attempts";
 import {
   clearAdminSession,
   clearMemberSession,
   createAdminSession,
   createMemberSession,
   getMemberSession,
-  isAdmin,
+  requireAdmin,
 } from "@/lib/auth";
 import { execute } from "@/lib/db";
+
+// Optional connection to the existing member service.
+const FUINT_API = process.env.NEXT_PUBLIC_FUINT_API || "https://parsley-easiest-qualify.ngrok-free.dev";
 
 export type FormState = { status: "idle" | "success" | "error"; message: string };
 
@@ -48,6 +53,7 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
   try {
     const id = crypto.randomUUID();
     const data = parsed.data;
+
     await execute(
       `INSERT INTO members
        (id, first_name, last_name, email, phone, birthday, interests, membership_tier,
@@ -67,10 +73,30 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
         checked(formData, "smsOptIn"),
       ],
     );
+    // Keep the existing member service synchronized when it is available.
+    try {
+      await fetch(`${FUINT_API}/clientApi/member/quickSave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          mobile: data.phone,
+          email: data.email,
+          birthday: data.birthday || "",
+          tier: data.membershipTier,
+          interests: data.interests || "",
+          merchantNo: "10001",
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch {
+      // Continue with the primary database if the member service is unavailable.
+    }
+
     await writeActivityLog({
       memberId: id,
       activityType: "membership_application",
-      description: "Submitted a WLHL membership application.",
+      description: "Submitted a club membership application.",
       actorType: "member",
       metadata: { membershipTier: data.membershipTier },
     });
@@ -78,7 +104,7 @@ export async function joinClubAction(_state: FormState, formData: FormData): Pro
     revalidatePath("/");
     revalidatePath("/cn");
     revalidatePath("/admin");
-    return { status: "success", message: cn ? `${data.firstName}，您的 WLHL 会员申请已提交。` : `Welcome, ${data.firstName}! Your WLHL membership application is in.` };
+    return { status: "success", message: cn ? `${data.firstName}，您的俱乐部会员申请已提交。` : `Welcome, ${data.firstName}! Your club membership application is in.` };
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.toLowerCase().includes("unique")) {
@@ -147,6 +173,13 @@ export async function forumRegistrationAction(_state: FormState, formData: FormD
     const existing = await execute("SELECT id FROM members WHERE email = ? LIMIT 1", [data.email]);
     const memberId = existing.rows[0]?.id ? String(existing.rows[0].id) : crypto.randomUUID();
 
+    // An email address is not proof of ownership of an existing membership.
+    if (existing.rows.length && await getMemberSession() !== memberId) {
+      return { status: "error", message: cn
+        ? "请先登录此邮箱对应的会员账户，再提交活动报名。"
+        : "Please sign in to the member account for this email before registering." };
+    }
+
     if (existing.rows.length === 0) {
       await execute(
         `INSERT INTO members
@@ -180,7 +213,7 @@ export async function forumRegistrationAction(_state: FormState, formData: FormD
          language_preference = excluded.language_preference,
          accessibility_notes = excluded.accessibility_notes,
          referral_source = excluded.referral_source,
-         marketing_opt_in = excluded.marketing_opt_in, status = 'registered',
+         marketing_opt_in = excluded.marketing_opt_in,
          updated_at = excluded.updated_at`,
       [
         crypto.randomUUID(), eventId, memberId, data.firstName, data.lastName,
@@ -193,7 +226,7 @@ export async function forumRegistrationAction(_state: FormState, formData: FormD
     await execute(
       `INSERT INTO attendance (id, member_id, event_id, status, checked_in_at)
        VALUES (?, ?, ?, 'registered', NULL)
-       ON CONFLICT(member_id, event_id) DO UPDATE SET status = 'registered'`,
+       ON CONFLICT(member_id, event_id) DO NOTHING`,
       [crypto.randomUUID(), memberId, eventId],
     );
 
@@ -223,6 +256,9 @@ export async function memberLoginAction(formData: FormData) {
   const returnTo = text(formData, "returnTo") === "/cn/member" ? "/cn/member" : "/member";
   const email = text(formData, "email").toLowerCase();
   const phoneLastFour = text(formData, "phoneLastFour").replace(/\D/g, "");
+  if (!(await allowLoginAttempt("member", email))) {
+    redirect(`${returnTo}?error=${encodeURIComponent(returnTo.startsWith("/cn") ? "尝试次数过多，请15分钟后再试。" : "Too many sign-in attempts. Try again in 15 minutes.")}`);
+  }
   const result = await execute("SELECT id, phone FROM members WHERE email = ? LIMIT 1", [email]);
   const member = result.rows[0];
   const storedLastFour = String(member?.phone || "").replace(/\D/g, "").slice(-4);
@@ -246,10 +282,12 @@ export async function registerForEventAction(formData: FormData) {
   if (!memberId || !eventId) return;
   const member = await execute("SELECT membership_status FROM members WHERE id = ? LIMIT 1", [memberId]);
   if (member.rows[0]?.membership_status !== "active") return;
+  const event = await execute("SELECT id FROM events WHERE id = ? AND status = 'upcoming' AND julianday(event_date) >= julianday('now')", [eventId]);
+  if (!event.rows.length) return;
   await execute(
     `INSERT INTO attendance (id, member_id, event_id, status, checked_in_at)
      VALUES (?, ?, ?, 'registered', NULL)
-     ON CONFLICT(member_id, event_id) DO UPDATE SET status = 'registered'`,
+     ON CONFLICT(member_id, event_id) DO NOTHING`,
     [crypto.randomUUID(), memberId, eventId],
   );
   await writeActivityLog({ memberId, eventId, activityType: "event_registration", description: "Reserved a place through the member portal.", actorType: "member", metadata: { source: "member_portal" } });
@@ -265,6 +303,8 @@ export async function adminLoginAction(formData: FormData) {
     redirect("/admin/login?error=Admin+access+has+not+been+configured");
   }
   const expected = process.env.ADMIN_PASSWORD || "wlhl-admin";
+  const address = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  if (!(await allowLoginAttempt("admin", address))) redirect("/admin/login?error=Too+many+attempts.+Try+again+in+15+minutes.");
   if (password !== expected) redirect("/admin/login?error=Incorrect+password");
   await createAdminSession();
   redirect("/admin");
@@ -273,10 +313,6 @@ export async function adminLoginAction(formData: FormData) {
 export async function adminLogoutAction() {
   await clearAdminSession();
   redirect("/");
-}
-
-async function requireAdmin() {
-  if (!(await isAdmin())) redirect("/admin/login");
 }
 
 async function sendPushNotification(title: string, body: string) {
@@ -391,6 +427,8 @@ function revalidateProductPages() {
   revalidatePath("/cn");
   revalidatePath("/admin");
   revalidatePath("/admin/landing-page-editor");
+  revalidatePath("/shop", "layout");
+  revalidatePath("/cn/shop", "layout");
 }
 
 export async function updateProductAction(formData: FormData) {

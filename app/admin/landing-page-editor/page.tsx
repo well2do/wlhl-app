@@ -91,14 +91,14 @@ export default async function LandingPageEditor({
   const [content, assets, events, announcements, products] = await Promise.all([
     getLandingPageContent(locale),
     getLandingPageAssetMetadata(),
-    getEvents(),
-    getAnnouncements(2),
-    getProducts(),
+    getEvents(true),
+    getAnnouncements(10000),
+    getProducts(false),
   ]);
   const assetMap = new Map(assets.map((asset) => [asset.slot, asset]));
-  const nextEvent = events[0] ? (editingChinese ? chineseEvent(events[0]) : events[0]) : undefined;
+  const visibleEvents = editingChinese ? events.map(chineseEvent) : events;
   const visibleAnnouncements = editingChinese ? announcements.map(chineseAnnouncement) : announcements;
-  const visibleProducts = (editingChinese ? products.map(chineseProduct) : products).slice(0, 3);
+  const visibleProducts = editingChinese ? products.map(chineseProduct) : products;
 
   return (
     <div className="admin-shell">
@@ -157,6 +157,7 @@ export default async function LandingPageEditor({
         <section className="admin-panel landing-media-panel" id="images">
           <div className="admin-panel-heading"><div><h2>Page images</h2><p>Upload optimized landscape images. JPG, PNG, WebP, or GIF; maximum 4 MB each.</p></div></div>
           <div className="landing-image-grid">
+            <ImageUploadCard locale={locale} slot="forum-poster" title="Forum poster" description="Shared poster on the English and Chinese forum pages." alt="Forum event poster" asset={assetMap.get("forum-poster")} />
             <ImageUploadCard locale={locale} slot="logo" title="Brand logo" description="Replaces the leaf mark in the home page header and footer." alt={`${content.brandName} logo`} asset={assetMap.get("logo")} />
             <ImageUploadCard locale={locale} slot="hero" title="Hero image" description="Main visual at the top of the page. Portrait or 4:5 images work best." alt={content.heroImageAlt} asset={assetMap.get("hero")} />
             <ImageUploadCard locale={locale} slot="notification" title="Notification image" description="Replaces the phone mockup in the notification section." alt={content.notificationImageAlt} asset={assetMap.get("notification")} />
@@ -165,12 +166,12 @@ export default async function LandingPageEditor({
         </section>
 
         <section className="admin-panel landing-live-panel" id="live-content">
-          <div className="admin-panel-heading"><div><h2>Content shown from club records</h2><p>Edit the current featured event, news strip, and first three shop products without leaving this page.</p></div></div>
+          <div className="admin-panel-heading"><div><h2>Content shown from club records</h2><p>Edit every event, announcement, and product in either language. Changes also appear on the calendars, member portal and shop.</p></div></div>
 
           <div className="landing-record-section">
-            <div className="landing-record-heading"><div><span>Featured event</span><h3>{nextEvent?.title || "No upcoming event"}</h3></div><Link href="/admin?view=events">Manage all events</Link></div>
-            {nextEvent ? (
-              <div className="landing-record-grid">
+            <div className="landing-record-heading"><div><span>Events</span><h3>All club events</h3></div><Link href="/admin?view=events">Manage all events</Link></div>
+            {visibleEvents.map((nextEvent) => (
+              <div className="landing-record-grid" key={nextEvent.id}>
                 <form action={updateLandingEventAction} className="stack-form landing-record-form">
                   <input type="hidden" name="eventId" value={nextEvent.id} />
                   <input type="hidden" name="locale" value={locale} />
@@ -179,7 +180,15 @@ export default async function LandingPageEditor({
                   <label>Location<input name="location" defaultValue={nextEvent.location} required /></label>
                   <label>Category<input name="category" defaultValue={nextEvent.category} required /></label>
                   <p className="landing-derived-copy">Date shown on the page: <strong>{formatEventDate(nextEvent.event_date, true)} at {formatEventTime(nextEvent.event_date)}</strong></p>
-                  <button className="button button-dark button-small">Save featured event</button>
+                  <div className="form-row two-columns">
+                    <label>Start date and time (UTC)<input name="eventDate" type="datetime-local" defaultValue={new Date(nextEvent.event_date).toISOString().slice(0, 16)} required /></label>
+                    <label>End date and time (UTC)<input name="endDate" type="datetime-local" defaultValue={nextEvent.end_date ? new Date(nextEvent.end_date).toISOString().slice(0, 16) : ""} /></label>
+                  </div>
+                  <div className="form-row two-columns">
+                    <label>Capacity<input name="capacity" type="number" min={1} max={100000} defaultValue={nextEvent.capacity} required /></label>
+                    <label>Status<select name="status" defaultValue={nextEvent.status}><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
+                  </div>
+                  <button className="button button-dark button-small">Save event</button>
                 </form>
                 <ImageUploadCard
                   locale={locale}
@@ -190,11 +199,12 @@ export default async function LandingPageEditor({
                   asset={assetMap.get(`event-${nextEvent.id}`)}
                 />
               </div>
-            ) : <p className="admin-empty">Create an upcoming event to populate this section.</p>}
+            ))}
+            {!visibleEvents.length && <p className="admin-empty">Create an event to populate this section.</p>}
           </div>
 
           <div className="landing-record-section">
-            <div className="landing-record-heading"><div><span>News strip</span><h3>The two announcements currently shown</h3></div><Link href="/admin?view=announcements">Manage all announcements</Link></div>
+            <div className="landing-record-heading"><div><span>News strip</span><h3>All published announcements</h3></div><Link href="/admin?view=announcements">Manage all announcements</Link></div>
             <div className="landing-record-cards two-up">
               {visibleAnnouncements.map((announcement) => (
                 <form action={updateLandingAnnouncementAction} className="stack-form landing-record-form" key={announcement.id}>
@@ -212,7 +222,7 @@ export default async function LandingPageEditor({
           </div>
 
           <div className="landing-record-section">
-            <div className="landing-record-heading"><div><span>Wellness shop</span><h3>The first three active products currently shown</h3></div><Link href="/admin?view=products">Manage all products</Link></div>
+            <div className="landing-record-heading"><div><span>Wellness shop</span><h3>All active and hidden products</h3></div><Link href="/admin?view=products">Manage all products</Link></div>
             <div className="landing-record-cards product-editor-cards">
               {visibleProducts.map((product) => (
                 <article className="landing-product-editor" key={product.id}>

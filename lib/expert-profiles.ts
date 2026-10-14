@@ -12,6 +12,7 @@ const expertIds = [
   "zeng-chen",
   "xu-yi",
   "pang-jinzhong",
+  "shen-peihong",
   "sun-zhuqing",
   "yu-jianguo",
 ] as const;
@@ -54,8 +55,6 @@ export const shenPeihongProfile: SeedExpertProfile = {
   active: 1,
 };
 
-export const initialExpertProfiles = [
-  ...suppliedExperts.slice(0, 4),
-  shenPeihongProfile,
-  ...suppliedExperts.slice(4).map((expert) => ({ ...expert, sort_order: expert.sort_order + 10 })),
-];
+export const initialExpertProfiles = suppliedExperts.map((expert) =>
+  expert.id === "shen-peihong" ? shenPeihongProfile : expert,
+);

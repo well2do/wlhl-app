@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { NotificationButton } from "@/components/notification-button";
+import { LatestNews } from "@/components/latest-news";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { chineseAnnouncement, chineseEvent, chineseProduct, formatChineseEventDate, formatChineseEventTime } from "@/lib/chinese";
@@ -25,7 +26,7 @@ import { fillLandingTemplate, landingImageUrl } from "@/lib/landing-page-content
 
 export const metadata = {
   title: "华盛顿长寿康养俱乐部",
-  description: "WLHL 华盛顿长寿康养俱乐部中文网站：会员、健康活动、社区公告及健康产品。",
+  description: "华盛顿长寿康养俱乐部中文网站：会员、健康活动、社区公告及健康产品。",
 };
 
 export default async function ChineseHomePage() {
@@ -50,8 +51,8 @@ export default async function ChineseHomePage() {
   const eventImage = nextEvent ? imageFor(`event-${nextEvent.id}`) : undefined;
   const notificationImage = imageFor("notification");
   const membershipImage = imageFor("membership");
-  const zelleHandle = process.env.NEXT_PUBLIC_ZELLE_HANDLE;
-  const zelleRecipient = process.env.NEXT_PUBLIC_ZELLE_RECIPIENT;
+  const zelleHandle = content.zelleHandle || process.env.NEXT_PUBLIC_ZELLE_HANDLE;
+  const zelleRecipient = content.zelleRecipient || process.env.NEXT_PUBLIC_ZELLE_RECIPIENT;
   const benefits = [
     { icon: Users, title: content.benefitOneTitle, copy: content.benefitOneDescription },
     { icon: Salad, title: content.benefitTwoTitle, copy: content.benefitTwoDescription },
@@ -102,6 +103,8 @@ export default async function ChineseHomePage() {
           <div className="announcement-label"><span className="live-dot" /> {content.announcementLabel}</div>
           <div className="announcement-items">{announcements.slice(0, 2).map((item) => <p key={item.id}><strong>{item.title}</strong><span>{item.message}</span></p>)}</div>
         </section>
+
+        <LatestNews />
 
         <section className="section section-intro" id="about">
           <div className="section-heading centered-heading"><p className="eyebrow">{content.introEyebrow}</p><h2>{content.introTitleLine}<br /><em>{content.introTitleAccent}</em></h2><p>{content.introDescription}</p><Link className="about-intro-link" href="/cn/about">{content.introAboutButton} <ArrowRight size={15} /></Link></div>

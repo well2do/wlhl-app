@@ -7,9 +7,9 @@ const sans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const serif = Fraunces({ subsets: ["latin"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: { default: "WLHL | Washington Longevity Healthy Life Club", template: "%s | WLHL" },
+  title: { default: "华盛顿长寿康养俱乐部 | Washington Longevity Health Life Club", template: "%s | 华盛顿长寿康养俱乐部" },
   description: "Washington, D.C.'s community for movement, wellness, healthy aging, and meaningful connection.",
-  applicationName: "WLHL Healthy Life Club",
+  applicationName: "华盛顿长寿康养俱乐部",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
 };

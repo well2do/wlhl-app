@@ -74,13 +74,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <Brand inverse />
         <nav>
           {navItems.map(({ view: itemView, label, icon: Icon }) => <Link key={itemView} href={`/admin?view=${itemView}`} className={view === itemView ? "active" : ""}><Icon size={18} />{label}</Link>)}
+          <Link href="/admin/pages">Website pages</Link>
           <Link href="/admin/landing-page-editor"><Image size={18} />Landing page</Link>
           <Link href="/admin/database"><Database size={18} />Database</Link>
         </nav>
         <div className="admin-sidebar-bottom"><Link href="/">View club website</Link><form action={adminLogoutAction}><button><LogOut size={17} />Sign out</button></form></div>
       </aside>
       <main className="admin-main">
-        <header className="admin-topbar"><div><p className="eyebrow">WLHL operations</p><h1>{navItems.find((item) => item.view === view)?.label}</h1></div><div className="admin-date">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div></header>
+        <header className="admin-topbar"><div><p className="eyebrow">Club administration</p><h1>{navItems.find((item) => item.view === view)?.label}</h1></div><div className="admin-date">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div></header>
         {params.saved && <div className="saved-toast" role="status"><CheckCircle2 size={17} />{params.saved}</div>}
         {params.error && <div className="error-toast" role="alert"><CircleAlert size={17} />{params.error}</div>}
 

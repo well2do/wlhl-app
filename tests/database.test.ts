@@ -30,6 +30,15 @@ test("database initialization recovers after a connection failure in the same pr
     await mkdir(join(directory, "missing"));
     const results = await Promise.all([execute("SELECT 1 AS connected"), execute("SELECT 1 AS connected")]);
     for (const result of results) assert.equal(result.rows[0].connected, 1);
+    await execute("UPDATE expert_profiles SET name_en = 'Administrator edit' WHERE id = 'shen-peihong'");
+    await execute("DELETE FROM expert_profiles WHERE id = 'liu-meichang'");
+    await execute(
+      "INSERT INTO activity_logs (id, activity_type, description, actor_type, metadata, created_at) VALUES (?, 'expert_deleted', 'Deleted fixture', 'admin', ?, ?)",
+      [crypto.randomUUID(), JSON.stringify({ expertId: "liu-meichang" }), new Date().toISOString()],
+    );
+    global.wlhlDatabaseReady = undefined;
+    assert.equal((await execute("SELECT COUNT(*) AS count FROM expert_profiles WHERE id = 'liu-meichang'")).rows[0].count, 0);
+    assert.equal((await execute("SELECT name_en FROM expert_profiles WHERE id = 'shen-peihong'")).rows[0].name_en, "Administrator edit");
   } finally {
     global.wlhlDatabase?.close();
     global.wlhlDatabase = undefined;

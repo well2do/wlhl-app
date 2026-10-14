@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { execute } from "@/lib/db";
 import {
   isAllowedLandingImageSlot,
@@ -14,19 +14,13 @@ import {
 const text = (formData: FormData, key: string) => String(formData.get(key) || "").trim();
 const checked = (formData: FormData, key: string) => (formData.get(key) ? 1 : 0);
 
-async function requireAdmin() {
-  if (!(await isAdmin())) redirect("/admin/login");
-}
-
 function editorRedirect(kind: "saved" | "error", message: string, locale?: LandingPageLocale): never {
   const localeQuery = locale === "cn" ? "locale=cn&" : "";
   redirect(`/admin/landing-page-editor?${localeQuery}${kind}=${encodeURIComponent(message)}`);
 }
 
 function revalidateLandingPage() {
-  revalidatePath("/");
-  revalidatePath("/cn");
-  revalidatePath("/admin/landing-page-editor");
+  revalidatePath("/", "layout");
 }
 
 async function writeAdminLog(input: {
@@ -171,13 +165,25 @@ export async function updateLandingEventAction(formData: FormData) {
   const description = text(formData, "description");
   const location = text(formData, "location");
   const category = text(formData, "category");
-  if (!eventId || title.length < 3 || description.length < 8 || location.length < 3 || !category) {
+  if (!eventId || title.length < 3 || title.length > 300 || description.length < 8 || description.length > 4000
+    || location.length < 3 || location.length > 500 || !category || category.length > 100) {
     editorRedirect("error", "Please complete the featured event fields.", locale);
   }
+  const eventDate = new Date(`${text(formData, "eventDate")}Z`);
+  const endDate = text(formData, "endDate") ? new Date(`${text(formData, "endDate")}Z`) : null;
+  const capacity = Number(text(formData, "capacity"));
+  const status = text(formData, "status");
+  if (!Number.isFinite(eventDate.getTime()) || (endDate && (!Number.isFinite(endDate.getTime()) || endDate <= eventDate))
+    || !Number.isSafeInteger(capacity) || capacity < 1 || capacity > 100000
+    || !["upcoming", "completed", "cancelled"].includes(status)) {
+    editorRedirect("error", "Check the event dates, capacity and status.", locale);
+  }
+  const existing = await execute("SELECT id FROM events WHERE id = ?", [eventId]);
+  if (!existing.rows.length) editorRedirect("error", "Event not found.", locale);
   if (locale === "cn") {
-    await execute("UPDATE events SET title_cn = ?, description_cn = ?, location_cn = ?, category_cn = ? WHERE id = ?", [title, description, location, category, eventId]);
+    await execute("UPDATE events SET title_cn = ?, description_cn = ?, location_cn = ?, category_cn = ?, event_date = ?, end_date = ?, capacity = ?, status = ? WHERE id = ?", [title, description, location, category, eventDate.toISOString(), endDate?.toISOString() ?? null, capacity, status, eventId]);
   } else {
-    await execute("UPDATE events SET title = ?, description = ?, location = ?, category = ? WHERE id = ?", [title, description, location, category, eventId]);
+    await execute("UPDATE events SET title = ?, description = ?, location = ?, category = ?, event_date = ?, end_date = ?, capacity = ?, status = ? WHERE id = ?", [title, description, location, category, eventDate.toISOString(), endDate?.toISOString() ?? null, capacity, status, eventId]);
   }
   await writeAdminLog({
     eventId,

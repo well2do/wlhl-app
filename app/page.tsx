@@ -18,6 +18,7 @@ import {
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { NotificationButton } from "@/components/notification-button";
+import { LatestNews } from "@/components/latest-news";
 import { getAnnouncements, getEvents, getLandingPageAssetMetadata, getLandingPageContent, getProducts } from "@/lib/db";
 import { formatCurrency, formatEventDate, formatEventTime } from "@/lib/format";
 import { fillLandingTemplate, landingImageUrl } from "@/lib/landing-page-content";
@@ -41,8 +42,8 @@ export default async function HomePage() {
   const eventImage = nextEvent ? imageFor(`event-${nextEvent.id}`) : undefined;
   const notificationImage = imageFor("notification");
   const membershipImage = imageFor("membership");
-  const zelleHandle = process.env.NEXT_PUBLIC_ZELLE_HANDLE;
-  const zelleRecipient = process.env.NEXT_PUBLIC_ZELLE_RECIPIENT;
+  const zelleHandle = content.zelleHandle || process.env.NEXT_PUBLIC_ZELLE_HANDLE;
+  const zelleRecipient = content.zelleRecipient || process.env.NEXT_PUBLIC_ZELLE_RECIPIENT;
   const benefits = [
     { icon: Users, title: content.benefitOneTitle, copy: content.benefitOneDescription },
     { icon: Salad, title: content.benefitTwoTitle, copy: content.benefitTwoDescription },
@@ -108,6 +109,8 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+
+        <LatestNews />
 
         <section className="section section-intro" id="about">
           <div className="section-heading centered-heading">
