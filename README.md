@@ -392,3 +392,24 @@ an overview reminder. The queue shows only pending website applications, with
 contact details, membership tier, application date, and a profile link. Clicking
 **审核通过** activates that member, records an audit entry, and returns to the
 queue. Fuint shop members and website membership applications remain separate.
+
+### Administrator login troubleshooting
+
+Website administration at `/admin/login` takes the separate `ADMIN_PASSWORD` and
+does not use a username. Retrieve the production value from the authorized Mac's
+Keychain as documented above. Local ignored environment files may contain a copy
+for the operator; never commit them or print their contents in diagnostics.
+`FUINT_ADMIN_USERNAME` and `FUINT_ADMIN_PASSWORD` may also hold local operator
+references. Editing these references does not reset a Fuint database account.
+
+Shop administration at `/wlhl-application/index.html#/login` uses Fuint accounts.
+It starts with empty credentials and links to the website login. The remember
+option stores only the username; legacy password cookies are removed, and the
+browser password manager can fill the password. Expired sessions clear local
+authentication without calling the expired logout endpoint. Relogin stays within
+the same administration entry, including `/funit-application/index.html`.
+Explicit logout also clears local credentials if the server logout call fails.
+
+`npm run test:admin-login-browser` checks both entry points, invalid-password
+retry, expired-session recovery, legacy cookies, and logout failure using mocked
+backend requests. Set `TEST_ORIGIN` to select the deployed or local frontend.

@@ -23,6 +23,54 @@ function replace(file, before, after) {
 }
 replace('src/utils/request.js', "import axios from 'axios'", "import axios from 'axios'\nimport { normalizeMediaResponse } from '@/utils/content-media'");
 replace('src/utils/request.js', '  (res) => {', '  (res) => {\n    res.data = normalizeMediaResponse(res.data)');
+replace('src/utils/request.js', "store.dispatch('LogOut').then(() => {\n              location.href = '/index'", "store.dispatch('ResetSession').then(() => {\n              location.replace(location.pathname + '#/login')");
+replace('src/permission.js', "store.dispatch('LogOut').then(() => {", "store.dispatch('ResetSession').then(() => {\n              isRelogin.show = false");
+replace('src/permission.js', "              next({ path: '/' })", "              next({ path: '/login', query: { redirect: to.fullPath } })");
+replace('src/store/modules/user.js', `    LogOut({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        logout(state.token)
+          .then(() => {
+            commit('SET_TOKEN', '')
+            commit('SET_ROLES', [])
+            commit('SET_PERMISSIONS', [])
+            commit('SET_MERCHANT_ID', '')
+            commit('SET_MERCHANT_NAME', '')
+            commit('SET_STORE_ID', '')
+            commit('SET_STORE_NAME', '')
+            removeToken()
+            resolve()
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },`, `    ResetSession({ commit }) {
+      for (const field of ['TOKEN', 'NAME', 'AVATAR', 'MERCHANT_ID', 'MERCHANT_NAME', 'STORE_ID', 'STORE_NAME']) {
+        commit('SET_' + field, '')
+      }
+      commit('SET_ROLES', [])
+      commit('SET_PERMISSIONS', [])
+      removeToken()
+    },
+    LogOut({ dispatch }) {
+      return logout().catch(() => undefined).then(() => dispatch('ResetSession'))
+    },`);
+const login = 'src/views/login.vue';
+replace(login, "        username: 'wlhl',", "        username: '',");
+replace(login, "        password: '123456',", "        password: '',");
+replace(login, 'placeholder="wlhl"', 'placeholder="请输入店铺后台账号"');
+replace(login, 'auto-complete="off"', 'auto-complete="username"');
+replace(login, 'auto-complete="off"', 'auto-complete="current-password"\n            show-password');
+replace(login, '>记住密码</el-checkbox', '>记住账号</el-checkbox');
+replace(login, "import { encrypt, decrypt } from '@/utils/jsencrypt'", '');
+replace(login, "      const password = Cookies.get('password')", "      Cookies.remove('password')");
+replace(login, `        password:
+          password === undefined ? this.loginForm.password : decrypt(password),`, "        password: '',");
+replace(login, `            Cookies.set('password', encrypt(this.loginForm.password), {
+              expires: 30,
+            })`, "            Cookies.remove('password')");
+replace(login, '        <el-form-item prop="username">', `        <p style="font-size:14px;line-height:1.7;margin-bottom:20px">店铺后台：请使用已开通的店铺或平台账号和密码。<br /><a href="/admin/login?view=approvals" style="text-decoration:underline">网站会员审核请从这里登录</a></p>
+        <el-form-item prop="username">`);
 const article = 'src/views/content/article/index.vue';
 replace(article, "uploadHeader: { 'Access-Token': getToken() },", "uploadHeader: { 'Access-Token': getToken(), 'ngrok-skip-browser-warning': 'true' },\n      uploadingContent: false,");
 replace(article, ':on-success="handleUploadSuccess"', ':on-success="handleUploadSuccess"\n                :on-error="handleUploadError"\n                :before-upload="validateImage"\n                accept="image/png,image/jpeg,image/gif,image/webp,image/bmp"');

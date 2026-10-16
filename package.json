@@ -11,6 +11,7 @@
     "test": "tsx --test tests/*.test.ts",
     "test:integration": "tsx --test tests/*.integration.ts",
     "test:content-browser": "node tests/content-browser.cjs",
+    "test:admin-login-browser": "node tests/admin-login-browser.cjs",
     "build:content-admin": "node scripts/build-fuint-admin.mjs",
     "test:event-manager-browser": "node tests/event-manager-browser.cjs"
   },
