@@ -174,8 +174,8 @@ export async function updateLandingEventAction(formData: FormData) {
   const capacity = Number(text(formData, "capacity"));
   const status = text(formData, "status");
   if (!Number.isFinite(eventDate.getTime()) || (endDate && (!Number.isFinite(endDate.getTime()) || endDate <= eventDate))
-    || !Number.isSafeInteger(capacity) || capacity < 1 || capacity > 100000
-    || !["upcoming", "completed", "cancelled"].includes(status)) {
+    || !Number.isSafeInteger(capacity) || capacity < 0 || capacity > 100000
+    || !["draft", "upcoming", "completed", "cancelled"].includes(status)) {
     editorRedirect("error", "Check the event dates, capacity and status.", locale);
   }
   const existing = await execute("SELECT id FROM events WHERE id = ?", [eventId]);
@@ -185,6 +185,7 @@ export async function updateLandingEventAction(formData: FormData) {
   } else {
     await execute("UPDATE events SET title = ?, description = ?, location = ?, category = ?, event_date = ?, end_date = ?, capacity = ?, status = ? WHERE id = ?", [title, description, location, category, eventDate.toISOString(), endDate?.toISOString() ?? null, capacity, status, eventId]);
   }
+  await execute("UPDATE event_management SET revision = revision + 1, updated_at = ? WHERE event_id = ?", [new Date().toISOString(), eventId]);
   await writeAdminLog({
     eventId,
     activityType: "landing_event_updated",

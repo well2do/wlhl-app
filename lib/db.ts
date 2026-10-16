@@ -63,6 +63,11 @@ async function initialize() {
         FOREIGN KEY(member_id) REFERENCES members(id) ON DELETE CASCADE,
         FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
       )`,
+      `CREATE TABLE IF NOT EXISTS event_management (
+        event_id TEXT PRIMARY KEY, merchant_id INTEGER NOT NULL, store_id INTEGER NOT NULL,
+        created_by TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL,
+        FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
+      )`,
       `CREATE TABLE IF NOT EXISTS event_registrations (
         id TEXT PRIMARY KEY, event_id TEXT NOT NULL, member_id TEXT,
         first_name TEXT NOT NULL, last_name TEXT NOT NULL,
@@ -254,7 +259,7 @@ async function initialize() {
   );
 }
 
-async function db() {
+export async function db() {
   if (!global.wlhlDatabaseReady) {
     global.wlhlDatabaseReady = initialize().catch((error) => {
       // A temporary connection failure must not poison every later request.
@@ -272,7 +277,8 @@ export async function execute(sql: string, args: InValue[] = []) {
 
 export async function getEvents(includePast = false) {
   const result = await execute(
-    `SELECT e.*, COUNT(a.id) AS attendee_count FROM events e
+    `SELECT e.*, COUNT(a.id) AS attendee_count,
+     (SELECT updated_at FROM landing_page_assets WHERE slot = 'event-' || e.id) AS poster_updated_at FROM events e
      LEFT JOIN attendance a ON a.event_id = e.id
      ${includePast ? "" : "WHERE e.status = 'upcoming' AND e.event_date >= datetime('now')"}
      GROUP BY e.id ORDER BY e.event_date ASC`,

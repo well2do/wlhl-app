@@ -343,3 +343,39 @@ If a renamed merchant still shows its previous label in existing Fuint sessions,
 `scripts/refresh-fuint-merchant-label.lua` updates only that label while preserving
 the session token and expiration. Confirm the database name first, then invoke it
 with the merchant ID, old name, and new name through the authenticated Redis CLI.
+
+### Publishing website events as a shop manager
+
+1. Sign in to `/wlhl-application/index.html` with the existing Fuint account.
+2. Click **发布网站活动** in the top navigation, or open `/shop-manager/events`.
+3. Click **新增活动**, enter the title, description, start/end times, location, and
+   category, then upload a PNG/JPG/WebP poster up to 4 MB. Times always use
+   `America/New_York`, regardless of the manager's device timezone. Planned
+   capacity is optional; blank means unspecified. English text is optional.
+4. Select **上线（即将举行）** and click **保存活动**. The event appears on both
+   language calendars, with a poster and detail page. The nearest upcoming event
+   also appears on both home pages. The confirmation links to the public page.
+5. Use **编辑活动** to revise it. **草稿** is private; **下线 / 取消** removes the
+   public event page and calendar entry. No code deployment is required for
+   subsequent event edits or poster uploads.
+
+The manager API validates the current Fuint session with `backendApi/login/getInfo`
+for every request. It accepts only administrator/common roles in
+`FUINT_MERCHANT_ID` (default `1`), with `content:article:index` and the appropriate
+`content:article:add` or `content:article:edit` permission. Store accounts are
+restricted to their own store; merchant accounts with store ID 0 can manage all
+of that merchant's events. Existing site administrators retain full access.
+These permissions do not grant access to the site's member database or other
+administrator pages. Client-supplied owner/store IDs are ignored. Event saves and
+poster writes are transactional, stale revisions are rejected, and drafts are
+excluded from public event and poster pages.
+
+`event_management` records ownership, revision, and modification time alongside
+existing event rows; images remain in the persistent landing asset table. New
+site-admin events belong to the configured merchant at store ID 0. Legacy events
+without ownership metadata remain editable only by site administrators.
+
+Validation: `npm test`, `npm run test:integration`, and
+`npm run test:event-manager-browser`. The browser test starts isolated database
+and permission fixtures and exercises publish, edit, poster viewing, mobile
+layout, and unpublishing without writing production data.

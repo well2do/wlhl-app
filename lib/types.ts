@@ -27,8 +27,9 @@ export type ClubEvent = {
   location_cn?: string;
   category_cn?: string;
   capacity: number;
-  status: "upcoming" | "completed" | "cancelled";
+  status: "draft" | "upcoming" | "completed" | "cancelled";
   attendee_count?: number;
+  poster_updated_at?: string;
 };
 
 export type Announcement = {

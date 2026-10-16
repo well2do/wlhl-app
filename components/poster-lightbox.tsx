@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Expand, ExternalLink, X } from "lucide-react";
 import { useRef } from "react";
 
-export function PosterLightbox({ locale = "en", src = "/268.jpg", copy = {} }: { locale?: "en" | "cn"; src?: string; copy?: PageCopy }) {
+export function PosterLightbox({ locale = "en", src = "/268.jpg", copy = {}, alt }: { locale?: "en" | "cn"; src?: string; copy?: PageCopy; alt?: string }) {
   const copyText = createCopy(copy);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cn = locale === "cn";
@@ -34,7 +34,7 @@ export function PosterLightbox({ locale = "en", src = "/268.jpg", copy = {} }: {
           height={1934}
           priority
           quality={90}
-          alt={cn ? copyText("9月7日 AI 时代健康与财富传承论坛活动海报") : copyText("September 7 AI, Health and Wealth Legacy Forum event poster")}
+          alt={alt || (cn ? copyText("9月7日 AI 时代健康与财富传承论坛活动海报") : copyText("September 7 AI, Health and Wealth Legacy Forum event poster"))}
         />
         <span className="forum-poster-expand"><Expand size={16} />{cn ? copyText("点击查看高清大图") : copyText("View high-resolution poster")}</span>
       </button>
@@ -60,7 +60,7 @@ export function PosterLightbox({ locale = "en", src = "/268.jpg", copy = {} }: {
           height={1934}
           quality={100}
           sizes="(max-width: 900px) 96vw, 1280px"
-          alt={cn ? copyText("9月7日 AI 时代健康与财富传承论坛活动海报高清大图") : copyText("September 7 AI, Health and Wealth Legacy Forum event poster, high-resolution view")}
+          alt={alt || (cn ? copyText("9月7日 AI 时代健康与财富传承论坛活动海报高清大图") : copyText("September 7 AI, Health and Wealth Legacy Forum event poster, high-resolution view"))}
         />
       </dialog>
     </>

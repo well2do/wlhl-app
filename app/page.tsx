@@ -1,3 +1,4 @@
+import { eventHref } from "@/lib/event-time";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -146,10 +147,10 @@ export default async function HomePage() {
                 <p>{nextEvent.description}</p>
                 <div className="event-meta-grid">
                   <span><CalendarDays size={19} /><strong>{formatEventDate(nextEvent.event_date, true)}</strong></span>
-                  <span><Clock3 size={19} /><strong>{formatEventTime(nextEvent.event_date)}</strong></span>
+                  <span><Clock3 size={19} /><strong>{formatEventTime(nextEvent.event_date)}{nextEvent.end_date && ` – ${formatEventTime(nextEvent.end_date)}`}</strong></span>
                   <span className="wide-meta"><MapPin size={19} /><strong>{nextEvent.location}</strong></span>
                 </div>
-                <Link className="button button-dark" href="/member">{content.eventPrimaryButton} <ArrowRight size={17} /></Link>
+                <Link className="button button-dark" href={eventHref(nextEvent.id)}>{content.eventPrimaryButton} <ArrowRight size={17} /></Link>
                 <Link className="under-link" href="/events">{content.eventSecondaryButton}</Link>
               </div>
             </div>

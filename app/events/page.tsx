@@ -1,3 +1,5 @@
+import { eventHref } from "@/lib/event-time";
+import { landingImageUrl } from "@/lib/landing-page-content";
 import { createCopy } from "@/lib/page-copy";
 import { getPageCopy } from "@/lib/page-copy-store";
 import Link from "next/link";
@@ -28,12 +30,12 @@ export default async function EventsPage() {
             {events.map((event, index) => (
               <article className="event-row" key={event.id}>
                 <div className="event-date-block"><strong>{new Date(event.event_date).toLocaleDateString("en-US", { timeZone: "America/New_York", day: "2-digit" })}</strong><span>{new Date(event.event_date).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short" })}</span></div>
-                <div className={`event-list-art art-tone-${(index % 3) + 1}`}><span>{event.category}</span></div>
+                <div className={`event-list-art art-tone-${(index % 3) + 1} ${event.poster_updated_at ? "has-event-poster" : ""}`}>{event.poster_updated_at ? <Link href={eventHref(event.id, "en")}><img src={landingImageUrl(`event-${event.id}`, event.poster_updated_at)} alt={event.title} /></Link> : <span>{event.category}</span>}</div>
                 <div className="event-row-copy">
-                  <small>{event.category}</small><h3>{event.title}</h3><p>{event.description}</p>
-                  <div className="event-inline-meta"><span><CalendarDays size={15} />{formatEventDate(event.event_date)}</span><span><Clock3 size={15} />{formatEventTime(event.event_date)}</span><span><MapPin size={15} />{event.location}</span><span><Users size={15} />{event.attendee_count || 0}/{event.capacity}</span></div>
+                  <small>{event.category}</small><h3><Link href={eventHref(event.id, "en")}>{event.title}</Link></h3><p>{event.description}</p>
+                  <div className="event-inline-meta"><span><CalendarDays size={15} />{formatEventDate(event.event_date)}</span><span><Clock3 size={15} />{formatEventTime(event.event_date)}{event.end_date && ` – ${formatEventTime(event.end_date)}`}</span><span><MapPin size={15} />{event.location}</span>{event.capacity > 0 && <span><Users size={15} />{event.attendee_count || 0}/{event.capacity}</span>}</div>
                 </div>
-                <Link className="round-link" href={event.id === "forum-2026-09-07" ? "/events/ai-health-wealth-forum" : "/member"} aria-label={`Reserve ${event.title}`}><ArrowRight size={20} /></Link>
+                <Link className="round-link" href={eventHref(event.id)} aria-label={`Reserve ${event.title}`}><ArrowRight size={20} /></Link>
               </article>
             ))}
           </div>

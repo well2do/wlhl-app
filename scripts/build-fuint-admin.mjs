@@ -49,6 +49,7 @@ replace(article, '          if (this.form.articleId != undefined) {', '         
 replace(article, '            >修改</el-button\n          >', `            >修改</el-button
           >
           <el-link v-if="scope.row.status === 'A'" :href="'/cn/news/' + scope.row.id" target="_blank" type="primary">查看前台</el-link>`);
+replace('src/layout/components/Navbar.vue', '<div class="right-menu">', '<div class="right-menu"><a href="/shop-manager/events" class="right-menu-item" v-hasPermi="[\'content:article:index\']" style="font-weight:600">发布网站活动</a>');
 const publicPath = '/wlhl-application/';
 const result = spawnSync('npm', ['run', 'build:prod'], {
   cwd: staging, stdio: 'inherit', env: {

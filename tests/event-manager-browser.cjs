@@ -1,0 +1,50 @@
+const assert = require('node:assert/strict');
+const { createServer } = require('node:http');
+const { spawn } = require('node:child_process');
+const { mkdtempSync, rmSync } = require('node:fs');
+const { tmpdir } = require('node:os');
+const { join } = require('node:path');
+const { chromium } = require('playwright');
+const origin = 'http://127.0.0.1:3138';
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3ioAAAAASUVORK5CYII=', 'base64');
+(async()=>{
+ const directory=mkdtempSync(join(tmpdir(),'wlhl-event-ui-'));
+ let app,browser;
+ const backend=createServer((req,res)=>{res.setHeader('Content-Type','application/json');res.end(JSON.stringify(req.headers['access-token']==='event-ui-fixture'?{code:200,data:{accountInfo:{id:14,accountName:'Fixture shop manager',merchantId:1,storeId:7},roles:['common'],permissions:['content:article:index','content:article:add','content:article:edit']}}:{code:1001}));});
+ try {
+  await new Promise(resolve=>backend.listen(3139,'127.0.0.1',resolve));
+  app=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3138'],{env:{...process.env,VERCEL:'',TURSO_DATABASE_URL:`file:${join(directory,'events.db')}`,TURSO_AUTH_TOKEN:'',FUINT_API_URL:'http://127.0.0.1:3139',FUINT_MERCHANT_ID:'1',SESSION_SECRET:'event-ui-secret',ADMIN_PASSWORD:'event-ui-admin'},stdio:'ignore'});
+  let ready=false;for(let i=0;i<100;i++){try{if((await fetch(origin+'/api/health')).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,100));}assert.ok(ready);
+  browser=await chromium.launch({channel:'chrome',headless:true});
+  const context=await browser.newContext();context.setDefaultTimeout(15000);
+  await context.addCookies([{name:'Access-Token',value:'event-ui-fixture',url:origin}]);
+  await context.route('**/api/articles',route=>route.fulfill({json:{articles:[]}}));
+  const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto(origin+'/shop-manager/events');
+  await page.getByText('当前账号：Fixture shop manager',{exact:false}).waitFor();
+  await page.locator('[name=titleCn]').fill('浏览器活动发布测试');
+  await page.locator('[name=descriptionCn]').fill('全身保健操 / 八段锦 → 午餐 → 三高管理交流');
+  await page.locator('[name=start]').fill('2099-10-18T11:00');await page.locator('[name=end]').fill('2099-10-18T15:00');
+  await page.locator('[name=locationCn]').fill('14679 Dorsey Mill Rd, Glenwood, MD 21738');
+  await page.locator('[name=poster]').setInputFiles({name:'poster.png',mimeType:'image/png',buffer:png});
+  await page.locator('[name=status]').selectOption('upcoming');
+  await page.getByRole('button',{name:'保存活动',exact:true}).click();
+  const link=page.getByRole('link',{name:'查看已发布活动 →'});try{await link.waitFor();}catch(error){console.log(await page.locator('body').innerText(),errors);throw error;}const href=await link.getAttribute('href');assert.ok(href.startsWith('/cn/events/'));
+  await page.locator('[name=descriptionCn]').fill('Updated activity details');
+  await Promise.all([page.waitForResponse(response=>response.url().endsWith('/api/shop-manager/events')&&response.request().method()==='GET'),page.getByRole('button',{name:'保存活动',exact:true}).click()]);
+  await page.goto(origin+href);await page.getByRole('heading',{name:'浏览器活动发布测试'}).waitFor();
+  assert.match(await page.locator('.event-detail-description').innerText(),/Updated activity details/);
+  const poster=page.locator('.forum-poster-button img');assert.ok(await poster.evaluate(img=>img.complete&&img.naturalWidth>0));
+  await page.getByRole('button',{name:'打开活动海报高清大图'}).click();assert.ok(await page.locator('dialog').evaluate(el=>el.open));
+  await page.getByRole('button',{name:'关闭海报大图'}).click();
+  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await page.goto(origin+'/shop-manager/events');await page.getByRole('button',{name:'编辑活动',exact:true}).click();
+  await page.locator('[name=status]').selectOption('cancelled');await page.getByRole('button',{name:'保存活动',exact:true}).click();
+  await page.getByText('活动已保存；草稿或下线活动不会显示在前台。').waitFor();
+  assert.equal((await fetch(origin+href)).status,404);
+  assert.deepEqual(errors,[]);
+  console.log(JSON.stringify({shopManagerUI:'passed',posterUpload:'passed',publishAndEdit:'passed',publicDetail:'passed',posterLightbox:'passed',mobileOverflow:false,unpublish:'passed',pageErrors:errors,productionWrites:0}));
+ } finally {
+  await browser?.close();app?.kill();backend.closeAllConnections();await new Promise(resolve=>backend.close(resolve));rmSync(directory,{recursive:true,force:true});
+ }
+})().catch(error=>{console.error(error.message);process.exitCode=1;});

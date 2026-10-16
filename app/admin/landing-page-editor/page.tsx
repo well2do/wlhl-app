@@ -185,8 +185,8 @@ export default async function LandingPageEditor({
                     <label>End date and time (UTC)<input name="endDate" type="datetime-local" defaultValue={nextEvent.end_date ? new Date(nextEvent.end_date).toISOString().slice(0, 16) : ""} /></label>
                   </div>
                   <div className="form-row two-columns">
-                    <label>Capacity<input name="capacity" type="number" min={1} max={100000} defaultValue={nextEvent.capacity} required /></label>
-                    <label>Status<select name="status" defaultValue={nextEvent.status}><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
+                    <label>Capacity (0 = unspecified)<input name="capacity" type="number" min={0} max={100000} defaultValue={nextEvent.capacity} required /></label>
+                    <label>Status<select name="status" defaultValue={nextEvent.status}><option value="draft">Draft</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
                   </div>
                   <button className="button button-dark button-small">Save event</button>
                 </form>

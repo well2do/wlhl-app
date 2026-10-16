@@ -11,7 +11,8 @@
     "test": "tsx --test tests/*.test.ts",
     "test:integration": "tsx --test tests/*.integration.ts",
     "test:content-browser": "node tests/content-browser.cjs",
-    "build:content-admin": "node scripts/build-fuint-admin.mjs"
+    "build:content-admin": "node scripts/build-fuint-admin.mjs",
+    "test:event-manager-browser": "node tests/event-manager-browser.cjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
