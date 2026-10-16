@@ -379,3 +379,16 @@ Validation: `npm test`, `npm run test:integration`, and
 `npm run test:event-manager-browser`. The browser test starts isolated database
 and permission fixtures and exercises publish, edit, poster viewing, mobile
 layout, and unpublishing without writing production data.
+
+### Reviewing website membership applications
+
+Open `/admin?view=approvals`, or choose **网站会员审核** in the Fuint sidebar.
+The Fuint member directory also links to this queue. Both links use the existing
+website administrator login; a shop session alone does not authorize access to
+website member records. The login page preserves the approval destination.
+
+The website dashboard has a **会员审核** navigation item with a pending count and
+an overview reminder. The queue shows only pending website applications, with
+contact details, membership tier, application date, and a profile link. Clicking
+**审核通过** activates that member, records an audit entry, and returns to the
+queue. Fuint shop members and website membership applications remain separate.

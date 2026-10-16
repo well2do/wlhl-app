@@ -22,6 +22,10 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
  });
  await context.route('**/api/articles',route=>route.fulfill({json:{articles:saved?[{...saved,id:501,image:'/api/content-media/static/uploadFiles/cover.png'}]:[]}}));
  await page.goto(base+'/wlhl-application/index.html#/content/article');
+ const approvalLink=page.locator('.sidebar-container a[href="/admin?view=approvals"]');
+ await approvalLink.waitFor({state:'visible'});
+ assert.equal(await approvalLink.innerText(),'网站会员审核');
+ assert.equal(await approvalLink.getAttribute('href'),'/admin?view=approvals');
  await page.locator('button').filter({hasText:'新增'}).last().click();
  await page.getByPlaceholder('请输入文章标题').last().fill('Browser content verification');
  const editor=page.locator('.ql-editor');await editor.waitFor({state:'visible'});
@@ -53,8 +57,14 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
  await page.goto(base+'/cn/news/501');await page.getByRole('heading',{name:'Browser content verification'}).waitFor();
  assert.match(await page.locator('.article-body').innerText(),/Nested pasted text/);
  assert.ok(await page.locator('.article-body img').evaluate(el=>el.complete&&el.naturalWidth>0));
+ await page.goto(base+'/wlhl-application/index.html#/content/article');
+ await approvalLink.click();
+ await page.getByRole('heading',{name:'网站会员审核',exact:true}).waitFor();
+ assert.equal(new URL(page.url()).pathname,'/admin/login');
+ assert.equal(new URL(page.url()).searchParams.get('view'),'approvals');
+ await page.getByLabel('网站管理员密码').waitFor({state:'visible'});
  assert.deepEqual(errors,[]);
  
- console.log(JSON.stringify({plainPaste:'passed',htmlPaste:'passed',replaceSelection:'passed',pastedImage:'passed',coverUpload:'passed',uploadFailure:'passed',saveAndReopen:'passed',publicDetail:'passed',uploads,pageErrors:errors,productionWrites:0}));
+ console.log(JSON.stringify({plainPaste:'passed',htmlPaste:'passed',replaceSelection:'passed',pastedImage:'passed',coverUpload:'passed',uploadFailure:'passed',saveAndReopen:'passed',publicDetail:'passed',membershipApprovalEntry:'passed',uploads,pageErrors:errors,productionWrites:0}));
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

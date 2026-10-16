@@ -42,9 +42,10 @@ import { isAdmin } from "@/lib/auth";
 import { getActivityLogs, getAllAttendance, getAnnouncements, getDashboardStats, getEventRegistrations, getEvents, getExpertProfiles, getMembers, getProducts } from "@/lib/db";
 import { formatCurrency, formatEventDate, formatEventTime, initials } from "@/lib/format";
 
-type View = "overview" | "members" | "registrations" | "events" | "attendance" | "activity" | "announcements" | "products" | "experts";
+type View = "overview" | "approvals" | "members" | "registrations" | "events" | "attendance" | "activity" | "announcements" | "products" | "experts";
 const navItems = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
+  { view: "approvals", label: "会员审核", icon: UserCheck },
   { view: "members", label: "Members", icon: Users },
   { view: "registrations", label: "Registrations", icon: ClipboardList },
   { view: "events", label: "Events", icon: CalendarDays },
@@ -58,8 +59,8 @@ const navItems = [
 export const metadata = { title: "Admin Dashboard" };
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ view?: string; saved?: string; error?: string; editProduct?: string; editExpert?: string }> }) {
-  if (!(await isAdmin())) redirect("/admin/login");
   const params = await searchParams;
+  if (!(await isAdmin())) redirect(params.view === "approvals" ? "/admin/login?view=approvals" : "/admin/login");
   const allowed = navItems.map((item) => item.view);
   const view = (allowed.includes(params.view as View) ? params.view : "overview") as View;
   const [stats, members, events, attendance, announcements, products, registrations, activityLogs, experts] = await Promise.all([
@@ -67,13 +68,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   ]);
   const editingProduct = view === "products" ? products.find((product) => product.id === params.editProduct) : undefined;
   const editingExpert = view === "experts" ? experts.find((expert) => expert.id === params.editExpert) : undefined;
+  const pendingMembers = members.filter((member) => member.membership_status === "pending");
 
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <Brand inverse />
         <nav>
-          {navItems.map(({ view: itemView, label, icon: Icon }) => <Link key={itemView} href={`/admin?view=${itemView}`} className={view === itemView ? "active" : ""}><Icon size={18} />{label}</Link>)}
+          {navItems.map(({ view: itemView, label, icon: Icon }) => <Link key={itemView} href={`/admin?view=${itemView}`} className={view === itemView ? "active" : ""}><Icon size={18} />{label}{itemView === "approvals" && <span className="approval-count">{pendingMembers.length}</span>}</Link>)}
           <Link href="/admin/pages">Website pages</Link>
           <Link href="/admin/landing-page-editor"><Image size={18} />Landing page</Link>
           <Link href="/admin/database"><Database size={18} />Database</Link>
@@ -84,6 +86,20 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <header className="admin-topbar"><div><p className="eyebrow">Club administration</p><h1>{navItems.find((item) => item.view === view)?.label}</h1></div><div className="admin-date">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div></header>
         {params.saved && <div className="saved-toast" role="status"><CheckCircle2 size={17} />{params.saved}</div>}
         {params.error && <div className="error-toast" role="alert"><CircleAlert size={17} />{params.error}</div>}
+        {view === "overview" && pendingMembers.length > 0 && <div className="approval-notice"><span>有 {pendingMembers.length} 位网站会员等待审核</span><Link className="button button-dark button-small" href="/admin?view=approvals">去审核</Link></div>}
+
+        {view === "approvals" && (
+          <section className="admin-panel full-panel">
+            <div className="admin-panel-heading"><div><h2>待审核会员</h2><p>共 {pendingMembers.length} 位。请核对申请资料后，点击「审核通过」。</p></div><Link href="/admin?view=members">查看全部会员</Link></div>
+            <div className="member-approval-list">
+              {pendingMembers.map((member) => <article className="member-approval-card" key={member.id}>
+                <div><h3>{member.first_name} {member.last_name}</h3><p>{member.email}</p><p>电话：{member.phone || "未填写"}</p><p>会员类型：{member.membership_tier}</p><p>申请日期：{new Date(member.joined_at).toLocaleDateString("zh-CN", { timeZone: "America/New_York" })}</p></div>
+                <div className="member-approval-controls"><Link href={`/admin/members/${member.id}`}>查看资料</Link><form action={updateMemberStatusAction}><input type="hidden" name="memberId" value={member.id} /><input type="hidden" name="status" value="active" /><input type="hidden" name="returnView" value="approvals" /><button className="button button-dark"><CheckCircle2 size={16} />审核通过</button></form></div>
+              </article>)}
+              {pendingMembers.length === 0 && <p className="admin-empty">暂无待审核会员。新的入会申请会显示在这里。</p>}
+            </div>
+          </section>
+        )}
 
         {view === "overview" && (
           <>

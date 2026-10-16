@@ -50,6 +50,16 @@ replace(article, '            >修改</el-button\n          >', `            >�
           >
           <el-link v-if="scope.row.status === 'A'" :href="'/cn/news/' + scope.row.id" target="_blank" type="primary">查看前台</el-link>`);
 replace('src/layout/components/Navbar.vue', '<div class="right-menu">', '<div class="right-menu"><a href="/shop-manager/events" class="right-menu-item" v-hasPermi="[\'content:article:index\']" style="font-weight:600">发布网站活动</a>');
+replace('src/layout/components/Sidebar/index.vue', '        <sidebar-item', `        <a href="/admin?view=approvals" v-hasPermi="['member:index']">
+          <el-menu-item index="website-member-approvals" class="submenu-title-noDropdown">
+            <i class="el-icon-user" /><span slot="title">网站会员审核</span>
+          </el-menu-item>
+        </a>
+        <sidebar-item`);
+replace('src/views/member/index.vue', '  <div class="app-container">', `  <div class="app-container">
+    <el-alert type="info" :closable="false" show-icon style="margin-bottom:16px">
+      <template slot="title">网站入会申请需由网站管理员审核。<a href="/admin?view=approvals" style="text-decoration:underline;font-weight:600">打开网站会员审核</a></template>
+    </el-alert>`);
 const publicPath = '/wlhl-application/';
 const result = spawnSync('npm', ['run', 'build:prod'], {
   cwd: staging, stdio: 'inherit', env: {

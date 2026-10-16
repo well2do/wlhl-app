@@ -299,15 +299,17 @@ export async function registerForEventAction(formData: FormData) {
 
 export async function adminLoginAction(formData: FormData) {
   const password = text(formData, "password");
+  const approvals = text(formData, "view") === "approvals";
+  const loginPath = approvals ? "/admin/login?view=approvals&" : "/admin/login?";
   if (process.env.NODE_ENV === "production" && !process.env.ADMIN_PASSWORD) {
-    redirect("/admin/login?error=Admin+access+has+not+been+configured");
+    redirect(`${loginPath}error=Admin+access+has+not+been+configured`);
   }
   const expected = process.env.ADMIN_PASSWORD || "wlhl-admin";
   const address = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  if (!(await allowLoginAttempt("admin", address))) redirect("/admin/login?error=Too+many+attempts.+Try+again+in+15+minutes.");
-  if (password !== expected) redirect("/admin/login?error=Incorrect+password");
+  if (!(await allowLoginAttempt("admin", address))) redirect(`${loginPath}error=Too+many+attempts.+Try+again+in+15+minutes.`);
+  if (password !== expected) redirect(`${loginPath}error=Incorrect+password`);
   await createAdminSession();
-  redirect("/admin");
+  redirect(approvals ? "/admin?view=approvals" : "/admin");
 }
 
 export async function adminLogoutAction() {
@@ -482,6 +484,7 @@ export async function updateMemberStatusAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/member");
   revalidatePath("/cn/member");
+  if (text(formData, "returnView") === "approvals") redirect(`/admin?view=approvals&saved=${encodeURIComponent("会员状态已更新")}`);
   redirect("/admin?view=members&saved=Member+updated");
 }
 

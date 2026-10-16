@@ -310,3 +310,41 @@ test("member login guesses are limited across independent browser sessions", asy
   assert.ok(blocked.location?.includes("Too%20many"));
   assert.equal(browser.cookies.get("wlhl_member"), undefined);
 });
+
+test("the approval queue requires website admin login and preserves its destination", async () => {
+  for (const session of [visitor, member]) {
+    const response = await fetch(`${origin}/admin?view=approvals`, { headers: { Cookie: session.cookie }, redirect: "manual" });
+    assert.equal(response.status, 307);
+    assert.equal(response.headers.get("location"), "/admin/login?view=approvals");
+    assert.ok(!(await response.text()).includes("pending@example.invalid"));
+  }
+  const browser = new BrowserSession();
+  const login = formFrom(await browser.get("/admin/login?view=approvals"), "password");
+  const incorrect = await browser.post("/admin/login?view=approvals", login, { password: "incorrect" });
+  assert.equal(incorrect.location, "/admin/login?view=approvals&error=Incorrect+password");
+  const signedIn = await browser.post("/admin/login?view=approvals", login, { password: "access-test-admin" });
+  assert.equal(signedIn.location, "/admin?view=approvals");
+  const forged = await browser.post("/admin/login", login, { password: "access-test-admin", view: "https://example.invalid/" });
+  assert.equal(forged.location, "/admin");
+});
+
+test("the pending queue lets administrators approve a member without granting shop or member access", async () => {
+  const path = "/admin?view=approvals";
+  const html = await admin.get(path);
+  assert.ok(html.includes("待审核会员"));
+  assert.ok(html.includes("pending@example.invalid"));
+  assert.ok(!html.includes("victim@example.invalid"));
+  const form = formFrom(html, "memberId", 'value="pending"');
+  const shop = new BrowserSession();
+  shop.cookies.set("Access-Token", "shop-session-without-website-admin");
+  for (const session of [visitor, member, shop]) {
+    const rejected = await session.post(path, form);
+    assert.equal(rejected.location, "/admin/login");
+    assert.equal((await db.execute("SELECT membership_status FROM members WHERE id = 'pending'")).rows[0].membership_status, "pending");
+  }
+  const approved = await admin.post(path, form);
+  assert.ok(approved.location?.startsWith("/admin?view=approvals&saved="));
+  assert.equal((await db.execute("SELECT membership_status FROM members WHERE id = 'pending'")).rows[0].membership_status, "active");
+  assert.ok(!(await admin.get(path)).includes("pending@example.invalid"));
+  assert.equal((await db.execute("SELECT COUNT(*) AS count FROM activity_logs WHERE member_id = 'pending' AND activity_type = 'membership_status_updated'")).rows[0].count, 1);
+});
