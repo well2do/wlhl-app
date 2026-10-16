@@ -402,6 +402,11 @@ for the operator; never commit them or print their contents in diagnostics.
 `FUINT_ADMIN_USERNAME` and `FUINT_ADMIN_PASSWORD` may also hold local operator
 references. Editing these references does not reset a Fuint database account.
 
+The website password field offers explicit paste and visibility controls. Pasting
+replaces the existing field value, and denied clipboard access falls back to
+manual paste. Successful website administrator logins clear their attempt counter;
+ten consecutive failed attempts still block further attempts for 15 minutes.
+
 Shop administration at `/wlhl-application/index.html#/login` uses Fuint accounts.
 It starts with empty credentials and links to the website login. The remember
 option stores only the username; legacy password cookies are removed, and the

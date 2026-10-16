@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { headers } from "next/headers";
-import { allowLoginAttempt } from "@/lib/login-attempts";
+import { allowLoginAttempt, clearLoginAttempts } from "@/lib/login-attempts";
 import {
   clearAdminSession,
   clearMemberSession,
@@ -309,6 +309,7 @@ export async function adminLoginAction(formData: FormData) {
   if (!(await allowLoginAttempt("admin", address))) redirect(`${loginPath}error=Too+many+attempts.+Try+again+in+15+minutes.`);
   if (password !== expected) redirect(`${loginPath}error=Incorrect+password`);
   await createAdminSession();
+  await clearLoginAttempts("admin", address);
   redirect(approvals ? "/admin?view=approvals" : "/admin");
 }
 

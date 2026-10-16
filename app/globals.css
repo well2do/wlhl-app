@@ -657,6 +657,13 @@ input:focus, textarea:focus, select:focus { border-color: var(--green-3); box-sh
 .member-approval-controls { display: grid; justify-items: center; gap: 16px; flex-shrink: 0; }
 .member-approval-controls > a { font-size: 14px; text-decoration: underline; }
 .member-approval-controls .button { min-height: 44px; }
+.admin-password-form { gap: 14px; }
+.admin-password-form input { font-size: 16px; }
+.admin-password-tools { display: flex; flex-wrap: wrap; gap: 10px; }
+.admin-password-tools button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
+.admin-password-tools button:focus-visible { outline: 2px solid var(--coral-dark); outline-offset: 3px; }
+.admin-password-help, .admin-password-notice { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.admin-password-notice:empty { display: none; }
 @media (max-width: 600px) {
   .member-approval-list { padding: 12px; }
   .member-approval-card { align-items: stretch; flex-direction: column; gap: 18px; padding: 16px; }

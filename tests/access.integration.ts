@@ -348,3 +348,33 @@ test("the pending queue lets administrators approve a member without granting sh
   assert.ok(!(await admin.get(path)).includes("pending@example.invalid"));
   assert.equal((await db.execute("SELECT COUNT(*) AS count FROM activity_logs WHERE member_id = 'pending' AND activity_type = 'membership_status_updated'")).rows[0].count, 1);
 });
+
+test("successful admin logins reset attempts while repeated failures remain rate limited", async () => {
+  await db.execute("DELETE FROM login_attempts");
+  const login = formFrom(await visitor.get("/admin/login?view=approvals"), "password");
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const failed = await new BrowserSession().post("/admin/login?view=approvals", login, { password: "wrong-fixture-password" });
+    assert.ok(failed.location?.includes("Incorrect+password"));
+  }
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const browser = new BrowserSession();
+    const success = await browser.post("/admin/login?view=approvals", login, { password: "access-test-admin" });
+    assert.equal(success.location, "/admin?view=approvals");
+    assert.ok(browser.cookies.get("wlhl_admin"));
+    assert.equal((await db.execute("SELECT COUNT(*) AS count FROM login_attempts")).rows[0].count, 0);
+  }
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const browser = new BrowserSession();
+    const failed = await browser.post("/admin/login?view=approvals", login, { password: "wrong-fixture-password" });
+    assert.ok(failed.location?.includes("Incorrect+password"));
+    assert.equal(browser.cookies.get("wlhl_admin"), undefined);
+  }
+  const blocked = new BrowserSession();
+  const limited = await blocked.post("/admin/login?view=approvals", login, { password: "access-test-admin" });
+  assert.ok(limited.location?.includes("Too+many+attempts"));
+  assert.equal(blocked.cookies.get("wlhl_admin"), undefined);
+  await db.execute("UPDATE login_attempts SET reset_at = 0");
+  const recovered = await blocked.post("/admin/login?view=approvals", login, { password: "access-test-admin" });
+  assert.equal(recovered.location, "/admin?view=approvals");
+  assert.ok(blocked.cookies.get("wlhl_admin"));
+});

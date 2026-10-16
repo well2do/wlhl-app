@@ -50,6 +50,34 @@ const origin = process.env.TEST_ORIGIN || 'http://localhost:3141';
     assert.equal(await fresh.page.getByPlaceholder('密码', { exact: true }).inputValue(), '');
     await fresh.page.getByRole('link', { name: '网站会员审核请从这里登录' }).click();
     await fresh.page.getByLabel('网站管理员密码').waitFor();
+    const websitePassword = fresh.page.getByLabel('网站管理员密码');
+    await fresh.page.evaluate(() => Object.defineProperty(navigator, 'clipboard', {
+      configurable: true, value: { readText: async () => 'website-fixture-password' },
+    }));
+    await websitePassword.fill('old-shop-password');
+    await fresh.page.getByRole('button', { name: '粘贴密码', exact: true }).click();
+    assert.equal(await websitePassword.inputValue(), 'website-fixture-password');
+    assert.equal(await websitePassword.getAttribute('type'), 'password');
+    await fresh.page.getByRole('button', { name: '显示密码', exact: true }).click();
+    assert.equal(await websitePassword.getAttribute('type'), 'text');
+    assert.equal(await websitePassword.inputValue(), 'website-fixture-password');
+    await fresh.page.getByRole('button', { name: '隐藏密码', exact: true }).click();
+    assert.equal(await websitePassword.getAttribute('type'), 'password');
+    await websitePassword.evaluate(input => {
+      input.setSelectionRange(input.value.length, input.value.length);
+      const clipboardData = new DataTransfer();
+      clipboardData.setData('text/plain', 'replacement-fixture-password');
+      input.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
+    });
+    assert.equal(await websitePassword.inputValue(), 'replacement-fixture-password');
+    await fresh.page.evaluate(() => Object.defineProperty(navigator, 'clipboard', {
+      configurable: true, value: { readText: async () => { throw new DOMException('Fixture permission denied', 'NotAllowedError'); } },
+    }));
+    await fresh.page.getByRole('button', { name: '粘贴密码', exact: true }).click();
+    await fresh.page.getByRole('status').filter({ hasText: '浏览器未允许读取剪贴板' }).waitFor();
+    assert.equal(await websitePassword.inputValue(), 'replacement-fixture-password');
+    await fresh.page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await fresh.page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await fresh.page.getByRole('link', { name: '店铺、订单和文章管理请使用店铺后台登录。' }).click();
     await fresh.page.getByPlaceholder('请输入店铺后台账号').waitFor();
     await fresh.context.close();
@@ -97,7 +125,7 @@ const origin = process.env.TEST_ORIGIN || 'http://localhost:3141';
     assert.equal(logoutRequests, 1);
     await logout.context.close();
     assert.deepEqual(errors.filter(message => message !== '无效的会话，或者会话已过期，请重新登录。'), []);
-    console.log(JSON.stringify({ blankCredentials: 'passed', loginEntryLinks: 'passed', legacyPasswordCookie: 'removed', expiredSessionRecovery: 'passed for both entries', incorrectPasswordRetry: 'passed', logoutServiceFailure: 'passed', loginRequests, productionWrites: 0 }));
+    console.log(JSON.stringify({ blankCredentials: 'passed', loginEntryLinks: 'passed', websitePasswordPasteAndVisibility: 'passed', clipboardDeniedFallback: 'passed', mobileOverflow: false, legacyPasswordCookie: 'removed', expiredSessionRecovery: 'passed for both entries', incorrectPasswordRetry: 'passed', logoutServiceFailure: 'passed', loginRequests, productionWrites: 0 }));
   } finally {
     await browser.close();
   }

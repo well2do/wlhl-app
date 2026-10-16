@@ -3,8 +3,16 @@ import { execute } from "./db";
 
 const windowSeconds = 15 * 60;
 
+function attemptKey(scope: string, identifier: string) {
+  return createHash("sha256").update(`${scope}:${identifier.trim().toLowerCase()}`).digest("hex");
+}
+
+export async function clearLoginAttempts(scope: string, identifier: string) {
+  await execute("DELETE FROM login_attempts WHERE key = ?", [attemptKey(scope, identifier)]);
+}
+
 export async function allowLoginAttempt(scope: string, identifier: string) {
-  const key = createHash("sha256").update(`${scope}:${identifier.trim().toLowerCase()}`).digest("hex");
+  const key = attemptKey(scope, identifier);
   const now = Math.floor(Date.now() / 1000);
   await execute("DELETE FROM login_attempts WHERE reset_at <= ?", [now]);
   const result = await execute(
