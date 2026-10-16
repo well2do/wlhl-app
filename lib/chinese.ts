@@ -16,7 +16,7 @@ const eventByTitle: Record<string, Partial<ClubEvent>> = {
 
 const announcementByTitle: Record<string, Pick<Announcement, "title" | "message">> = {
   "September 7: AI, Health & Wealth Legacy Forum": { title: "9月7日：AI 时代健康与财富传承论坛", message: "洛克维尔中英双语论坛现已开放报名，主题涵盖健康长寿、AI、企业发展与家庭财富规划。" },
-  "A healthier season starts together": { title: "一起开启更健康的新季节", message: "秋季活动日历现已开放，欢迎预约运动、营养和社区健康活动。" },
+  "A healthier season starts together": { title: "一起开启更健康的新季节", message: "秋季活动日历现已开放，欢迎报名参加运动、营养和社区健康活动。" },
   "Member wellness bundle": { title: "会员健康生活组合优惠", message: "本月会员购买养生茶、健康手帐和阻力带组合可优惠 12 美元。" },
 };
 

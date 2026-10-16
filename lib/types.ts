@@ -26,6 +26,11 @@ export type ClubEvent = {
   description_cn?: string;
   location_cn?: string;
   category_cn?: string;
+  registration_url?: string;
+  fee_details?: string;
+  fee_details_cn?: string;
+  payment_instructions?: string;
+  payment_instructions_cn?: string;
   capacity: number;
   status: "draft" | "upcoming" | "completed" | "cancelled";
   attendee_count?: number;

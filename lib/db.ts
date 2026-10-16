@@ -146,7 +146,7 @@ async function initialize() {
   );
 
   for (const [table, columns] of [
-    ["events", ["title_cn", "description_cn", "location_cn", "category_cn"]],
+    ["events", ["title_cn", "description_cn", "location_cn", "category_cn", "registration_url", "fee_details", "fee_details_cn", "payment_instructions", "payment_instructions_cn"]],
     ["announcements", ["title_cn", "message_cn"]],
     ["products", ["name_cn", "description_cn", "category_cn", "badge_cn"]],
   ] as const) {
@@ -314,6 +314,9 @@ export async function getLandingPageContent(locale: LandingPageLocale = "en"): P
     const content = { ...defaults } as LandingPageContent;
     for (const key of Object.keys(defaults) as (keyof LandingPageContent)[]) {
       if (typeof stored[key] === "string") content[key] = stored[key];
+    }
+    if (content.eventPrimaryButton === (locale === "cn" ? "预约席位" : "Reserve your spot")) {
+      content.eventPrimaryButton = defaults.eventPrimaryButton;
     }
     return content;
   } catch {

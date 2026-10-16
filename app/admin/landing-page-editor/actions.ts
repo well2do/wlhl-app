@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { execute } from "@/lib/db";
+import { readEventRegistrationFields } from "@/lib/event-registration";
 import {
   isAllowedLandingImageSlot,
   landingPageDefaults,
@@ -178,12 +179,21 @@ export async function updateLandingEventAction(formData: FormData) {
     || !["draft", "upcoming", "completed", "cancelled"].includes(status)) {
     editorRedirect("error", "Check the event dates, capacity and status.", locale);
   }
-  const existing = await execute("SELECT id FROM events WHERE id = ?", [eventId]);
+  const existing = await execute("SELECT * FROM events WHERE id = ?", [eventId]);
   if (!existing.rows.length) editorRedirect("error", "Event not found.", locale);
+  const row = existing.rows[0];
+  let registration: ReturnType<typeof readEventRegistrationFields>;
+  try {
+    registration = readEventRegistrationFields({
+      registrationUrl: row.registration_url, feeDetails: row.fee_details, feeDetailsCn: row.fee_details_cn,
+      paymentInstructions: row.payment_instructions, paymentInstructionsCn: row.payment_instructions_cn,
+      ...Object.fromEntries(formData),
+    });
+  } catch (error) { editorRedirect("error", error instanceof Error ? error.message : "Check the registration and payment fields.", locale); }
   if (locale === "cn") {
-    await execute("UPDATE events SET title_cn = ?, description_cn = ?, location_cn = ?, category_cn = ?, event_date = ?, end_date = ?, capacity = ?, status = ? WHERE id = ?", [title, description, location, category, eventDate.toISOString(), endDate?.toISOString() ?? null, capacity, status, eventId]);
+    await execute("UPDATE events SET title_cn = ?, description_cn = ?, location_cn = ?, category_cn = ?, event_date = ?, end_date = ?, capacity = ?, status = ?, registration_url = ?, fee_details_cn = ?, payment_instructions_cn = ? WHERE id = ?", [title, description, location, category, eventDate.toISOString(), endDate?.toISOString() ?? null, capacity, status, registration.registrationUrl, registration.feeDetailsCn, registration.paymentInstructionsCn, eventId]);
   } else {
-    await execute("UPDATE events SET title = ?, description = ?, location = ?, category = ?, event_date = ?, end_date = ?, capacity = ?, status = ? WHERE id = ?", [title, description, location, category, eventDate.toISOString(), endDate?.toISOString() ?? null, capacity, status, eventId]);
+    await execute("UPDATE events SET title = ?, description = ?, location = ?, category = ?, event_date = ?, end_date = ?, capacity = ?, status = ?, registration_url = ?, fee_details = ?, payment_instructions = ? WHERE id = ?", [title, description, location, category, eventDate.toISOString(), endDate?.toISOString() ?? null, capacity, status, registration.registrationUrl, registration.feeDetails, registration.paymentInstructions, eventId]);
   }
   await execute("UPDATE event_management SET revision = revision + 1, updated_at = ? WHERE event_id = ?", [new Date().toISOString(), eventId]);
   await writeAdminLog({

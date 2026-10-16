@@ -25,3 +25,11 @@ test("page content accepts only known fields and safe registration links", () =>
   const link = pageCopyFields("about", "en").find((field) => field.startsWith("https://"))!;
   assert.throws(() => validatePageCopy("about", "en", { [link]: "javascript:alert(1)" }));
 });
+
+test("registration copy upgrades old labels without discarding custom page edits", () => {
+  assert.deepEqual(validatePageCopy("events", "cn", {
+    "预约您的席位。": "预约您的席位。", "俱乐部活动日历": "Custom calendar title",
+  }), { "报名登记": "报名登记", "俱乐部活动日历": "Custom calendar title" });
+  assert.deepEqual(validatePageCopy("member", "en", { Reserve: "Custom registration label" }), { Register: "Custom registration label" });
+  assert.deepEqual(validatePageCopy("member", "en", { Reserve: "Old label", Register: "New label" }), { Register: "New label" });
+});

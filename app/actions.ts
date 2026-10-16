@@ -15,6 +15,7 @@ import {
   requireAdmin,
 } from "@/lib/auth";
 import { execute } from "@/lib/db";
+import { readEventRegistrationFields, safeEventRegistrationUrl } from "@/lib/event-registration";
 
 // Optional connection to the existing member service.
 const FUINT_API = process.env.NEXT_PUBLIC_FUINT_API || "https://parsley-easiest-qualify.ngrok-free.dev";
@@ -282,15 +283,17 @@ export async function registerForEventAction(formData: FormData) {
   if (!memberId || !eventId) return;
   const member = await execute("SELECT membership_status FROM members WHERE id = ? LIMIT 1", [memberId]);
   if (member.rows[0]?.membership_status !== "active") return;
-  const event = await execute("SELECT id FROM events WHERE id = ? AND status = 'upcoming' AND julianday(event_date) >= julianday('now')", [eventId]);
+  const event = await execute("SELECT id, registration_url FROM events WHERE id = ? AND status = 'upcoming' AND julianday(event_date) >= julianday('now')", [eventId]);
   if (!event.rows.length) return;
+  const registrationUrl = safeEventRegistrationUrl(event.rows[0].registration_url);
+  if (registrationUrl) redirect(registrationUrl);
   await execute(
     `INSERT INTO attendance (id, member_id, event_id, status, checked_in_at)
      VALUES (?, ?, ?, 'registered', NULL)
      ON CONFLICT(member_id, event_id) DO NOTHING`,
     [crypto.randomUUID(), memberId, eventId],
   );
-  await writeActivityLog({ memberId, eventId, activityType: "event_registration", description: "Reserved a place through the member portal.", actorType: "member", metadata: { source: "member_portal" } });
+  await writeActivityLog({ memberId, eventId, activityType: "event_registration", description: "Registered through the member portal.", actorType: "member", metadata: { source: "member_portal" } });
   revalidatePath("/member");
   revalidatePath("/cn/member");
   revalidatePath("/events");
@@ -359,9 +362,12 @@ export async function createAnnouncementAction(formData: FormData) {
 
 export async function createEventAction(formData: FormData) {
   await requireAdmin();
+  let registration: ReturnType<typeof readEventRegistrationFields>;
+  try { registration = readEventRegistrationFields(Object.fromEntries(formData)); }
+  catch (error) { redirect(`/admin?view=events&error=${encodeURIComponent(error instanceof Error ? error.message : "Check the registration and payment fields.")}`); }
   const eventDate = text(formData, "eventDate");
   const eventId = crypto.randomUUID();
-  await execute("INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'upcoming')", [
+  await execute("INSERT INTO events (id, title, description, event_date, end_date, location, category, capacity, status, registration_url, fee_details, fee_details_cn, payment_instructions, payment_instructions_cn) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'upcoming', ?, ?, ?, ?, ?)", [
     eventId,
     text(formData, "title"),
     text(formData, "description"),
@@ -370,6 +376,8 @@ export async function createEventAction(formData: FormData) {
     text(formData, "location"),
     text(formData, "category"),
     Math.max(1, Number(text(formData, "capacity")) || 30),
+    registration.registrationUrl, registration.feeDetails, registration.feeDetailsCn,
+    registration.paymentInstructions, registration.paymentInstructionsCn,
   ]);
   await writeActivityLog({ eventId, activityType: "event_created", description: `Created event: ${text(formData, "title")}`, actorType: "admin" });
   revalidatePath("/");

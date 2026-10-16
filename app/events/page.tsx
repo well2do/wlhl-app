@@ -23,8 +23,8 @@ export default async function EventsPage() {
         </section>
         <section className="section event-list-section">
           <div className="section-heading split-heading compact-heading">
-            <div><p className="eyebrow">{copyText("Upcoming gatherings")}</p><h2>{copyText("Save your spot.")}</h2></div>
-            <p>{copyText("Members can reserve from their personal portal. New here? Join the club in just a few minutes.")}</p>
+            <div><p className="eyebrow">{copyText("Upcoming gatherings")}</p><h2>{copyText("Event registration")}</h2></div>
+            <p>{copyText("Open an event to view fees, payment methods and registration details.")}</p>
           </div>
           <div className="event-list">
             {events.map((event, index) => (
@@ -35,7 +35,7 @@ export default async function EventsPage() {
                   <small>{event.category}</small><h3><Link href={eventHref(event.id, "en")}>{event.title}</Link></h3><p>{event.description}</p>
                   <div className="event-inline-meta"><span><CalendarDays size={15} />{formatEventDate(event.event_date)}</span><span><Clock3 size={15} />{formatEventTime(event.event_date)}{event.end_date && ` – ${formatEventTime(event.end_date)}`}</span><span><MapPin size={15} />{event.location}</span>{event.capacity > 0 && <span><Users size={15} />{event.attendee_count || 0}/{event.capacity}</span>}</div>
                 </div>
-                <Link className="round-link" href={eventHref(event.id)} aria-label={`Reserve ${event.title}`}><ArrowRight size={20} /></Link>
+                <Link className="round-link" href={eventHref(event.id)} aria-label={`Register for ${event.title}`}><ArrowRight size={20} /></Link>
               </article>
             ))}
           </div>

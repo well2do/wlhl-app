@@ -26,6 +26,9 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
   await page.locator('[name=descriptionCn]').fill('全身保健操 / 八段锦 → 午餐 → 三高管理交流');
   await page.locator('[name=start]').fill('2099-10-18T11:00');await page.locator('[name=end]').fill('2099-10-18T15:00');
   await page.locator('[name=locationCn]').fill('14679 Dorsey Mill Rd, Glenwood, MD 21738');
+  await page.locator('[name=registrationUrl]').fill('https://example.invalid/event-registration');
+  await page.locator('[name=feeDetailsCn]').fill('会员：$10/人\n非会员：$30/人\n特邀：免费\n现场支付：$35/人');
+  await page.locator('[name=paymentInstructionsCn]').fill('Zelle：payments@example.invalid\n现场支付：$35/人');
   await page.locator('[name=poster]').setInputFiles({name:'poster.png',mimeType:'image/png',buffer:png});
   await page.locator('[name=status]').selectOption('upcoming');
   await page.getByRole('button',{name:'保存活动',exact:true}).click();
@@ -34,16 +37,22 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
   await Promise.all([page.waitForResponse(response=>response.url().endsWith('/api/shop-manager/events')&&response.request().method()==='GET'),page.getByRole('button',{name:'保存活动',exact:true}).click()]);
   await page.goto(origin+href);await page.getByRole('heading',{name:'浏览器活动发布测试'}).waitFor();
   assert.match(await page.locator('.event-detail-description').innerText(),/Updated activity details/);
+  await page.getByRole('heading',{name:'活动费用',exact:true}).waitFor();
+  assert.match(await page.locator('.event-payment-details').innerText(),/会员：\$10\/人/);
+  assert.match(await page.locator('.event-payment-details').innerText(),/payments@example.invalid/);
+  assert.equal(await page.getByRole('link',{name:'报名登记',exact:true}).getAttribute('href'),'https://example.invalid/event-registration');
   const poster=page.locator('.forum-poster-button img');assert.ok(await poster.evaluate(img=>img.complete&&img.naturalWidth>0));
   await page.getByRole('button',{name:'打开活动海报高清大图'}).click();assert.ok(await page.locator('dialog').evaluate(el=>el.open));
   await page.getByRole('button',{name:'关闭海报大图'}).click();
   await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.goto(origin+'/shop-manager/events');await page.getByRole('button',{name:'编辑活动',exact:true}).click();
+  assert.equal(await page.locator('[name=registrationUrl]').inputValue(),'https://example.invalid/event-registration');
+  assert.match(await page.locator('[name=feeDetailsCn]').inputValue(),/非会员：\$30\/人/);
   await page.locator('[name=status]').selectOption('cancelled');await page.getByRole('button',{name:'保存活动',exact:true}).click();
   await page.getByText('活动已保存；草稿或下线活动不会显示在前台。').waitFor();
   assert.equal((await fetch(origin+href)).status,404);
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({shopManagerUI:'passed',posterUpload:'passed',publishAndEdit:'passed',publicDetail:'passed',posterLightbox:'passed',mobileOverflow:false,unpublish:'passed',pageErrors:errors,productionWrites:0}));
+  console.log(JSON.stringify({shopManagerUI:'passed',posterUpload:'passed',publishAndEdit:'passed',publicDetail:'passed',registrationAndFees:'passed',posterLightbox:'passed',mobileOverflow:false,unpublish:'passed',pageErrors:errors,productionWrites:0}));
  } finally {
   await browser?.close();app?.kill();backend.closeAllConnections();await new Promise(resolve=>backend.close(resolve));rmSync(directory,{recursive:true,force:true});
  }

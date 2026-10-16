@@ -2,6 +2,7 @@ import { db, execute } from './db';
 import { canManageEvent, type EventManager } from './event-manager-auth';
 import { easternTimeToIso } from './event-time';
 import type { ClubEvent } from './types';
+import { readEventRegistrationFields } from './event-registration';
 
 export class EventError extends Error {
   constructor(message: string, public status = 400) { super(message); }
@@ -63,21 +64,33 @@ export async function saveManagedEvent(manager: EventManager, input: Record<stri
   const client = await db();
   const tx = await client.transaction('write');
   try {
-    const current = await tx.execute({ sql: 'SELECT e.id, m.* FROM events e LEFT JOIN event_management m ON m.event_id = e.id WHERE e.id = ?', args: [id] });
+    const current = await tx.execute({ sql: 'SELECT e.*, m.* FROM events e LEFT JOIN event_management m ON m.event_id = e.id WHERE e.id = ?', args: [id] });
     const row = current.rows[0];
     if (updating) {
       if (!row || !canManageEvent(manager, { merchant_id: row.merchant_id, store_id: row.store_id })) throw new EventError('无权修改这个活动', 403);
       if (Number(input.revision) !== Number(row.revision || 0)) throw new EventError('活动已被其他人更新，请重新打开后再修改', 409);
     }
+    let registration;
+    try {
+      registration = readEventRegistrationFields({
+        registrationUrl: row?.registration_url, feeDetails: row?.fee_details, feeDetailsCn: row?.fee_details_cn,
+        paymentInstructions: row?.payment_instructions, paymentInstructionsCn: row?.payment_instructions_cn,
+        ...input,
+      });
+    } catch (error) { throw new EventError(error instanceof Error ? error.message : '请检查报名和收费说明'); }
     const now = new Date().toISOString();
     await tx.execute({ sql: `INSERT INTO events
-      (id,title,description,event_date,end_date,location,category,capacity,status,title_cn,description_cn,location_cn,category_cn)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
+      (id,title,description,event_date,end_date,location,category,capacity,status,title_cn,description_cn,location_cn,category_cn,
+       registration_url,fee_details,fee_details_cn,payment_instructions,payment_instructions_cn)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
       title=excluded.title,description=excluded.description,event_date=excluded.event_date,end_date=excluded.end_date,
       location=excluded.location,category=excluded.category,capacity=excluded.capacity,status=excluded.status,
-      title_cn=excluded.title_cn,description_cn=excluded.description_cn,location_cn=excluded.location_cn,category_cn=excluded.category_cn`,
+      title_cn=excluded.title_cn,description_cn=excluded.description_cn,location_cn=excluded.location_cn,category_cn=excluded.category_cn,
+      registration_url=excluded.registration_url,fee_details=excluded.fee_details,fee_details_cn=excluded.fee_details_cn,
+      payment_instructions=excluded.payment_instructions,payment_instructions_cn=excluded.payment_instructions_cn`,
       args: [id,fields.title,fields.description,fields.start,fields.end,fields.location,fields.category,fields.capacity,fields.status,
-        fields.titleCn,fields.descriptionCn,fields.locationCn,fields.categoryCn] });
+        fields.titleCn,fields.descriptionCn,fields.locationCn,fields.categoryCn,registration.registrationUrl,
+        registration.feeDetails,registration.feeDetailsCn,registration.paymentInstructions,registration.paymentInstructionsCn] });
     await tx.execute({ sql: `INSERT INTO event_management (event_id,merchant_id,store_id,created_by,revision,updated_at)
       VALUES (?,?,?,?,1,?) ON CONFLICT(event_id) DO UPDATE SET revision=event_management.revision+1,updated_at=excluded.updated_at`,
       args: [id,manager.merchantId,manager.storeId,manager.id,now] });

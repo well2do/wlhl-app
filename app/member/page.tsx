@@ -1,3 +1,5 @@
+import { eventHref } from "@/lib/event-time";
+import { safeEventRegistrationUrl } from "@/lib/event-registration";
 import { MemberProfileForm } from "@/components/member-profile-form";
 import { createCopy } from "@/lib/page-copy";
 import { getPageCopy } from "@/lib/page-copy-store";
@@ -72,7 +74,7 @@ export default async function MemberPage({ searchParams }: { searchParams: Promi
         </section>
 
         <section className="member-stat-grid">
-          <div><span className="member-stat-icon coral"><CalendarCheck2 size={22} /></span><p><strong>{attendance.length}</strong><small>{copyText("Events reserved")}</small></p></div>
+          <div><span className="member-stat-icon coral"><CalendarCheck2 size={22} /></span><p><strong>{attendance.length}</strong><small>{copyText("Registered events")}</small></p></div>
           <div><span className="member-stat-icon gold"><Trophy size={22} /></span><p><strong>{completedCount}</strong><small>{copyText("Events completed")}</small></p></div>
           <div className="member-interest-stat"><span className="member-stat-icon green"><Sparkles size={22} /></span><p><strong>{member.interests.split(",")[0] || "Wellness"}</strong><small>{copyText("Top interest")}</small></p></div>
         </section>
@@ -87,12 +89,12 @@ export default async function MemberPage({ searchParams }: { searchParams: Promi
                   <article key={event.id} className="portal-event">
                     <div className="portal-event-date"><strong>{new Date(event.event_date).toLocaleDateString("en-US", { timeZone: "America/New_York", day: "2-digit" })}</strong><span>{new Date(event.event_date).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short" })}</span></div>
                     <div className="portal-event-info"><small>{event.category}</small><h3>{event.title}</h3><p><Clock3 size={14} />{formatEventTime(event.event_date)} <span>·</span> <MapPin size={14} />{event.location}</p></div>
-                    {record ? <span className="reserved-chip"><CheckCircle2 size={14} />{record.status}</span> : member.membership_status !== "active" ? (
+                    {safeEventRegistrationUrl(event.registration_url) ? <Link className="button button-outline button-small" href={eventHref(event.id)}>{copyText("Register")}</Link> : record ? <span className="reserved-chip"><CheckCircle2 size={14} />{record.status}</span> : member.membership_status !== "active" ? (
                       <span className="approval-chip">{copyText("Approval pending")}</span>
                     ) : (
                       <form action={registerForEventAction}>
                         <input type="hidden" name="eventId" value={event.id} />
-                        <button className="button button-outline button-small">{copyText("Reserve")}</button>
+                        <button className="button button-outline button-small">{copyText("Register")}</button>
                       </form>
                     )}
                   </article>
@@ -112,7 +114,7 @@ export default async function MemberPage({ searchParams }: { searchParams: Promi
           {attendance.length ? (
             <div className="history-list">{attendance.map((item) => <div key={item.id}><span className={`history-check history-${item.status}`}><CheckCircle2 size={16} /></span><div><strong>{item.event_title}</strong><small>{item.event_date ? formatEventDate(item.event_date, true) : ""}</small></div><span className="history-status">{item.status}</span></div>)}</div>
           ) : (
-            <div className="empty-state compact-empty"><CalendarDays size={26} /><h3>{copyText("Your first event is waiting.")}</h3><p>{copyText("Reserve one above and it’ll appear here.")}</p></div>
+            <div className="empty-state compact-empty"><CalendarDays size={26} /><h3>{copyText("Your first event is waiting.")}</h3><p>{copyText("Register above to see your member portal registrations here.")}</p></div>
           )}
         </section>
         <MemberProfileForm member={member} locale="en" />

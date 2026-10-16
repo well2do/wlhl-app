@@ -6,6 +6,7 @@ import type { EventManager } from '@/lib/event-manager-auth';
 import type { ManagedEvent } from '@/lib/managed-events';
 import { easternTimeInput, eventHref } from '@/lib/event-time';
 import { landingImageUrl } from '@/lib/landing-page-content';
+import { EventRegistrationFields } from './event-registration-fields';
 
 const statuses: Record<string, string> = { draft: '草稿（仅后台可见）', upcoming: '上线（即将举行）', completed: '已结束', cancelled: '下线 / 取消' };
 export function EventManagerForm() {
@@ -83,6 +84,8 @@ export function EventManagerForm() {
               <label>结束时间（美国东部时间）<input name="end" type="datetime-local" required defaultValue={selected?.end_date ? easternTimeInput(selected.end_date) : ''} /></label>
             </div>
             <label>地点及地址<input name="locationCn" required maxLength={500} defaultValue={selected?.location_cn || selected?.location} /></label>
+            <h3>报名登记与收费</h3>
+            <EventRegistrationFields event={selected} locale="cn" />
             <div className="form-row two-columns">
               <label>分类<input name="categoryCn" required maxLength={100} defaultValue={selected?.category_cn || selected?.category || '社区活动'} /></label>
               <label>计划人数（选填）<input name="capacity" type="number" min={1} max={100000} defaultValue={selected?.capacity || ''} placeholder="未确定可留空" /></label>
@@ -99,6 +102,7 @@ export function EventManagerForm() {
               <label>English description<textarea name="description" rows={4} maxLength={4000} defaultValue={selected?.description} /></label>
               <label>English location<input name="location" maxLength={500} defaultValue={selected?.location} /></label>
               <label>English category<input name="category" maxLength={100} defaultValue={selected?.category} /></label>
+              <EventRegistrationFields event={selected} locale="en" includeLink={false} />
             </details>
             <label>发布状态<select name="status" defaultValue={selected?.status || 'draft'}>{Object.entries(statuses).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             <button className="button button-dark" type="submit">{busy ? '正在保存…' : '保存活动'}</button>

@@ -380,6 +380,24 @@ Validation: `npm test`, `npm run test:integration`, and
 and permission fixtures and exercises publish, edit, poster viewing, mobile
 layout, and unpublishing without writing production data.
 
+### Event registration, fees and payment instructions
+
+In `/shop-manager/events`, open an event and edit **报名登记与收费**. Set an
+optional HTTPS registration form URL, fee details and payment instructions;
+English versions are available in the English content section. Save a published
+event to update its public detail page. Website administrators can also edit
+these fields in the event creation form and the landing-page record editor.
+
+When a registration URL is present, the public registration button opens that
+form, including for visitors who are not club members. The external form stores
+those submissions; they are not automatically imported into website attendance.
+Without an external URL, the existing member registration flow remains active.
+Payment instructions describe the organizer's payment methods and do not initiate
+a payment or mark a registration as paid. Empty fee fields make no claim that an
+event is free. Existing events retain their values when older clients omit the
+new fields. The event manager's merchant/store scope and revision checks also
+protect registration URLs, fees and payment details.
+
 ### Reviewing website membership applications
 
 Open `/admin?view=approvals`, or choose **网站会员审核** in the Fuint sidebar.

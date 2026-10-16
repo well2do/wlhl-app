@@ -36,17 +36,34 @@ export function translateCopy<T>(value: T, copy: PageCopy): Translated<T> {
   return value as Translated<T>;
 }
 
+const registrationCopyAliases: Record<string, string> = {
+  "Save your spot.": "Event registration",
+  "Members can reserve from their personal portal. New here? Join the club in just a few minutes.": "Open an event to view fees, payment methods and registration details.",
+  "预约您的席位。": "报名登记",
+  "会员可以通过个人会员中心预约。第一次来到这里？几分钟即可申请加入俱乐部。": "打开活动详情查看费用和付款方式，并完成报名登记。",
+  "Events reserved": "Registered events",
+  "Reserve": "Register",
+  "Reserve one above and it’ll appear here.": "Register above to see your member portal registrations here.",
+  "已预约活动": "已报名活动",
+  "预约": "报名登记",
+  "在上方预约活动后，记录会显示在这里。": "完成活动报名登记后，可在这里查看站内报名记录。",
+  "Reserve your seat": "Registration",
+  "预约席位": "报名登记"
+};
+
 export function validatePageCopy(page: EditablePage, locale: PageLocale, input: unknown): PageCopy {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Invalid page content.");
   const fields = pageCopyFields(page, locale);
   const output: PageCopy = {};
-  for (const [key, value] of Object.entries(input)) {
+  for (const [storedKey, value] of Object.entries(input)) {
+    const key = registrationCopyAliases[storedKey] || storedKey;
     if (!fields.includes(key) || typeof value !== "string" || value.length > 4000) throw new Error("Invalid page field.");
     if (/^https:\/\//.test(key)) {
       try { if (new URL(value).protocol !== "https:") throw new Error(); }
       catch { throw new Error("Registration links must use a valid HTTPS address."); }
     }
-    output[key] = value;
+    if (storedKey !== key && Object.hasOwn(input, key)) continue;
+    output[key] = value === storedKey ? key : value;
   }
   return output;
 }

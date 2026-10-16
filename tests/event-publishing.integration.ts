@@ -106,3 +106,38 @@ test('root administrator can publish a club event and validation rejects bad dat
   assert.ok(!(await list(cookie('store7'))).some(e=>e.id===id));
   const logs=await database.execute({sql:'SELECT metadata FROM activity_logs WHERE event_id=?',args:[id]});assert.equal(JSON.parse(String(logs.rows[0].metadata)).actorId,'site-admin');
 });
+
+test('event fees and payment instructions publish bilingually and remain scoped to their manager', async()=>{
+  const registration = {
+    registrationUrl: 'https://example.invalid/event-registration',
+    feeDetails: 'Members: $10/person\nGuests: $30/person\nInvited guests: free\nOn-site: $35/person',
+    feeDetailsCn: '会员：$10/人\n非会员：$30/人\n特邀：免费\n现场支付：$35/人',
+    paymentInstructions: 'Zelle: payments@example.invalid\nOn-site payment: $35/person',
+    paymentInstructionsCn: 'Zelle：payments@example.invalid\n现场支付：$35/人',
+  };
+  for (const changes of [
+    {registrationUrl:'javascript:alert(1)'}, {registrationUrl:'http://example.invalid/form'},
+    {registrationUrl:'https://user:password@example.invalid/form'}, {feeDetails:'x'.repeat(3001)},
+  ]) assert.equal((await save(cookie('store7'), {...draft,...registration,...changes})).status, 400);
+  const created = await save(cookie('store7'), {...draft,...registration,status:'upcoming'});
+  assert.equal(created.status,200);
+  const {id} = await created.json();
+  for (const [prefix,fee,payment,label] of [
+    ['/cn',registration.feeDetailsCn,registration.paymentInstructionsCn,'报名登记'],
+    ['',registration.feeDetails,registration.paymentInstructions,'Register'],
+  ]) {
+    const html = await (await fetch(`${origin}${prefix}/events/${id}`)).text();
+    assert.ok(html.includes(fee)); assert.ok(html.includes(payment));
+    assert.ok(html.includes(`href="${registration.registrationUrl}"`));
+    assert.ok(html.includes(`>${label}</a>`));
+  }
+  assert.equal((await save(cookie('store8'), {...draft,...registration,id,revision:1,feeDetails:'Free'})).status,403);
+  assert.equal((await save(cookie('store7'), {...draft,id,revision:1,status:'upcoming'})).status,200);
+  const preserved = (await list(cookie('store7'))).find(event=>event.id===id)!;
+  assert.equal(preserved.fee_details,registration.feeDetails);
+  assert.equal(preserved.registration_url,registration.registrationUrl);
+  assert.equal((await save(cookie('store7'), {...draft,id,revision:2,status:'upcoming',registrationUrl:'',feeDetails:'',feeDetailsCn:'',paymentInstructions:'',paymentInstructionsCn:''})).status,200);
+  const cleared = await (await fetch(`${origin}/cn/events/${id}`)).text();
+  assert.ok(!cleared.includes('class="event-payment-details"'));
+  assert.ok(!cleared.includes(`href="${registration.registrationUrl}"`));
+});

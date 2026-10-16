@@ -164,6 +164,8 @@ test("admin-created events reach both language calendars and member reservations
     title: "Connected Calendar Fixture", description: "A temporary integration event.",
     eventDate: new Date(Date.now() + 86_400_000).toISOString().slice(0, 16),
     capacity: "30", location: "Test location", category: "Community",
+    feeDetails: "Members: $10/person", feeDetailsCn: "会员：$10/人",
+    paymentInstructions: "Zelle: payments@example.invalid", paymentInstructionsCn: "Zelle：payments@example.invalid",
   });
   for (const path of ["/events", "/cn/events"]) {
     assert.ok((await admin.get(path)).includes("Connected Calendar Fixture"), path);
@@ -172,8 +174,16 @@ test("admin-created events reach both language calendars and member reservations
   await member.submit("/member", "phoneLastFour", { email: "membership@example.invalid", phoneLastFour: "0199" });
   assert.ok((await member.get("/member")).includes("Connected Calendar Fixture"));
   const event = (await db.execute("SELECT id FROM events WHERE title = 'Connected Calendar Fixture'")).rows[0];
+  assert.ok((await admin.get(`/events/${event.id}`)).includes("Members: $10/person"));
+  assert.ok((await admin.get(`/cn/events/${event.id}`)).includes("会员：$10/人"));
+  assert.ok((await admin.get(`/cn/events/${event.id}`)).includes("payments@example.invalid"));
   await member.submit("/member", "eventId", { eventId: String(event.id) });
   const reservations = await db.execute({ sql: "SELECT COUNT(*) AS count FROM attendance WHERE event_id = ?", args: [event.id] });
   assert.equal(reservations.rows[0].count, 1);
   assert.ok((await admin.get("/admin?view=attendance")).includes("Connected Calendar Fixture"));
+  await db.execute({sql:"UPDATE events SET registration_url = ? WHERE id = ?",args:['https://example.invalid/event-registration',event.id]});
+  const registrationCount = (await db.execute("SELECT COUNT(*) AS count FROM attendance")).rows[0].count;
+  const external = await member.submit("/member", "eventId", { eventId: String(event.id) });
+  assert.equal(external.response.headers.get("location"),'https://example.invalid/event-registration');
+  assert.equal((await db.execute("SELECT COUNT(*) AS count FROM attendance")).rows[0].count,registrationCount);
 });

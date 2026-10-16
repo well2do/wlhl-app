@@ -33,7 +33,7 @@ export function ForumRegistrationForm({locale = "en", copy = {}}: {locale?: "en"
     <form action={action} className="forum-form">
       <input type="hidden" name="locale" value={locale} />
       <div className="forum-form-heading">
-        <p className="forum-kicker">{locale === "cn" ? copyText("预约席位") : copyText("Reserve your seat")}</p>
+        <p className="forum-kicker">{locale === "cn" ? copyText("报名登记") : copyText("Registration")}</p>
         <h2>{locale === "cn" ? copyText("活动报名") : copyText("Event registration")}</h2>
         <p>{locale === "cn" ? copyText("本次活动免费参加，请每位参会者单独填写。") : copyText("Registration is complimentary. Please submit one form per attendee.")}</p>
       </div>

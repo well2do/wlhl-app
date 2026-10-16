@@ -45,7 +45,7 @@ export const defaultLandingPageContent = {
   eventArtworkLargeText: "Live fully.",
   eventImageAlt: "Club members enjoying the featured event",
   eventEyebrow: "Up next at the club",
-  eventPrimaryButton: "Reserve your spot",
+  eventPrimaryButton: "Register",
   eventSecondaryButton: "See all upcoming events",
 
   shopEyebrow: "The wellness shelf",
@@ -149,7 +149,7 @@ export const defaultChineseLandingPageContent: LandingPageContent = {
   eventArtworkLargeText: "活力生活。",
   eventImageAlt: "俱乐部会员参加精选活动",
   eventEyebrow: "俱乐部下一场活动",
-  eventPrimaryButton: "预约席位",
+  eventPrimaryButton: "报名登记",
   eventSecondaryButton: "查看全部活动",
 
   shopEyebrow: "健康生活精选",
@@ -284,7 +284,7 @@ export const landingPageFieldGroups: LandingPageFieldGroup[] = [
       { key: "eventArtworkLargeText", label: "Event artwork large text" },
       { key: "eventImageAlt", label: "Uploaded event image description", note: "Used by screen readers." },
       { key: "eventEyebrow", label: "Event eyebrow" },
-      { key: "eventPrimaryButton", label: "Reserve button" },
+      { key: "eventPrimaryButton", label: "Registration button" },
       { key: "eventSecondaryButton", label: "All events link" },
       { key: "shopEyebrow", label: "Shop eyebrow" },
       { key: "shopTitleLine", label: "Shop headline — first line" },
