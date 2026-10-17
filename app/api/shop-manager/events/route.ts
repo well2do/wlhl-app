@@ -5,7 +5,7 @@ import { EventError, listManagedEvents, saveManagedEvent } from '@/lib/managed-e
 const noStore = { 'Cache-Control': 'no-store' };
 export async function GET() {
   const manager = await getEventManager();
-  if (!manager) return Response.json({ error: '请先登录店铺后台，并确认账号有内容管理权限' }, { status: 401, headers: noStore });
+  if (!manager) return Response.json({ error: '请先登录部门后台，并确认账号有内容管理权限' }, { status: 401, headers: noStore });
   return Response.json({ manager, events: await listManagedEvents(manager) }, { headers: noStore });
 }
 
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   } catch { /* Missing and opaque origins cannot write events. */ }
   if (!sameOrigin) return Response.json({ error: '请求来源无效' }, { status: 403 });
   const manager = await getEventManager();
-  if (!manager) return Response.json({ error: '登录已失效或没有内容管理权限，请重新登录店铺后台' }, { status: 401, headers: noStore });
+  if (!manager) return Response.json({ error: '登录已失效或没有内容管理权限，请重新登录部门后台' }, { status: 401, headers: noStore });
   if (Number(request.headers.get('content-length') || 0) > 4.4 * 1024 * 1024) return Response.json({ error: '海报不能超过 4MB' }, { status: 413 });
   try {
     const form = await request.formData();

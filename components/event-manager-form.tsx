@@ -68,14 +68,14 @@ export function EventManagerForm({ initialEventId }: { initialEventId?: string }
     finally { setBusy(false); }
   }
   return <main className="event-manager-page" lang="zh-CN">
-    <nav><Link href="/wlhl-application/index.html">← 店铺后台</Link><Link href="/cn/events">查看网站活动日历</Link></nav>
+    <nav><Link href="/wlhl-application/index.html">← 部门后台</Link><Link href="/cn/events">查看网站活动日历</Link></nav>
     <h1>网站活动管理</h1>
     <p>填写活动资料、上传海报，选择“上线（即将举行）”并保存，即可显示在活动日历；最近的一场活动也会显示在首页。</p>
     {error && <p role="alert" className="form-error">{error}</p>}
     {!loaded && <p role="status">正在核对登录信息…</p>}
-    {loaded && !manager && <p><Link className="button button-dark" href="/wlhl-application/index.html#/login">登录店铺后台</Link> <Link href="/admin/login">网站管理员登录</Link></p>}
+    {loaded && !manager && <p><Link className="button button-dark" href="/wlhl-application/index.html#/login">登录部门后台</Link> <Link href="/admin/login">网站管理员登录</Link></p>}
     {manager && <>
-      <p>当前账号：{manager.name} · {manager.isSiteAdmin ? '管理所有商户的活动和网页' : manager.storeId ? '仅管理本店活动' : '管理俱乐部活动'}</p>
+      <p>当前账号：{manager.name} · {manager.isSiteAdmin ? '管理所有分会的活动和网页' : manager.storeId ? '仅管理本部门活动' : '管理俱乐部活动'}</p>
       <section className="event-editor-help" aria-label="网页内容编辑入口">
         <h2>网页上的文字在哪里改？</h2>
         <p>先选择左侧活动。“活动介绍 / 流程”修改正文；“活动网页文字”修改栏目标题、按钮和提示语。海报图片里的字需要修改图片后重新上传。</p>
@@ -92,7 +92,7 @@ export function EventManagerForm({ initialEventId }: { initialEventId?: string }
           <ul>{events.map(event => <li key={event.id}>
             <strong>{event.title_cn || event.title}</strong>
             <span>{easternTimeInput(event.event_date).replace('T',' ')} · {statuses[event.status]}</span>
-            {manager.isSiteAdmin && <span>{event.merchant_id == null ? '历史活动（未分配商户）' : `商户 ${event.merchant_id} · ${event.store_id ? `店铺 ${event.store_id}` : '商户统一活动'}`}</span>}
+            {manager.isSiteAdmin && <span>{event.merchant_id == null ? '历史活动（未分配分会）' : `分会 ${event.merchant_id} · ${event.store_id ? `部门 ${event.store_id}` : '分会统一活动'}`}</span>}
             <button type="button" disabled={!manager.canEdit || busy} onClick={() => choose(event)}>编辑活动</button>
             {['upcoming','completed'].includes(event.status) && <Link href={eventHref(event.id,'cn')} target="_blank">查看前台</Link>}
           </li>)}</ul>

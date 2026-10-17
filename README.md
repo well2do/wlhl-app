@@ -477,3 +477,12 @@ Explicit logout also clears local credentials if the server logout call fails.
 `npm run test:admin-login-browser` checks both entry points, invalid-password
 retry, expired-session recovery, legacy cookies, and logout failure using mocked
 backend requests. Set `TEST_ORIGIN` to select the deployed or local frontend.
+
+### Organization labels
+
+The Chinese administration interface calls merchants **分会** and stores
+**部门**, including ownership fields, menus, filters, validation messages,
+and event management. `build:content-admin` applies the terminology to staged
+Vue views and backend route titles. Saved organization names, article content,
+API identifiers, authorization scopes, and WeChat payment merchant numbers
+are unchanged. Rebuild both administration entry points when changing labels.

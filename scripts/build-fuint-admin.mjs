@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { organizationLabel } from '../integrations/fuint-admin/organization-terminology.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = resolve(process.argv[2] || '');
@@ -15,6 +16,7 @@ for (const entry of readdirSync(source)) {
 symlinkSync(join(source, 'node_modules'), join(staging, 'node_modules'), 'dir');
 copyFileSync(join(root, 'integrations/fuint-admin/Editor.vue'), join(staging, 'src/components/Editor/index.vue'));
 copyFileSync(join(root, 'integrations/fuint-admin/content-media.js'), join(staging, 'src/utils/content-media.js'));
+copyFileSync(join(root, 'integrations/fuint-admin/organization-terminology.mjs'), join(staging, 'src/utils/organization-terminology.js'));
 function replace(file, before, after) {
   const path = join(staging, file);
   const content = readFileSync(path, 'utf8');
@@ -23,6 +25,10 @@ function replace(file, before, after) {
 }
 replace('src/utils/request.js', "import axios from 'axios'", "import axios from 'axios'\nimport { normalizeMediaResponse } from '@/utils/content-media'");
 replace('src/utils/request.js', '  (res) => {', '  (res) => {\n    res.data = normalizeMediaResponse(res.data)');
+replace('src/utils/request.js', "import axios from 'axios'", "import axios from 'axios'\nimport { organizationLabel } from '@/utils/organization-terminology'");
+replace('src/utils/request.js', "const msg = errorCode[code] || res.data.message || errorCode['default']", "const msg = organizationLabel(errorCode[code] || res.data.message || errorCode['default'])");
+replace('src/store/modules/permission.js', "import auth from '@/plugins/auth'", "import auth from '@/plugins/auth'\nimport { organizationLabel } from '@/utils/organization-terminology'");
+replace('src/store/modules/permission.js', '  return asyncRouterMap.filter((route) => {', '  return asyncRouterMap.filter((route) => {\n    if (route.meta) route.meta.title = organizationLabel(route.meta.title)');
 replace('src/utils/request.js', "store.dispatch('LogOut').then(() => {\n              location.href = '/index'", "store.dispatch('ResetSession').then(() => {\n              location.replace(location.pathname + '#/login')");
 replace('src/permission.js', "store.dispatch('LogOut').then(() => {", "store.dispatch('ResetSession').then(() => {\n              isRelogin.show = false");
 replace('src/permission.js', "              next({ path: '/' })", "              next({ path: '/login', query: { redirect: to.fullPath } })");
@@ -58,7 +64,7 @@ replace('src/store/modules/user.js', `    LogOut({ commit, state }) {
 const login = 'src/views/login.vue';
 replace(login, "        username: 'wlhl',", "        username: '',");
 replace(login, "        password: '123456',", "        password: '',");
-replace(login, 'placeholder="wlhl"', 'placeholder="请输入店铺后台账号"');
+replace(login, 'placeholder="wlhl"', 'placeholder="请输入部门后台账号"');
 replace(login, 'auto-complete="off"', 'auto-complete="username"');
 replace(login, 'auto-complete="off"', 'auto-complete="current-password"\n            show-password');
 replace(login, '>记住密码</el-checkbox', '>记住账号</el-checkbox');
@@ -69,7 +75,7 @@ replace(login, `        password:
 replace(login, `            Cookies.set('password', encrypt(this.loginForm.password), {
               expires: 30,
             })`, "            Cookies.remove('password')");
-replace(login, '        <el-form-item prop="username">', `        <p style="font-size:14px;line-height:1.7;margin-bottom:20px">店铺后台：请使用已开通的店铺或平台账号和密码。<br /><a href="/admin/login?view=approvals" style="text-decoration:underline">网站会员审核请从这里登录</a></p>
+replace(login, '        <el-form-item prop="username">', `        <p style="font-size:14px;line-height:1.7;margin-bottom:20px">部门后台：请使用已开通的部门、分会或平台账号和密码。<br /><a href="/admin/login?view=approvals" style="text-decoration:underline">网站会员审核请从这里登录</a></p>
         <el-form-item prop="username">`);
 const article = 'src/views/content/article/index.vue';
 replace(article, "uploadHeader: { 'Access-Token': getToken() },", "uploadHeader: { 'Access-Token': getToken(), 'ngrok-skip-browser-warning': 'true' },\n      uploadingContent: false,");
@@ -114,6 +120,21 @@ replace('src/views/member/index.vue', '  <div class="app-container">', `  <div c
     <el-alert type="info" :closable="false" show-icon style="margin-bottom:16px">
       <template slot="title">网站入会申请需由网站管理员审核。<a href="/admin?view=approvals" style="text-decoration:underline;font-weight:600">打开网站会员审核</a></template>
     </el-alert>`);
+replace('src/views/store/list.vue', "this.title = '新增站点'", "this.title = '新增部门'");
+replace('src/views/store/list.vue', "this.title = '编辑站点'", "this.title = '编辑部门'");
+// Normalize static interface copy after exact source patches. API data and IDs stay intact.
+function translateViews(directory) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) translateViews(path);
+    else if (entry.name.endsWith('.vue')) {
+      const content = readFileSync(path, 'utf8');
+      const translated = organizationLabel(content);
+      if (translated !== content) writeFileSync(path, translated);
+    }
+  }
+}
+translateViews(join(staging, 'src'));
 const publicPath = '/wlhl-application/';
 const result = spawnSync('npm', ['run', 'build:prod'], {
   cwd: staging, stdio: 'inherit', env: {

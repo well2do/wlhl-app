@@ -20,7 +20,7 @@ export function managerFromAccount(data: unknown): EventManager | null {
   const permitted = (permission: string) => info.permissions!.includes("*:*:*") || info.permissions!.includes(permission);
   if (!permitted("content:article:index")) return null;
   return {
-    id: `fuint:${account.id}`, name: String(account.accountName || "店铺管理员"),
+    id: `fuint:${account.id}`, name: String(account.accountName || "部门管理员"),
     merchantId: Number(account.merchantId), storeId: Number(account.storeId), isSiteAdmin: false,
     canCreate: permitted("content:article:add"), canEdit: permitted("content:article:edit"),
   };

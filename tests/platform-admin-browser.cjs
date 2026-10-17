@@ -46,7 +46,7 @@ const session = platform => ({ accountInfo: { id: 12, accountName: 'Fixture edit
     await page.getByRole('status').waitFor();
     await page.screenshot({path:'/tmp/wlhl-platform-content-editor.png'});
     await page.goto(origin+'/cn/news');await page.getByRole('heading',{name:'系统管理员发布的动态标题',exact:true}).waitFor();
-    await page.goto(origin+'/shop-manager/events');await page.getByText('管理所有商户的活动和网页',{exact:false}).waitFor();
+    await page.goto(origin+'/shop-manager/events');await page.getByText('管理所有分会的活动和网页',{exact:false}).waitFor();
     await page.goto(origin+'/admin/pages?locale=cn');
     await page.getByRole('button',{name:'Sign out',exact:true}).click();
     await page.waitForURL(origin+'/');

@@ -46,7 +46,7 @@ const origin = process.env.TEST_ORIGIN || 'http://localhost:3141';
 
     const fresh = await session();
     await fresh.page.goto(origin + '/wlhl-application/index.html#/login');
-    assert.equal(await fresh.page.getByPlaceholder('请输入店铺后台账号').inputValue(), '');
+    assert.equal(await fresh.page.getByPlaceholder('请输入部门后台账号').inputValue(), '');
     assert.equal(await fresh.page.getByPlaceholder('密码', { exact: true }).inputValue(), '');
     await fresh.page.getByRole('link', { name: '网站会员审核请从这里登录' }).click();
     await fresh.page.getByLabel('网站管理员密码').waitFor();
@@ -78,13 +78,13 @@ const origin = process.env.TEST_ORIGIN || 'http://localhost:3141';
     assert.equal(await websitePassword.inputValue(), 'replacement-fixture-password');
     await fresh.page.setViewportSize({ width: 390, height: 844 });
     assert.equal(await fresh.page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-    await fresh.page.getByRole('link', { name: '店铺、订单和文章管理请使用店铺后台登录。' }).click();
-    await fresh.page.getByPlaceholder('请输入店铺后台账号').waitFor();
+    await fresh.page.getByRole('link', { name: '部门、订单和文章管理请使用部门后台登录。' }).click();
+    await fresh.page.getByPlaceholder('请输入部门后台账号').waitFor();
     await fresh.context.close();
 
     const remembered = await session([{ name: 'username', value: 'fixture-shop' }, { name: 'password', value: 'invalid-legacy-password-cookie' }, { name: 'rememberMe', value: 'true' }]);
     await remembered.page.goto(origin + '/wlhl-application/index.html#/login');
-    assert.equal(await remembered.page.getByPlaceholder('请输入店铺后台账号').inputValue(), 'fixture-shop');
+    assert.equal(await remembered.page.getByPlaceholder('请输入部门后台账号').inputValue(), 'fixture-shop');
     assert.equal(await remembered.page.getByPlaceholder('密码', { exact: true }).inputValue(), '');
     assert.ok(!(await remembered.context.cookies()).some(cookie => cookie.name === 'password'));
     await remembered.context.close();
@@ -92,7 +92,7 @@ const origin = process.env.TEST_ORIGIN || 'http://localhost:3141';
     for (const entry of ['wlhl-application', 'funit-application']) {
       const { context, page, state } = await session([{ name: 'Access-Token', value: 'expired-fixture-session' }]);
       await page.goto(`${origin}/${entry}/index.html#/content/article`);
-      const username = page.getByPlaceholder('请输入店铺后台账号');
+      const username = page.getByPlaceholder('请输入部门后台账号');
       const password = page.getByPlaceholder('密码', { exact: true });
       await username.waitFor();
       assert.ok(!(await context.cookies()).some(cookie => cookie.name === 'Access-Token'));

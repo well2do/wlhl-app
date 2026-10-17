@@ -29,7 +29,7 @@ export default async function PageEditor({ searchParams }: {
       {params.saved && <p className="saved-toast" role="status">{params.saved}</p>}
       {params.error && <p className="editor-error-toast" role="alert">{params.error}</p>}
       <section className="admin-panel">
-        <div className="admin-panel-heading"><div><h2>选择要修改的页面</h2><p>系统管理员可以修改全站网页及所有商户的活动。中英文分别保存。</p></div></div>
+        <div className="admin-panel-heading"><div><h2>选择要修改的页面</h2><p>系统管理员可以修改全站网页及所有分会的活动。中英文分别保存。</p></div></div>
         <nav className="page-editor-links" aria-label="Website pages">
           <Link href={`/admin/landing-page-editor?locale=${locale}`}>首页、顶部导航和页脚</Link>
           {editablePages.map((item) => <Link key={item.id} href={`/admin/pages?page=${item.id}&locale=${locale}`} aria-current={page === item.id ? "page" : undefined}>{pageLabelsCn[item.id]}</Link>)}
@@ -38,13 +38,13 @@ export default async function PageEditor({ searchParams }: {
       <section className="admin-panel">
         <div className="admin-panel-heading"><div><h2>活动、文章、图片及其他内容</h2><p>页面标题和提示语在下方修改；具体内容使用对应入口。海报内的文字需要修改图片后重新上传。</p></div></div>
         <nav className="page-editor-links" aria-label="内容管理入口">
-          <Link href="/shop-manager/events">所有商户的活动、活动网页文字及海报</Link>
-          <Link href="/wlhl-application/index.html#/content/article">所有商户的文章及文章图片</Link>
+          <Link href="/shop-manager/events">所有分会的活动、活动网页文字及海报</Link>
+          <Link href="/wlhl-application/index.html#/content/article">所有分会的文章及文章图片</Link>
           <Link href={`/admin/landing-page-editor?locale=${locale}#live-content`}>公告、商品及历史活动</Link>
           <Link href={`/admin/landing-page-editor?locale=${locale}#images`}>首页图片、标志及论坛海报</Link>
           <Link href="/admin?view=experts">专家介绍</Link>
         </nav>
-        <p>跨商户文章使用店铺后台的系统管理员账号。普通商户和店铺账号仍按所属范围管理。</p>
+        <p>跨分会文章使用部门后台的系统管理员账号。普通分会和部门账号仍按所属范围管理。</p>
       </section>
       <nav className="landing-locale-tabs" aria-label="Page language">
         <Link className={locale === "en" ? "active" : ""} href={`/admin/pages?page=${page}&locale=en`}>English</Link>
