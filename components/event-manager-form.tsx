@@ -7,9 +7,10 @@ import type { ManagedEvent } from '@/lib/managed-events';
 import { easternTimeInput, eventHref } from '@/lib/event-time';
 import { landingImageUrl } from '@/lib/landing-page-content';
 import { EventRegistrationFields } from './event-registration-fields';
+import { EventPageCopyFields } from './event-page-copy-fields';
 
 const statuses: Record<string, string> = { draft: '草稿（仅后台可见）', upcoming: '上线（即将举行）', completed: '已结束', cancelled: '下线 / 取消' };
-export function EventManagerForm() {
+export function EventManagerForm({ initialEventId }: { initialEventId?: string }) {
   const [manager, setManager] = useState<EventManager | null>(null);
   const [events, setEvents] = useState<ManagedEvent[]>([]);
   const [selected, setSelected] = useState<ManagedEvent | null>(null);
@@ -27,7 +28,14 @@ export function EventManagerForm() {
     setManager(result.manager); setEvents(result.events);
     return result.events as ManagedEvent[];
   }
-  useEffect(() => { load().catch(error => setError(error.message)).finally(() => setLoaded(true)); }, []);
+  useEffect(() => {
+    load().then(items => {
+      if (!initialEventId) return;
+      const event = items.find(item => item.id === initialEventId);
+      if (event) setSelected(event);
+      else setError('找不到这个活动，或当前账号没有管理权限。');
+    }).catch(error => setError(error.message)).finally(() => setLoaded(true));
+  }, [initialEventId]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   function choose(event: ManagedEvent | null) {
     setSelected(event); setPreview(''); setError(''); setMessage(''); setPublicLink(''); setReset(value => value + 1);
@@ -38,7 +46,13 @@ export function EventManagerForm() {
     const input = Object.fromEntries(form.entries());
     delete input.poster;
     const body = new FormData();
-    body.set('event', JSON.stringify({ ...input, id: selected?.id, revision: selected?.revision }));
+    const pageCopyFields = (prefix: string) => {
+      const entries = Object.entries(input).filter(([key]) => key.startsWith(prefix));
+      for (const [key] of entries) delete input[key];
+      return entries.length ? Object.fromEntries(entries.map(([key, value]) => [key.slice(prefix.length), value])) : undefined;
+    };
+    const pageCopy = pageCopyFields('pageCopy:'), pageCopyCn = pageCopyFields('pageCopyCn:');
+    body.set('event', JSON.stringify({ ...input, pageCopy, pageCopyCn, id: selected?.id, revision: selected?.revision }));
     const poster = form.get('poster');
     if (poster instanceof File && poster.size) body.set('poster', poster);
     try {
@@ -62,6 +76,15 @@ export function EventManagerForm() {
     {loaded && !manager && <p><Link className="button button-dark" href="/wlhl-application/index.html#/login">登录店铺后台</Link> <Link href="/admin/login">网站管理员登录</Link></p>}
     {manager && <>
       <p>当前账号：{manager.name} · {manager.storeId ? '仅管理本店活动' : '管理俱乐部活动'}</p>
+      <section className="event-editor-help" aria-label="网页内容编辑入口">
+        <h2>网页上的文字在哪里改？</h2>
+        <p>先选择左侧活动。“活动介绍 / 流程”修改正文；“活动网页文字”修改栏目标题、按钮和提示语。海报图片里的字需要修改图片后重新上传。</p>
+        <nav aria-label="其他网页文字编辑">
+          <Link href="/admin/pages?page=events&locale=cn">编辑活动日历页面文字</Link>
+          <Link href="/admin/landing-page-editor?locale=cn">编辑网站顶部导航和页脚</Link>
+        </nav>
+        <small>这两个入口会修改多个活动共用的页面，需要网站管理员登录。</small>
+      </section>
       {message && <p role="status" className="event-save-message">{message} {publicLink && <Link href={publicLink} target="_blank">查看已发布活动 →</Link>}</p>}
       <div className="event-manager-grid">
         <aside>
@@ -86,6 +109,11 @@ export function EventManagerForm() {
             <label>地点及地址<input name="locationCn" required maxLength={500} defaultValue={selected?.location_cn || selected?.location} /></label>
             <h3>报名登记与收费</h3>
             <EventRegistrationFields event={selected} locale="cn" />
+            {selected?.id === 'forum-2026-09-07' ? <p>这场论坛使用独立网页，请由网站管理员前往 <Link href="/admin/pages?page=forum&locale=cn">论坛网页文字编辑</Link> 修改栏目文字。</p> : <section id="event-page-copy" className="event-page-copy-editor">
+              <h3>活动网页文字</h3>
+              <p>修改此活动详情页的标题、按钮和说明。费用金额、付款账号仍在上方“报名登记与收费”中修改。保存活动后生效。</p>
+              <EventPageCopyFields value={selected?.page_copy_cn} locale="cn" />
+            </section>}
             <div className="form-row two-columns">
               <label>分类<input name="categoryCn" required maxLength={100} defaultValue={selected?.category_cn || selected?.category || '社区活动'} /></label>
               <label>计划人数（选填）<input name="capacity" type="number" min={1} max={100000} defaultValue={selected?.capacity || ''} placeholder="未确定可留空" /></label>
@@ -103,6 +131,7 @@ export function EventManagerForm() {
               <label>English location<input name="location" maxLength={500} defaultValue={selected?.location} /></label>
               <label>English category<input name="category" maxLength={100} defaultValue={selected?.category} /></label>
               <EventRegistrationFields event={selected} locale="en" includeLink={false} />
+              {selected?.id !== 'forum-2026-09-07' && <details><summary>英文活动网页文字</summary><EventPageCopyFields value={selected?.page_copy} locale="en" /></details>}
             </details>
             <label>发布状态<select name="status" defaultValue={selected?.status || 'draft'}>{Object.entries(statuses).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             <button className="button button-dark" type="submit">{busy ? '正在保存…' : '保存活动'}</button>

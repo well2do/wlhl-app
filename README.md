@@ -382,6 +382,21 @@ layout, and unpublishing without writing production data.
 
 ### Event registration, fees and payment instructions
 
+In the event manager, **活动网页文字** edits each event detail page's section
+headings, registration buttons, help text, capacity template, ended message,
+and poster viewer labels. Chinese and English are saved separately. Optional
+notes can be cleared; the capacity template must retain `{capacity}`. These
+plain-text settings share the event's ownership and revision checks and are
+preserved when older editors save other fields. Existing events keep the
+original wording until edited. `/shop-manager/events?event=EVENT_ID` opens a
+specific event when the signed-in manager has access.
+
+The manager's **网页上的文字在哪里改？** panel links website administrators to
+the shared calendar copy at `/admin/pages?page=events&locale=cn` and navigation
+and footer copy at `/admin/landing-page-editor?locale=cn`. Poster image lettering
+requires uploading an edited image. The September 7 forum uses its existing
+dedicated editor at `/admin/pages?page=forum&locale=cn`.
+
 In `/shop-manager/events`, open an event and edit **报名登记与收费**. Set an
 optional HTTPS registration form URL, fee details and payment instructions;
 English versions are available in the English content section. Save a published

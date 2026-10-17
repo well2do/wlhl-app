@@ -141,3 +141,42 @@ test('event fees and payment instructions publish bilingually and remain scoped 
   assert.ok(!cleared.includes('class="event-payment-details"'));
   assert.ok(!cleared.includes(`href="${registration.registrationUrl}"`));
 });
+
+test('event page wording publishes per language, remains private by scope, and survives older editors', async()=>{
+  for (const pageCopyCn of [[], 'invalid', { unknown: 'text' }, { registrationButton: '' }, { feesHeading: 'x'.repeat(201) }, { capacity: 'No number' }]) {
+    assert.equal((await save(cookie('store7'), {...draft, pageCopyCn})).status,400);
+  }
+  const pageCopyCn = {
+    feesHeading: '聚会收费标准', paymentHeading: '如何付款', registrationButton: '立即登记参加',
+    registrationNote: '填写表格后请联系店长。\n<script>alert(1)</script>', paymentNote: '',
+    posterExpand: '查看聚会海报', capacity: '限 {capacity} 位参加',
+  };
+  const pageCopy = { feesHeading: 'Gathering prices', registrationButton: 'Join this gathering' };
+  const created = await save(cookie('store7'), {...draft, status:'upcoming', capacity:20,
+    registrationUrl:'https://example.invalid/form', feeDetailsCn:'会员 $10', paymentInstructionsCn:'现场付款', pageCopyCn, pageCopy }, true);
+  assert.equal(created.status,200,await created.clone().text());
+  const { id } = await created.json();
+  let chinese = await (await fetch(`${origin}/cn/events/${id}`)).text();
+  for (const text of ['聚会收费标准','如何付款','立即登记参加','查看聚会海报','限 20 位参加']) assert.ok(chinese.includes(text));
+  assert.ok(chinese.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
+  assert.ok(!chinese.includes('<script>alert(1)</script>'));
+  assert.ok(!chinese.includes('请按上方说明支付活动费用。'));
+  const english = await (await fetch(`${origin}/events/${id}`)).text();
+  assert.ok(english.includes('Gathering prices')); assert.ok(english.includes('Join this gathering'));
+  assert.ok(!english.includes('聚会收费标准'));
+  assert.equal((await save(cookie('store8'), {...draft, id, revision:1, pageCopyCn:{feesHeading:'Forged fees'}})).status,403);
+  assert.equal((await save(cookie('readonly'), {...draft, id, revision:1, pageCopyCn:{feesHeading:'Forged fees'}})).status,403);
+  assert.equal((await save(cookie('store7'), {...draft, id, revision:1, status:'upcoming'})).status,200);
+  const preserved = (await list(cookie('store7'))).find(event => event.id === id)!;
+  assert.deepEqual(JSON.parse(String(preserved.page_copy_cn)),pageCopyCn);
+  assert.deepEqual(JSON.parse(String(preserved.page_copy)),pageCopy);
+  assert.equal((await save(cookie('store7'), {...draft, id, revision:1, pageCopyCn:{feesHeading:'Stale fees'}})).status,409);
+  const other = await save(cookie('store7'), {...draft, status:'upcoming', feeDetailsCn:'会员 $10'});
+  const otherId = (await other.json()).id;
+  const untouched = await (await fetch(`${origin}/cn/events/${otherId}`)).text();
+  assert.ok(untouched.includes('活动费用')); assert.ok(!untouched.includes('聚会收费标准'));
+  assert.equal((await save(cookie('store7'), {...draft, id, revision:2, status:'upcoming', pageCopyCn:{}})).status,200);
+  chinese = await (await fetch(`${origin}/cn/events/${id}`)).text();
+  assert.ok(chinese.includes('活动费用')); assert.ok(!chinese.includes('聚会收费标准'));
+  assert.ok((await (await fetch(`${origin}/events/${id}`)).text()).includes('Gathering prices'));
+});

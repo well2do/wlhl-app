@@ -146,7 +146,7 @@ async function initialize() {
   );
 
   for (const [table, columns] of [
-    ["events", ["title_cn", "description_cn", "location_cn", "category_cn", "registration_url", "fee_details", "fee_details_cn", "payment_instructions", "payment_instructions_cn"]],
+    ["events", ["title_cn", "description_cn", "location_cn", "category_cn", "registration_url", "fee_details", "fee_details_cn", "payment_instructions", "payment_instructions_cn", "page_copy", "page_copy_cn"]],
     ["announcements", ["title_cn", "message_cn"]],
     ["products", ["name_cn", "description_cn", "category_cn", "badge_cn"]],
   ] as const) {

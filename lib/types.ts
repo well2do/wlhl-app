@@ -31,6 +31,8 @@ export type ClubEvent = {
   fee_details_cn?: string;
   payment_instructions?: string;
   payment_instructions_cn?: string;
+  page_copy?: string;
+  page_copy_cn?: string;
   capacity: number;
   status: "draft" | "upcoming" | "completed" | "cancelled";
   attendee_count?: number;
