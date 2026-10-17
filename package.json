@@ -13,7 +13,8 @@
     "test:content-browser": "node tests/content-browser.cjs",
     "test:admin-login-browser": "node tests/admin-login-browser.cjs",
     "build:content-admin": "node scripts/build-fuint-admin.mjs",
-    "test:event-manager-browser": "node tests/event-manager-browser.cjs"
+    "test:event-manager-browser": "node tests/event-manager-browser.cjs",
+    "test:platform-admin-browser": "node tests/platform-admin-browser.cjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

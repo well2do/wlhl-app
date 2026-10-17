@@ -19,7 +19,7 @@ export function ForumRegistrationForm({locale = "en", copy = {}}: {locale?: "en"
         <span><CheckCircle2 size={34} /></span>
         <p className="forum-kicker">{locale === "cn" ? copyText("报名成功") : copyText("Registration confirmed")}</p>
         <h2>{locale === "cn" ? <>{copyText("您的席位已确认。")}<br /><em>{copyText("期待与您见面。")}</em></> : <>{copyText("We saved your seat.")}<br /><em>{copyText("See you there.")}</em></>}</h2>
-        <p>{state.message}</p>
+        <p>{copyText(locale === "cn" ? "您的活动报名已收到。" : "Your event registration has been received.")}</p>
         <div className="forum-confirmation-details">
           <div><CalendarCheck2 size={18} /><span><strong>{locale === "cn" ? copyText("2026年9月7日") : copyText("September 7, 2026")}</strong>{locale === "cn" ? copyText("下午 2:00–5:00") : copyText("2:00–5:00 PM")}</span></div>
           <div><MapPin size={18} /><span><strong>{copyText("7361 Calhoun Place")}</strong>{copyText("Rockville, MD 20855")}</span></div>
@@ -65,9 +65,9 @@ export function ForumRegistrationForm({locale = "en", copy = {}}: {locale?: "en"
         <span>{locale === "cn" ? copyText("接收俱乐部今后的活动与社区通知。") : copyText("Send me future club event and community updates.")}</span>
       </label>
 
-      {state.status === "error" && <p className="forum-form-error" role="alert">{state.message}</p>}
+      {state.status === "error" && <p className="forum-form-error" role="alert">{copyText(state.message)}</p>}
       <button className="forum-button" disabled={pending}>{pending ? (locale === "cn" ? copyText("提交中…") : copyText("Registering…")) : (locale === "cn" ? copyText("完成报名") : copyText("Complete registration"))}<ArrowRight size={17} /></button>
-      <p><Link href={locale === "cn" ? "/cn/member" : "/member"}>{locale === "cn" ? "已有会员账户？请先登录后再报名。" : "Already have a member account? Sign in before registering."}</Link></p>
+      <p><Link href={locale === "cn" ? "/cn/member" : "/member"}>{copyText(locale === "cn" ? "已有会员账户？请先登录后再报名。" : "Already have a member account? Sign in before registering.")}</Link></p>
       <p className="forum-privacy">{locale === "cn" ? copyText("您的信息仅用于活动管理及您选择接收的通知。") : copyText("Your information is used only for event operations and the updates you select.")}</p>
     </form>
   );

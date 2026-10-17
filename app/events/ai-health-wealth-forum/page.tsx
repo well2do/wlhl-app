@@ -24,11 +24,13 @@ export async function ForumPageContent({ locale = "en" }: { locale?: "en" | "cn"
   const copyText = createCopy(await getPageCopy("forum", locale));
   const cn = locale === "cn";
   const brand = await getLandingPageContent(locale);
-  const poster = (await getLandingPageAssetMetadata()).find((asset) => asset.slot === "forum-poster");
+  const assets = await getLandingPageAssetMetadata();
+  const poster = assets.find(asset => asset.slot === "forum-poster");
+  const logo = assets.find(asset => asset.slot === "logo");
   return (
     <main className="forum-page" lang={cn ? "zh-CN" : "en"}>
       <header className="forum-nav">
-        <Brand inverse href={cn ? "/cn" : "/"} name={brand.brandName} tagline={brand.brandTagline} />
+        <Brand inverse href={cn ? "/cn" : "/"} name={brand.brandName} tagline={brand.brandTagline} logoSrc={logo ? landingImageUrl(logo.slot, logo.updated_at) : undefined} logoAlt={brand.brandName} />
         <div className="forum-nav-actions">
           <LanguageSwitcher locale={locale} inverse />
           <Link href={cn ? "/cn/events" : "/events"}><ArrowLeft size={15} />{cn ? copyText("全部活动") : copyText("All club events")}</Link>

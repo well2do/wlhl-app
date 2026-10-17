@@ -252,14 +252,20 @@ shop routes, and signed webhook persistence without changing production data.
 
 ## Website editing and access
 
-Sign in at `/admin/login`, then open **Website pages** at `/admin/pages`.
-The existing administrator credential grants access to site content; a member
-session never grants administration access.
+Sign in at `/admin/login`, then open **全站网页内容** at `/admin/pages?locale=cn`.
+Alternatively, sign in to Fuint as a platform administrator and use **全站网页内容**
+in its navigation. The website verifies the existing `Access-Token` with Fuint on
+each request; only an active, unlocked account with merchant ID 0, store ID 0 and
+the current `admin` role receives full website administration. Merchant `admin`
+roles, ordinary store accounts and member sessions do not grant global access.
+No new long-lived website administrator cookie is issued by this bridge.
 
 | Content | Editing location | Who can save |
 | --- | --- | --- |
 | Home, navigation, footer, contact details and payment instructions | `/admin/landing-page-editor` | Administrator |
 | About, events, join form, member portal, shop and checkout copy, forum | `/admin/pages` (English / 中文 tabs) | Administrator |
+| News list, article detail labels, home news preview and feedback text | `/admin/pages?page=news` | Administrator |
+| Event detail wording, posters and registration information across merchants | `/shop-manager/events` | Website or platform administrator; scoped shop manager |
 | Every event, announcement and product, including past events and hidden products | Club records in `/admin/landing-page-editor` | Administrator |
 | Event dates, capacity and status; product prices and translations | Club records in `/admin/landing-page-editor` | Administrator |
 | Home and product images, shared logo, forum poster | Image forms in `/admin/landing-page-editor` | Administrator |
@@ -285,10 +291,30 @@ password or MFA system.
 
 The optional external news/member service and prebuilt applications under
 `public/funit-application` and `public/wlhl-application` use their own backend
-accounts and permissions, separate from the website's administrator session.
+accounts and permissions. Their verified platform administrator can also use
+the website editors, while scoped merchant and store sessions remain limited.
 Their generated bundles are not committed. Existing bundles must be supplied
 separately when deploying a checkout that needs those applications. This page
 editor manages the Next.js website's content, not the external service's records.
+
+The website editor links to the Fuint article editor for external article records.
+`scripts/patch-fuint-backend.mjs /path/to/fuintBackend` installs the tracked article
+authorization patch and its isolated Java tests. Build the application with tests
+enabled and restart its existing service separately; a Vercel deployment does not
+update the Java backend. The patch permits the active platform administrator to
+edit articles across merchants, validates current account ownership and roles,
+checks store boundaries and rejects mismatched destination stores. Editing content
+does not change article ownership unless the authorized editor explicitly chooses
+a valid destination. API permission annotations continue to apply.
+
+The public content audit covers both languages: home and shared navigation/footer;
+about and expert profiles; event calendar and individual details; the September 7
+forum and registration; membership application and member portal; shop, product
+details and checkout result; news list and article details. Redirect aliases share
+their destination editor. Page copy, content records, images and private member
+data have distinct editors linked from the central page. Poster lettering remains
+part of the image and requires replacing that image. Browser-provided validation
+messages, third-party Google Forms and Stripe-hosted pages are not website content.
 
 `npm run test:integration` includes an isolated temporary database and exercises
 actual rendered forms for public routes, both page languages, stale saves,

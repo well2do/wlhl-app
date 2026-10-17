@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
-import { isAdmin } from "./auth";
+import { hasWebsiteAdminSession } from "./auth";
+import { getFuintSession, isPlatformAdministrator, readFuintSession } from "./fuint-session";
 
 export type EventManager = {
   id: string; name: string; merchantId: number; storeId: number;
@@ -7,7 +7,11 @@ export type EventManager = {
 };
 
 export function managerFromAccount(data: unknown): EventManager | null {
-  const info = data as { accountInfo?: Record<string, unknown>; roles?: string[]; permissions?: string[] } | null;
+  const info = readFuintSession(data);
+  if (isPlatformAdministrator(info)) return {
+    id: `fuint:${info!.accountInfo.id}`, name: `${info!.accountInfo.accountName}（系统管理员）`,
+    merchantId: Number(process.env.FUINT_MERCHANT_ID || 1), storeId: 0, isSiteAdmin: true, canCreate: true, canEdit: true,
+  };
   const account = info?.accountInfo;
   if (!account || !Array.isArray(info?.roles) || !info.roles.some((role) => ["admin", "common"].includes(role))
     || !Array.isArray(info.permissions) || !Number.isSafeInteger(account.id) || Number(account.id) < 1
@@ -23,19 +27,8 @@ export function managerFromAccount(data: unknown): EventManager | null {
 }
 
 export async function getEventManager(): Promise<EventManager | null> {
-  if (await isAdmin()) return { id: "site-admin", name: "网站管理员", merchantId: Number(process.env.FUINT_MERCHANT_ID || 1), storeId: 0, isSiteAdmin: true, canCreate: true, canEdit: true };
-  const token = (await cookies()).get("Access-Token")?.value;
-  if (!token || token.length > 4096) return null;
-  try {
-    const base = process.env.FUINT_API_URL || process.env.NEXT_PUBLIC_FUINT_API || "https://parsley-easiest-qualify.ngrok-free.dev";
-    const response = await fetch(new URL("/backendApi/login/getInfo", base), {
-      headers: { "Access-Token": token, "ngrok-skip-browser-warning": "true" },
-      cache: "no-store", redirect: "error", signal: AbortSignal.timeout(8000),
-    });
-    if (!response.ok) return null;
-    const result = await response.json();
-    return result.code === 200 ? managerFromAccount(result.data) : null;
-  } catch { return null; }
+  if (await hasWebsiteAdminSession()) return { id: "site-admin", name: "网站管理员", merchantId: Number(process.env.FUINT_MERCHANT_ID || 1), storeId: 0, isSiteAdmin: true, canCreate: true, canEdit: true };
+  return managerFromAccount(await getFuintSession());
 }
 
 export function canManageEvent(manager: EventManager, ownership?: { merchant_id: unknown; store_id: unknown }) {

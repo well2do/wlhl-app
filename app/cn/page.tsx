@@ -17,7 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import { NotificationButton } from "@/components/notification-button";
-import { LatestNews } from "@/components/latest-news";
+import { LatestNews } from "@/components/news-page";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { chineseAnnouncement, chineseEvent, chineseProduct, formatChineseEventDate, formatChineseEventTime } from "@/lib/chinese";

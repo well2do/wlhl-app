@@ -1,3 +1,4 @@
+import { landingImageUrl } from "@/lib/landing-page-content";
 import { eventHref } from "@/lib/event-time";
 import { safeEventRegistrationUrl } from "@/lib/event-registration";
 import { MemberProfileForm } from "@/components/member-profile-form";
@@ -21,7 +22,7 @@ import { Brand } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { getMemberSession } from "@/lib/auth";
 import { chineseAnnouncement, chineseEvent, chineseEventTitle, formatChineseEventDate, formatChineseEventTime } from "@/lib/chinese";
-import { getLandingPageContent, getAnnouncements, getEvents, getMember, getMemberAttendance } from "@/lib/db";
+import { getLandingPageAssetMetadata, getLandingPageContent, getAnnouncements, getEvents, getMember, getMemberAttendance } from "@/lib/db";
 
 export const metadata = { title: "会员中心" };
 
@@ -31,6 +32,8 @@ const interestText: Record<string, string> = { Movement: "运动健身", Nutriti
 export default async function ChineseMemberPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const copyText = createCopy(await getPageCopy("member", "cn"));
   const brand = await getLandingPageContent("cn");
+  const logo = (await getLandingPageAssetMetadata()).find(asset => asset.slot === "logo");
+  const logoSrc = logo ? landingImageUrl(logo.slot, logo.updated_at) : undefined;
   const memberId = await getMemberSession();
   const member = memberId ? await getMember(memberId) : null;
   const params = await searchParams;
@@ -38,7 +41,7 @@ export default async function ChineseMemberPage({ searchParams }: { searchParams
   if (!member) {
     return (
       <main className="access-page" lang="zh-CN">
-        <div className="access-brand"><Brand href="/cn" name={brand.brandName} tagline={brand.brandTagline} /></div>
+        <div className="access-brand"><Brand href="/cn" name={brand.brandName} tagline={brand.brandTagline} logoSrc={logoSrc} logoAlt={brand.brandName} /></div>
         <section className="access-card">
           <span className="access-icon"><Leaf size={27} /></span>
           <p className="eyebrow">{copyText("欢迎回来")}</p>
@@ -48,7 +51,7 @@ export default async function ChineseMemberPage({ searchParams }: { searchParams
             <input type="hidden" name="returnTo" value="/cn/member" />
             <label>{copyText("电子邮箱")}<input type="email" name="email" autoComplete="email" required /></label>
             <label>{copyText("手机号码后四位")}<input name="phoneLastFour" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} required /></label>
-            {params.error && <p className="form-error">{params.error}</p>}
+            {params.error && <p className="form-error">{copyText(params.error)}</p>}
             <button className="button button-dark button-full">{copyText("进入会员中心 ")}<ArrowRight size={17} /></button>
           </form>
           <p className="access-help">{copyText("还不是会员？ ")}<Link href="/cn/join">{copyText("申请加入俱乐部")}</Link></p>
@@ -68,18 +71,18 @@ export default async function ChineseMemberPage({ searchParams }: { searchParams
   return (
     <div className="portal-shell" lang="zh-CN">
       <header className="portal-header">
-        <Brand href="/cn" />
-        <div className="portal-header-actions"><LanguageSwitcher locale="cn" /><Link href="/cn">{copyText("俱乐部网站")}</Link><form action={memberLogoutAction}><input type="hidden" name="returnTo" value="/cn" /><button aria-label="退出登录"><LogOut size={18} /></button></form></div>
+        <Brand href="/cn" name={brand.brandName} tagline={brand.brandTagline} logoSrc={logoSrc} logoAlt={brand.brandName} />
+        <div className="portal-header-actions"><LanguageSwitcher locale="cn" /><Link href="/cn">{copyText("俱乐部网站")}</Link><form action={memberLogoutAction}><input type="hidden" name="returnTo" value="/cn" /><button aria-label={copyText("退出登录")}><LogOut size={18} /></button></form></div>
       </header>
       <main className="portal-main">
-        {params.saved && <p className="saved-toast" role="status">个人资料已保存。</p>}
-        {params.error && <p className="form-error" role="alert">{params.error}</p>}
-        <section className="member-welcome"><div><p className="eyebrow">{copyText("会员中心")}</p><h1>{copyText("很高兴见到您，")}<em>{member.first_name}。</em></h1><p>{copyText("以下是俱乐部最近的活动与消息。")}</p></div><div className={`status-badge status-${member.membership_status}`}><span />{statusText[member.membership_status]}{copyText("会员")}</div></section>
+        {params.saved && <p className="saved-toast" role="status">{copyText("个人资料已保存。")}</p>}
+        {params.error && <p className="form-error" role="alert">{copyText(params.error)}</p>}
+        <section className="member-welcome"><div><p className="eyebrow">{copyText("会员中心")}</p><h1>{copyText("很高兴见到您，")}<em>{member.first_name}。</em></h1><p>{copyText("以下是俱乐部最近的活动与消息。")}</p></div><div className={`status-badge status-${member.membership_status}`}><span />{copyText(statusText[member.membership_status])}{copyText("会员")}</div></section>
 
         <section className="member-stat-grid">
           <div><span className="member-stat-icon coral"><CalendarCheck2 size={22} /></span><p><strong>{attendance.length}</strong><small>{copyText("已报名活动")}</small></p></div>
           <div><span className="member-stat-icon gold"><Trophy size={22} /></span><p><strong>{completedCount}</strong><small>{copyText("已完成活动")}</small></p></div>
-          <div className="member-interest-stat"><span className="member-stat-icon green"><Sparkles size={22} /></span><p><strong>{interestText[topInterest] || topInterest}</strong><small>{copyText("首要兴趣")}</small></p></div>
+          <div className="member-interest-stat"><span className="member-stat-icon green"><Sparkles size={22} /></span><p><strong>{copyText(interestText[topInterest] || topInterest)}</strong><small>{copyText("首要兴趣")}</small></p></div>
         </section>
 
         <div className="portal-columns">
@@ -90,7 +93,7 @@ export default async function ChineseMemberPage({ searchParams }: { searchParams
               return <article key={event.id} className="portal-event">
                 <div className="portal-event-date"><strong>{new Date(event.event_date).toLocaleDateString("zh-CN", { timeZone: "America/New_York", day: "2-digit" })}</strong><span>{new Date(event.event_date).toLocaleDateString("zh-CN", { timeZone: "America/New_York", month: "short" })}</span></div>
                 <div className="portal-event-info"><small>{event.category}</small><h3>{event.title}</h3><p><Clock3 size={14} />{formatChineseEventTime(event.event_date)} <span>·</span> <MapPin size={14} />{event.location}</p></div>
-                {safeEventRegistrationUrl(event.registration_url) ? <Link className="button button-outline button-small" href={eventHref(event.id, "cn")}>{copyText("报名登记")}</Link> : record ? <span className="reserved-chip"><CheckCircle2 size={14} />{statusText[record.status] || record.status}</span> : member.membership_status !== "active" ? <span className="approval-chip">{copyText("等待会员审核")}</span> : <form action={registerForEventAction}><input type="hidden" name="eventId" value={event.id} /><button className="button button-outline button-small">{copyText("报名登记")}</button></form>}
+                {safeEventRegistrationUrl(event.registration_url) ? <Link className="button button-outline button-small" href={eventHref(event.id, "cn")}>{copyText("报名登记")}</Link> : record ? <span className="reserved-chip"><CheckCircle2 size={14} />{copyText(statusText[record.status] || record.status)}</span> : member.membership_status !== "active" ? <span className="approval-chip">{copyText("等待会员审核")}</span> : <form action={registerForEventAction}><input type="hidden" name="eventId" value={event.id} /><button className="button button-outline button-small">{copyText("报名登记")}</button></form>}
               </article>;
             })}</div>
           </section>
@@ -100,7 +103,7 @@ export default async function ChineseMemberPage({ searchParams }: { searchParams
 
         <section className="portal-panel history-panel">
           <div className="panel-heading"><div><p className="eyebrow">{copyText("您的健康旅程")}</p><h2>{copyText("活动记录")}</h2></div></div>
-          {attendance.length ? <div className="history-list">{attendance.map((item) => <div key={item.id}><span className={`history-check history-${item.status}`}><CheckCircle2 size={16} /></span><div><strong>{chineseEventTitle(item.event_title || "活动")}</strong><small>{item.event_date ? formatChineseEventDate(item.event_date, true) : ""}</small></div><span className="history-status">{statusText[item.status] || item.status}</span></div>)}</div> : <div className="empty-state compact-empty"><CalendarDays size={26} /><h3>{copyText("您的第一场活动正在等您。")}</h3><p>{copyText("完成活动报名登记后，可在这里查看站内报名记录。")}</p></div>}
+          {attendance.length ? <div className="history-list">{attendance.map((item) => <div key={item.id}><span className={`history-check history-${item.status}`}><CheckCircle2 size={16} /></span><div><strong>{chineseEventTitle(item.event_title || "活动")}</strong><small>{item.event_date ? formatChineseEventDate(item.event_date, true) : ""}</small></div><span className="history-status">{copyText(statusText[item.status] || item.status)}</span></div>)}</div> : <div className="empty-state compact-empty"><CalendarDays size={26} /><h3>{copyText("您的第一场活动正在等您。")}</h3><p>{copyText("完成活动报名登记后，可在这里查看站内报名记录。")}</p></div>}
         </section>
         <MemberProfileForm member={member} locale="cn" />
       </main>

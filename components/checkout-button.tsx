@@ -23,7 +23,7 @@ export function CheckoutButton({productId, locale, enabled, copy = {}}: {product
       if (!response.ok || !result.url || new URL(result.url).hostname !== "checkout.stripe.com") throw new Error("Checkout unavailable");
       window.location.assign(result.url);
     } catch {
-      setError(cn ? "暂时无法开始结账，请稍后再试。" : "Unable to start checkout. Please try again shortly.");
+      setError(copyText(cn ? "暂时无法开始结账，请稍后再试。" : "Unable to start checkout. Please try again shortly."));
       setPending(false);
     }
   }

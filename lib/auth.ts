@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { issueSession, sessionLifetime, sessionSecret, verifySession, type SessionRole } from "./session-token";
+import { getFuintSession, isPlatformAdministrator } from "./fuint-session";
 
 const ADMIN_COOKIE = "wlhl_admin";
 const MEMBER_COOKIE = "wlhl_member";
@@ -25,10 +26,15 @@ export async function createAdminSession() {
 
 export async function clearAdminSession() {
   (await cookies()).delete(ADMIN_COOKIE);
+  (await cookies()).delete("Access-Token");
+}
+
+export async function hasWebsiteAdminSession() {
+  return verifySession((await cookies()).get(ADMIN_COOKIE)?.value, "admin", sessionSecret()) === "admin";
 }
 
 export async function isAdmin() {
-  return verifySession((await cookies()).get(ADMIN_COOKIE)?.value, "admin", sessionSecret()) === "admin";
+  return await hasWebsiteAdminSession() || isPlatformAdministrator(await getFuintSession());
 }
 
 export async function requireAdmin() {

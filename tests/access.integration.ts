@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { createClient, type Client } from "@libsql/client";
 import { issueSession } from "../lib/session-token";
 import { editablePages, pageCopyFields } from "../lib/page-copy";
+import { createServer, type Server } from 'node:http';
 
 const origin = "http://localhost:3131";
 const secret = "access-test-session-secret";
@@ -14,6 +15,8 @@ let directory: string;
 let server: ChildProcess;
 let db: Client;
 let output = "";
+let backend: Server;
+let platformRevoked = false;
 
 const decode = (value: string) => value.replace(/&quot;/g, '"').replace(/&#x27;/g, "'")
   .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
@@ -66,14 +69,27 @@ class BrowserSession {
 const admin = new BrowserSession();
 const visitor = new BrowserSession();
 const member = new BrowserSession();
+const platform = new BrowserSession();
+platform.cookies.set('Access-Token', 'platform-fixture');
 
 before(async () => {
   directory = await mkdtemp(join(tmpdir(), "wlhl-access-test-"));
   const url = `file:${join(directory, "club.db")}`;
   db = createClient({ url });
+  backend = createServer((request, response) => {
+    const token = request.headers['access-token'];
+    const known = ['platform-fixture', 'merchant-admin', 'store-manager', 'platform-common', 'locked-platform', 'disabled-platform'].includes(String(token));
+    response.setHeader('Content-Type','application/json');
+    response.end(JSON.stringify(!known || platformRevoked ? {code:401} : {code:200,data:{
+      accountInfo:{id:12,accountName:'Fixture administrator',merchantId:token==='merchant-admin'||token==='store-manager'?1:0,
+        storeId:token==='store-manager'?7:0,accountStatus:token==='disabled-platform'?0:1,locked:token==='locked-platform'?1:0},
+      roles:[token==='platform-common'||token==='store-manager'?'common':'admin'],permissions:['content:article:index','content:article:edit'],
+    }}));
+  });
+  await new Promise<void>(resolve => backend.listen(3142,'127.0.0.1',resolve));
   server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--port", "3131"], {
     env: { ...process.env, VERCEL: "", TURSO_DATABASE_URL: url, TURSO_AUTH_TOKEN: "",
-      ADMIN_PASSWORD: "access-test-admin", SESSION_SECRET: secret,
+      ADMIN_PASSWORD: "access-test-admin", SESSION_SECRET: secret, FUINT_API_URL:'http://127.0.0.1:3142',
       STRIPE_SECRET_KEY: "", STRIPE_WEBHOOK_SECRET: "", NEXT_PUBLIC_VAPID_PUBLIC_KEY: "", VAPID_PRIVATE_KEY: "" },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -101,12 +117,14 @@ after(async () => {
     server.kill("SIGTERM"); await exited;
   }
   db?.close();
+  backend?.closeAllConnections();
+  if (backend) await new Promise<void>(resolve => backend.close(()=>resolve()));
   if (directory) await rm(directory, { recursive: true, force: true });
 });
 
 test("every public route works and every admin route rejects visitors and members", async () => {
   for (const prefix of ["", "/cn"]) {
-    for (const route of ["", "/about", "/events", "/join", "/member", "/shop", "/shop/success", "/events/ai-health-wealth-forum"]) await visitor.get(`${prefix}${route}` || "/");
+    for (const route of ["", "/about", "/events", "/join", "/member", "/shop", "/shop/success", "/news", "/news/501", "/events/ai-health-wealth-forum"]) await visitor.get(`${prefix}${route}` || "/");
   }
   for (const path of ["/admin", "/admin/pages", "/admin/landing-page-editor", "/admin/database", "/admin/design-gui", "/admin/members/victim"]) {
     for (const session of [visitor, member]) {
@@ -115,29 +133,36 @@ test("every public route works and every admin route rejects visitors and member
       assert.equal(response.headers.get("location"), "/admin/login");
     }
     await admin.get(path);
+    await platform.get(path);
+    for (const token of ['merchant-admin','store-manager','platform-common','locked-platform','disabled-platform','forged']) {
+      const denied = await fetch(`${origin}${path}`, {headers:{Cookie:`Access-Token=${token}`},redirect:'manual'});
+      assert.equal(denied.status,307,`${path}: ${token}`);
+    }
   }
   for (const session of [visitor, member]) assert.equal((await fetch(`${origin}/api/admin/export`, { headers: { Cookie: session.cookie } })).status, 401);
   assert.equal((await fetch(`${origin}/api/admin/export`, { headers: { Cookie: admin.cookie } })).status, 200);
 });
 
 test("administrators can save every public page in either language; stale saves cannot replace newer content", async () => {
+  for (const editor of [admin, platform]) {
   for (const page of editablePages) {
     for (const locale of ["en", "cn"] as const) {
       const path = `/admin/pages?page=${page.id}&locale=${locale}`;
-      const form = formFrom(await admin.get(path), "page");
+      const form = formFrom(await editor.get(path), "page");
       const original = pageCopyFields(page.id, locale)[0];
       const marker = `Published ${page.id} ${locale} fixture`;
-      const result = await admin.post(path, form, { "copy:0": marker });
+      const result = await editor.post(path, form, { "copy:0": marker });
       assert.equal(result.status, 303);
       assert.ok(result.location?.includes("saved="), result.location ?? result.html);
       const publicPath = `${locale === "cn" ? "/cn" : ""}${page.path}`;
       assert.ok((await visitor.get(publicPath)).includes(marker), publicPath);
       const row = (await db.execute({ sql: "SELECT content_json FROM page_content WHERE page = ? AND locale = ?", args: [page.id, locale] })).rows[0];
       assert.equal(JSON.parse(String(row.content_json))[original], marker);
-      const stale = await admin.post(path, form, { "copy:0": "Stale overwrite" });
+      const stale = await editor.post(path, form, { "copy:0": "Stale overwrite" });
       assert.ok(stale.location?.includes("error="));
       assert.ok((await visitor.get(publicPath)).includes(marker));
     }
+  }
   }
   const path = "/admin/pages?page=about&locale=en";
   const form = formFrom(await admin.get(path), "page");
@@ -148,6 +173,40 @@ test("administrators can save every public page in either language; stale saves 
   const html = await visitor.get("/about");
   assert.ok(!html.includes('<script id="injected">'));
   assert.ok(html.includes("&lt;script"));
+});
+
+test('system administrator can publish shared content and loses access immediately after revocation', async()=>{
+  const path='/admin/landing-page-editor?locale=cn';
+  const form=formFrom(await platform.get(path),'brandName');
+  const saved=await platform.post(path,form,{heroTitleLine:'System administrator home headline'});
+  assert.ok(saved.location?.includes('saved='));
+  assert.ok((await visitor.get('/cn')).includes('System administrator home headline'));
+  const pagePath='/admin/pages?page=news&locale=cn';
+  const pageForm=formFrom(await platform.get(pagePath),'page');
+  const before=String((await db.execute("SELECT content_json FROM page_content WHERE page='news' AND locale='cn'")).rows[0].content_json);
+  platformRevoked=true;
+  try {
+    const denied=await platform.post(pagePath,pageForm,{'copy:0':'Revoked overwrite'});
+    assert.equal(denied.location,'/admin/login');
+    assert.equal((await fetch(`${origin}/api/shop-manager/events`,{headers:{Cookie:platform.cookie}})).status,401);
+    assert.equal(String((await db.execute("SELECT content_json FROM page_content WHERE page='news' AND locale='cn'")).rows[0].content_json),before);
+  } finally { platformRevoked=false; }
+});
+
+test('editable member status and news preview text do not alter stored state or CSS status classes', async()=>{
+  const path='/admin/pages?page=member&locale=en';
+  const form=formFrom(await platform.get(path),'page');
+  const index=pageCopyFields('member','en').indexOf('active');assert.ok(index>=0);
+  const saved=await platform.post(path,form,{[`copy:${index}`]:'Approved club member'});
+  assert.ok(saved.location?.includes('saved='));
+  const html=await member.get('/member');
+  assert.ok(html.includes('Approved club member'));assert.ok(html.includes('status-badge status-active'));
+  assert.equal((await db.execute("SELECT membership_status FROM members WHERE id='owner'")).rows[0].membership_status,'active');
+  const newsPath='/admin/pages?page=news&locale=cn';
+  const newsForm=formFrom(await platform.get(newsPath),'page');
+  const newsIndex=pageCopyFields('news','cn').indexOf('最新动态');
+  assert.ok((await platform.post(newsPath,newsForm,{[`copy:${newsIndex}`]:'管理员发布的首页动态'})).location?.includes('saved='));
+  assert.ok((await visitor.get('/cn')).includes('管理员发布的首页动态'));
 });
 
 test("replaying actual admin save forms with a visitor or member cookie never changes records", async () => {

@@ -53,7 +53,7 @@ export function JoinForm({locale = "en", copy = {}}: {locale?: "en" | "cn"; copy
         <span className="success-icon"><CheckCircle2 size={32} /></span>
         <p className="eyebrow">{cn ? copyText("申请已收到") : copyText("Application received")}</p>
         <h2>{cn ? copyText("欢迎加入我们的健康社区。") : copyText("You’re part of something good.")}</h2>
-        <p>{cn ? copyText("您的会员申请已提交。我们将很快与您联系，确认会员及付款信息。") : `${state.message} We’ll follow up with membership and payment details shortly.`}</p>
+        <p>{cn ? copyText("您的会员申请已提交。我们将很快与您联系，确认会员及付款信息。") : copyText("Your membership application has been submitted. We’ll follow up with membership and payment details shortly.")}</p>
         <div className="membership-payment-confirmation">
           <strong>{cn ? copyText("付款方式") : copyText("Payment method")}</strong>
           <span>{cn ? copyText("请根据联系人确认的会员方案，通过 Zelle 支付至 240-498-4568。") : copyText("Pay the amount confirmed for your membership option by Zelle to 240-498-4568.")}</span>
@@ -71,8 +71,8 @@ export function JoinForm({locale = "en", copy = {}}: {locale?: "en" | "cn"; copy
         <label>{cn ? copyText("姓氏") : copyText("Last name")}<input name="lastName" autoComplete="family-name" required /></label>
       </div>
       <div className="form-row two-columns">
-        <label>{cn ? copyText("电子邮箱") : copyText("Email address")}<input name="email" type="email" autoComplete="email" placeholder="you@example.com" required /></label>
-        <label>{cn ? copyText("手机号码") : copyText("Mobile phone")}<input name="phone" type="tel" autoComplete="tel" placeholder="(202) 555-0123" required /></label>
+        <label>{cn ? copyText("电子邮箱") : copyText("Email address")}<input name="email" type="email" autoComplete="email" placeholder={copyText("you@example.com")} required /></label>
+        <label>{cn ? copyText("手机号码") : copyText("Mobile phone")}<input name="phone" type="tel" autoComplete="tel" placeholder={copyText("(202) 555-0123")} required /></label>
       </div>
       <div className="form-row">
         <label>{cn ? copyText("出生日期") : copyText("Date of birth")} <span className="label-note">{cn ? copyText("选填") : copyText("Optional")}</span><input name="birthday" type="date" /></label>
@@ -110,7 +110,7 @@ export function JoinForm({locale = "en", copy = {}}: {locale?: "en" | "cn"; copy
         <label className="check-line"><input type="checkbox" name="emailOptIn" defaultChecked /> <span>{cn ? copyText("通过电子邮件接收俱乐部新闻、活动和会员优惠。") : copyText("Email me club news, events, and member offers.")}</span></label>
         <label className="check-line"><input type="checkbox" name="smsOptIn" /> <span>{cn ? copyText("通过短信接收重要活动提醒与通知。") : copyText("Text me occasional event reminders and announcements.")}</span></label>
       </div>
-      {state.status === "error" && <p className="form-error" role="alert">{state.message}</p>}
+      {state.status === "error" && <p className="form-error" role="alert">{copyText(state.message)}</p>}
       <button className="button button-coral button-full" disabled={pending}>
         {pending ? (cn ? copyText("提交中…") : copyText("Submitting…")) : (cn ? copyText("提交会员申请") : copyText("Submit membership application"))}<ArrowRight size={17} />
       </button>

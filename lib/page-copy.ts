@@ -11,7 +11,13 @@ export const editablePages: { id: EditablePage; label: string; path: string; rec
   { id: "member", label: "Member portal", path: "/member", records: "/admin?view=members" },
   { id: "shop", label: "Shop, product and checkout pages", path: "/shop", records: "/admin/landing-page-editor#live-content" },
   { id: "forum", label: "Forum and registration", path: "/events/ai-health-wealth-forum", records: "/admin/landing-page-editor#images" },
+  { id: "news", label: "News, articles and home news preview", path: "/news", records: "/wlhl-application/index.html#/content/article" },
 ];
+
+export const pageLabelsCn: Record<EditablePage, string> = {
+  about: '俱乐部介绍', events: '活动日历', join: '会员申请', member: '会员中心',
+  shop: '商城、商品详情和结账', forum: '论坛及报名页面', news: '文章列表、详情和首页动态',
+};
 
 export function isEditablePage(value: string): value is EditablePage {
   return editablePages.some((page) => page.id === value);

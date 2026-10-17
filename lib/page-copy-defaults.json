@@ -78,7 +78,13 @@
       "Lifetime membership",
       "$360/year · 2026 half-price offer: $180/year",
       "$66 for 2026",
-      "$980 one-time"
+      "$980 one-time",
+      "Your membership application has been submitted. We’ll follow up with membership and payment details shortly.",
+      "Please review your information.",
+      "That email is already registered. Use Member access to view your account.",
+      "We couldn't save your application. Please try again.",
+      "you@example.com",
+      "(202) 555-0123"
     ],
     "cn": [
       "从这里开始成为会员",
@@ -127,7 +133,12 @@
       "终身会员",
       "$360/年 · 2026年半价优惠：$180/年",
       "2026年度 $66",
-      "一次性 $980"
+      "一次性 $980",
+      "请检查并完整填写申请信息。",
+      "该电子邮箱已经登记，请前往会员中心查看账户。",
+      "暂时无法保存申请，请稍后重试。",
+      "you@example.com",
+      "(202) 555-0123"
     ]
   },
   "member": {
@@ -168,7 +179,27 @@
       "Receive email updates",
       "Receive SMS updates",
       "Contact a club administrator to change your sign-in email, phone number, or membership plan.",
-      "Save my profile"
+      "Save my profile",
+      "Sign out",
+      "Profile saved.",
+      "pending",
+      "active",
+      "paused",
+      "registered",
+      "attended",
+      "completed",
+      "Wellness",
+      "Movement",
+      "Nutrition",
+      "Healthy aging",
+      "Mindfulness",
+      "Community outings",
+      "Wellness products",
+      "event",
+      "promotion",
+      "community",
+      "Too many sign-in attempts. Try again in 15 minutes.",
+      "We couldn't match those details"
     ],
     "cn": [
       "欢迎回来",
@@ -210,7 +241,24 @@
       "接收电子邮件通知",
       "接收短信通知",
       "如需更改登录邮箱、手机号码或会员方案，请联系俱乐部管理员。",
-      "保存个人资料"
+      "保存个人资料",
+      "退出登录",
+      "个人资料已保存。",
+      "待审核",
+      "有效",
+      "已暂停",
+      "已报名",
+      "已参加",
+      "已完成",
+      "健康生活",
+      "运动健身",
+      "营养健康",
+      "健康长寿",
+      "正念生活",
+      "社区活动",
+      "健康产品",
+      "尝试次数过多，请15分钟后再试。",
+      "无法匹配您填写的信息"
     ]
   },
   "forum": {
@@ -287,7 +335,12 @@
       "High-resolution event poster",
       "Open original image",
       "Close poster preview",
-      "September 7 AI, Health and Wealth Legacy Forum event poster, high-resolution view"
+      "September 7 AI, Health and Wealth Legacy Forum event poster, high-resolution view",
+      "Already have a member account? Sign in before registering.",
+      "Your event registration has been received.",
+      "Please review your registration.",
+      "Please sign in to the member account for this email before registering.",
+      "We couldn't complete your registration. Please try again or contact an organizer."
     ],
     "cn": [
       "全部活动",
@@ -362,7 +415,12 @@
       "活动海报高清大图",
       "在新窗口打开原图",
       "关闭海报大图",
-      "9月7日 AI 时代健康与财富传承论坛活动海报高清大图"
+      "9月7日 AI 时代健康与财富传承论坛活动海报高清大图",
+      "已有会员账户？请先登录后再报名。",
+      "您的活动报名已收到。",
+      "请检查并完整填写报名信息。",
+      "请先登录此邮箱对应的会员账户，再提交活动报名。",
+      "暂时无法完成报名，请重试或联系活动负责人。"
     ]
   },
   "shop": {
@@ -384,7 +442,8 @@
       "Your test payment is confirmed and recorded. No real money was charged and no product will be delivered.",
       "We have not confirmed a successful payment. If you just checked out, refresh this page shortly.",
       "Opening checkout…",
-      "Test checkout is being configured."
+      "Test checkout is being configured.",
+      "Unable to start checkout. Please try again shortly."
     ],
     "cn": [
       "测试商店：购买仅用于测试付款流程，不会实际扣款，也不会配送商品。",
@@ -404,7 +463,8 @@
       "测试付款已确认并记录，不会实际扣款或配送商品。",
       "我们尚未确认付款成功。如果刚刚完成结账，请稍后刷新此页面。",
       "正在打开结账页面…",
-      "测试结账正在配置中。"
+      "测试结账正在配置中。",
+      "暂时无法开始结账，请稍后再试。"
     ]
   },
   "about": {
@@ -551,6 +611,28 @@
       "410-916-3105",
       "https://docs.google.com/forms/d/e/1FAIpQLSesGncl7HQW6B35O8tOFe84kK1VyyI--OQMdnC5a6jKNCW0aQ/viewform",
       "查看机构简介"
+    ]
+  },
+  "news": {
+    "en": [
+      "Club news",
+      "Latest news",
+      "View all articles →",
+      "← All articles",
+      "Loading articles…",
+      "Articles are temporarily unavailable. Please refresh to try again.",
+      "This article is unavailable or has not been published.",
+      "No articles have been published yet."
+    ],
+    "cn": [
+      "俱乐部动态",
+      "最新动态",
+      "查看全部文章 →",
+      "← 返回全部文章",
+      "正在加载文章…",
+      "文章暂时无法加载，请稍后刷新重试。",
+      "这篇文章不存在或尚未发布。",
+      "暂无已发布文章。"
     ]
   }
 }

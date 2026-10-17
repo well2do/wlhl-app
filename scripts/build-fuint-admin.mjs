@@ -98,9 +98,15 @@ replace(article, '            >修改</el-button\n          >', `            >�
           >
           <el-link v-if="scope.row.status === 'A'" :href="'/cn/news/' + scope.row.id" target="_blank" type="primary">查看前台</el-link>`);
 replace('src/layout/components/Navbar.vue', '<div class="right-menu">', '<div class="right-menu"><a href="/shop-manager/events" class="right-menu-item" v-hasPermi="[\'content:article:index\']" style="font-weight:600">发布网站活动</a>');
+replace('src/layout/components/Navbar.vue', '<div class="right-menu">', `<div class="right-menu"><a v-if="$store.state.user.merchantId === 0 && $store.state.user.storeId === 0 && $store.state.user.roles.includes('admin')" href="/admin/pages?locale=cn" class="right-menu-item" style="font-weight:600">全站网页内容</a>`);
 replace('src/layout/components/Sidebar/index.vue', '        <sidebar-item', `        <a href="/admin?view=approvals" v-hasPermi="['member:index']">
           <el-menu-item index="website-member-approvals" class="submenu-title-noDropdown">
             <i class="el-icon-user" /><span slot="title">网站会员审核</span>
+          </el-menu-item>
+        </a>
+        <a v-if="$store.state.user.merchantId === 0 && $store.state.user.storeId === 0 && $store.state.user.roles.includes('admin')" href="/admin/pages?locale=cn">
+          <el-menu-item index="website-content" class="submenu-title-noDropdown">
+            <i class="el-icon-edit-outline" /><span slot="title">全站网页内容</span>
           </el-menu-item>
         </a>
         <sidebar-item`);

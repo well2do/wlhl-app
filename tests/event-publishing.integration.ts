@@ -32,13 +32,13 @@ before(async () => {
   database = createClient({ url: `file:${join(directory, 'events.db')}` });
   backend = createServer((request, response) => {
     const token = request.headers['access-token'];
-    const known = ['store7','store8','merchant','readonly','wrong-merchant','member','no-add'].includes(String(token));
+    const known = ['platform','platform-common','store7','store8','merchant','readonly','wrong-merchant','member','no-add'].includes(String(token));
     const permissions = permissionsRevoked || token === 'readonly' ? ['content:article:index']
       : token === 'no-add' ? ['content:article:index','content:article:edit'] : ['content:article:index','content:article:add','content:article:edit'];
     response.setHeader('Content-Type','application/json');
     response.end(JSON.stringify(known ? { code: 200, data: {
-      accountInfo: { id: 11, accountName: 'Fixture manager', merchantId: token === 'wrong-merchant' ? 2 : 1, storeId: token === 'merchant' ? 0 : token === 'store8' ? 8 : 7 },
-      roles: [token === 'member' ? 'user' : 'common'], permissions,
+      accountInfo: { id: 11, accountName: 'Fixture manager', merchantId: String(token).startsWith('platform') ? 0 : token === 'wrong-merchant' ? 2 : 1, storeId: String(token).startsWith('platform') || token === 'merchant' ? 0 : token === 'store8' ? 8 : 7, accountStatus:1, locked:0 },
+      roles: [token === 'platform' ? 'admin' : token === 'member' ? 'user' : 'common'], permissions,
     } } : { code: 1001 }));
   });
   await new Promise<void>(resolve => backend.listen(3137,'127.0.0.1',resolve));
@@ -63,6 +63,21 @@ test('event publishing rejects anonymous, forged, cross-merchant and member sess
   assert.equal((await save(cookie('store7'),draft,false,'https://unrelated.example')).status,403);
   assert.equal((await save(cookie('readonly'),draft)).status,403);
   assert.equal((await save(cookie('no-add'),draft)).status,403);
+});
+
+test('platform administrator edits every merchant event without changing its owner',async()=>{
+  const created=await save(cookie('store7'),{...draft,titleCn:'Cross-merchant event fixture',status:'upcoming'});
+  const {id}=await created.json();
+  await database.execute({sql:'UPDATE event_management SET merchant_id=2,store_id=8 WHERE event_id=?',args:[id]});
+  assert.ok(!(await list(cookie('merchant'))).some(event=>event.id===id));
+  assert.ok((await list(cookie('platform'))).some(event=>event.id===id));
+  assert.equal((await save(cookie('platform-common'),{...draft,id,revision:1})).status,401);
+  assert.equal((await save(cookie('platform'),{...draft,titleCn:'Cross-merchant event fixture',id,revision:1,status:'upcoming',pageCopyCn:{registrationButton:'系统管理员修改'}})).status,200);
+  const saved=(await list(cookie('platform'))).find(event=>event.id===id)!;
+  assert.equal(saved.merchant_id,2);assert.equal(saved.store_id,8);
+  assert.equal(JSON.parse(String(saved.page_copy_cn)).registrationButton,'系统管理员修改');
+  const log=(await database.execute({sql:'SELECT metadata FROM activity_logs WHERE event_id=? ORDER BY created_at DESC LIMIT 1',args:[id]})).rows[0];
+  assert.equal(JSON.parse(String(log.metadata)).actorId,'fuint:11');
 });
 
 test('shop manager publishes a poster, preserves Eastern time, and cannot change another store event',async()=>{

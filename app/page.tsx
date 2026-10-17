@@ -19,7 +19,7 @@ import {
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { NotificationButton } from "@/components/notification-button";
-import { LatestNews } from "@/components/latest-news";
+import { LatestNews } from "@/components/news-page";
 import { getAnnouncements, getEvents, getLandingPageAssetMetadata, getLandingPageContent, getProducts } from "@/lib/db";
 import { formatCurrency, formatEventDate, formatEventTime } from "@/lib/format";
 import { fillLandingTemplate, landingImageUrl } from "@/lib/landing-page-content";
