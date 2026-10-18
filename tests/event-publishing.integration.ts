@@ -55,6 +55,42 @@ before(async () => {
 
 after(async()=>{app?.kill();backend?.closeAllConnections();await new Promise<void>(resolve=>backend?.close(()=>resolve()));database?.close();await rm(directory,{recursive:true,force:true});});
 
+test('dated meeting minutes appear in the public archive while drafts and cancelled events remain private', async () => {
+  const minutes = { ...draft, start:'2020-08-14', end:'', dateOnly:true, status:'completed', titleCn:'Archive latest meeting fixture', descriptionCn:'Meeting minutes\n\nSpeaker one: recorded discussion.\n\nFinal closing remarks.' };
+  const created = await save(cookie('store7'), minutes);
+  assert.equal(created.status,200,await created.clone().text());
+  const { id } = await created.json();
+  for (const [titleCn, start, status] of [
+    ['Archive older meeting fixture','2020-07-14','completed'],
+    ['Archive private draft fixture','2020-09-14','draft'],
+    ['Archive cancelled fixture','2020-09-15','cancelled'],
+  ]) assert.equal((await save(cookie('store7'),{...minutes,titleCn,start,status})).status,200);
+  // Older clients must preserve date precision when updating the same record.
+  const { dateOnly, ...legacy } = minutes;
+  assert.equal((await save(cookie('store7'),{...legacy,start:'2020-08-14T12:00',id,revision:1})).status,200);
+  const event=(await list(cookie('store7'))).find(row=>row.id===id)!;
+  assert.equal(event.date_precision,'day');assert.equal(event.end_date,null);
+  for (const path of ['/cn/events','/events']) {
+    const html=await(await fetch(origin+path)).text();
+    const archive=html.slice(html.indexOf('id="past-events"'));
+    assert.ok(archive.includes('Archive latest meeting fixture'));
+    assert.ok(archive.indexOf('Archive latest meeting fixture')<archive.indexOf('Archive older meeting fixture'));
+    assert.ok(!html.includes('Archive private draft fixture'));assert.ok(!html.includes('Archive cancelled fixture'));
+  }
+  const detail=await(await fetch(origin+'/cn/events/'+id)).text();
+  const metadata=detail.split('class="event-detail-meta"')[1].split('</div>')[0];
+  assert.ok(metadata.includes('2020'));assert.ok(!metadata.includes('12:00'));assert.ok(!metadata.includes('美国东部时间'));
+  assert.ok(detail.includes('Final closing remarks.'));assert.ok(detail.includes('活动已结束。'));
+  assert.ok(!detail.includes('event-registration-action'));
+  assert.equal((await save(cookie('store8'),{...minutes,id,revision:2})).status,403);
+  assert.equal((await save(cookie('store7'),{...minutes,id,revision:2,status:'cancelled'})).status,200);
+  assert.equal((await fetch(origin+'/cn/events/'+id)).status,404);
+  assert.ok(!(await(await fetch(origin+'/cn/events')).text()).includes('Archive latest meeting fixture'));
+  for (const changes of [{start:'2020-02-30'},{dateOnly:'true'},{status:'upcoming'}]) {
+    assert.equal((await save(cookie('store7'),{...minutes,...changes})).status,400);
+  }
+});
+
 test('event publishing rejects anonymous, forged, cross-merchant and member sessions', async()=>{
   for(const session of ['',cookie('forged'),cookie('wrong-merchant'),cookie('member')]) {
     assert.equal((await fetch(origin+'/api/shop-manager/events',{headers:{Cookie:session}})).status,401);
@@ -66,13 +102,14 @@ test('event publishing rejects anonymous, forged, cross-merchant and member sess
 });
 
 test('platform administrator edits every merchant event without changing its owner',async()=>{
-  const created=await save(cookie('store7'),{...draft,titleCn:'Cross-merchant event fixture',status:'upcoming'});
+  const laterEvent={...draft,start:'2099-11-18T11:00',end:'2099-11-18T15:00'};
+  const created=await save(cookie('store7'),{...laterEvent,titleCn:'Cross-merchant event fixture',status:'upcoming'});
   const {id}=await created.json();
   await database.execute({sql:'UPDATE event_management SET merchant_id=2,store_id=8 WHERE event_id=?',args:[id]});
   assert.ok(!(await list(cookie('merchant'))).some(event=>event.id===id));
   assert.ok((await list(cookie('platform'))).some(event=>event.id===id));
   assert.equal((await save(cookie('platform-common'),{...draft,id,revision:1})).status,401);
-  assert.equal((await save(cookie('platform'),{...draft,titleCn:'Cross-merchant event fixture',id,revision:1,status:'upcoming',pageCopyCn:{registrationButton:'系统管理员修改'}})).status,200);
+  assert.equal((await save(cookie('platform'),{...laterEvent,titleCn:'Cross-merchant event fixture',id,revision:1,status:'upcoming',pageCopyCn:{registrationButton:'系统管理员修改'}})).status,200);
   const saved=(await list(cookie('platform'))).find(event=>event.id===id)!;
   assert.equal(saved.merchant_id,2);assert.equal(saved.store_id,8);
   assert.equal(JSON.parse(String(saved.page_copy_cn)).registrationButton,'系统管理员修改');

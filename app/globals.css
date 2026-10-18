@@ -647,6 +647,9 @@ input:focus, textarea:focus, select:focus { border-color: var(--green-3); box-sh
 .event-detail { max-width: 1060px; margin: 50px auto; padding: 0 24px; }
 .event-detail h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.35; }
 .event-detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 35px; align-items: start; }
+.event-detail-no-poster { grid-template-columns: minmax(0, 1fr); max-width: 800px; }
+.event-manager-editor label.event-date-only { display: flex; align-items: center; gap: 10px; }
+.event-manager-editor .event-date-only input { width: auto; }
 .event-detail-description { white-space: pre-wrap; line-height: 1.8; }
 .event-detail-meta { display: grid; gap: 16px; padding: 20px 0; }
 .event-detail .forum-poster-button img { width: 100%; height: auto; }

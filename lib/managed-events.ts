@@ -1,6 +1,6 @@
 import { db, execute } from './db';
 import { canManageEvent, type EventManager } from './event-manager-auth';
-import { easternTimeToIso } from './event-time';
+import { easternTimeToIso, isUpcomingEvent } from './event-time';
 import type { ClubEvent } from './types';
 import { readEventRegistrationFields } from './event-registration';
 import { storedEventPageCopy, validateEventPageCopy } from './event-page-copy';
@@ -15,7 +15,7 @@ export async function listManagedEvents(manager: EventManager) {
   const args = manager.isSiteAdmin ? [] : manager.storeId > 0 ? [manager.merchantId, manager.storeId] : [manager.merchantId];
   const result = await execute(`SELECT e.*, m.merchant_id, m.store_id, COALESCE(m.revision, 0) AS revision,
     (SELECT updated_at FROM landing_page_assets WHERE slot = 'event-' || e.id) AS poster_updated_at
-    FROM events e LEFT JOIN event_management m ON m.event_id = e.id ${scope} ORDER BY e.event_date DESC`, args);
+    FROM events e LEFT JOIN event_management m ON m.event_id = e.id ${scope} ORDER BY julianday(e.event_date) DESC, e.id ASC`, args);
   return result.rows as unknown as ManagedEvent[];
 }
 
@@ -27,19 +27,28 @@ export function readEventFields(input: Record<string, unknown>) {
   };
   const titleCn = field('titleCn', 300, true), descriptionCn = field('descriptionCn', 4000, true);
   const locationCn = field('locationCn', 500, true), categoryCn = field('categoryCn', 100, true);
-  let start: string, end: string;
-  try { start = easternTimeToIso(String(input.start || '')); end = easternTimeToIso(String(input.end || '')); }
+  if (input.dateOnly !== undefined && typeof input.dateOnly !== 'boolean') throw new EventError('请检查日期显示设置');
+  const dateOnly = input.dateOnly === true;
+  let start: string, end: string | null;
+  try {
+    const value = String(input.start || '');
+    if (dateOnly && !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(value)) throw new Error('请填写完整日期');
+    // Noon anchors a date without implying a known meeting time.
+    start = easternTimeToIso(dateOnly ? value.slice(0, 10) + 'T12:00' : value);
+    end = !dateOnly && input.end ? easternTimeToIso(String(input.end)) : null;
+  }
   catch (error) { throw new EventError(error instanceof Error ? error.message : '请检查活动时间'); }
-  if (end <= start) throw new EventError('结束时间必须晚于开始时间');
+  if (end && end <= start) throw new EventError('结束时间必须晚于开始时间');
   const capacity = input.capacity === '' || input.capacity === undefined ? 0 : Number(input.capacity);
   if (!Number.isSafeInteger(capacity) || capacity < 0 || capacity > 100000) throw new EventError('人数请留空，或填写 1 至 100000 的整数');
   const status = String(input.status || 'draft');
   if (!['draft', 'upcoming', 'completed', 'cancelled'].includes(status)) throw new EventError('活动状态无效');
-  if (status === 'upcoming' && start <= new Date().toISOString()) throw new EventError('发布的活动开始时间必须在未来');
+  const datePrecision = dateOnly ? 'day' : '';
+  if (status === 'upcoming' && !isUpcomingEvent({ status, event_date: start, date_precision: datePrecision })) throw new EventError('发布的活动开始时间必须在未来');
   return {
     title: field('title', 300) || titleCn, description: field('description', 4000) || descriptionCn,
     location: field('location', 500) || locationCn, category: field('category', 100) || categoryCn,
-    titleCn, descriptionCn, locationCn, categoryCn, start, end, capacity, status,
+    titleCn, descriptionCn, locationCn, categoryCn, start, end, capacity, status, datePrecision,
   };
 }
 
@@ -60,7 +69,6 @@ export async function saveManagedEvent(manager: EventManager, input: Record<stri
   if (!(updating ? manager.canEdit : manager.canCreate)) throw new EventError('此账号没有新增或修改活动的权限', 403);
   const id = updating ? String(input.id) : crypto.randomUUID();
   if (!/^[A-Za-z0-9-]{1,100}$/.test(id)) throw new EventError('活动编号无效');
-  const fields = readEventFields(input);
   const image = await readPoster(poster);
   const client = await db();
   const tx = await client.transaction('write');
@@ -71,6 +79,7 @@ export async function saveManagedEvent(manager: EventManager, input: Record<stri
       if (!row || !canManageEvent(manager, { merchant_id: row.merchant_id, store_id: row.store_id })) throw new EventError('无权修改这个活动', 403);
       if (Number(input.revision) !== Number(row.revision || 0)) throw new EventError('活动已被其他人更新，请重新打开后再修改', 409);
     }
+    const fields = readEventFields({ ...input, dateOnly: input.dateOnly ?? row?.date_precision === 'day' });
     let registration, pageCopy, pageCopyCn;
     try {
       pageCopy = validateEventPageCopy(input.pageCopy ?? storedEventPageCopy(row?.page_copy));
@@ -84,18 +93,18 @@ export async function saveManagedEvent(manager: EventManager, input: Record<stri
     const now = new Date().toISOString();
     await tx.execute({ sql: `INSERT INTO events
       (id,title,description,event_date,end_date,location,category,capacity,status,title_cn,description_cn,location_cn,category_cn,
-       registration_url,fee_details,fee_details_cn,payment_instructions,payment_instructions_cn,page_copy,page_copy_cn)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
+       registration_url,fee_details,fee_details_cn,payment_instructions,payment_instructions_cn,page_copy,page_copy_cn,date_precision)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
       title=excluded.title,description=excluded.description,event_date=excluded.event_date,end_date=excluded.end_date,
       location=excluded.location,category=excluded.category,capacity=excluded.capacity,status=excluded.status,
       title_cn=excluded.title_cn,description_cn=excluded.description_cn,location_cn=excluded.location_cn,category_cn=excluded.category_cn,
       registration_url=excluded.registration_url,fee_details=excluded.fee_details,fee_details_cn=excluded.fee_details_cn,
       payment_instructions=excluded.payment_instructions,payment_instructions_cn=excluded.payment_instructions_cn,
-      page_copy=excluded.page_copy,page_copy_cn=excluded.page_copy_cn`,
+      page_copy=excluded.page_copy,page_copy_cn=excluded.page_copy_cn,date_precision=excluded.date_precision`,
       args: [id,fields.title,fields.description,fields.start,fields.end,fields.location,fields.category,fields.capacity,fields.status,
         fields.titleCn,fields.descriptionCn,fields.locationCn,fields.categoryCn,registration.registrationUrl,
         registration.feeDetails,registration.feeDetailsCn,registration.paymentInstructions,registration.paymentInstructionsCn,
-        JSON.stringify(pageCopy),JSON.stringify(pageCopyCn)] });
+        JSON.stringify(pageCopy),JSON.stringify(pageCopyCn),fields.datePrecision] });
     await tx.execute({ sql: `INSERT INTO event_management (event_id,merchant_id,store_id,created_by,revision,updated_at)
       VALUES (?,?,?,?,1,?) ON CONFLICT(event_id) DO UPDATE SET revision=event_management.revision+1,updated_at=excluded.updated_at`,
       args: [id,manager.merchantId,manager.storeId,manager.id,now] });

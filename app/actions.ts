@@ -15,6 +15,7 @@ import {
   requireAdmin,
 } from "@/lib/auth";
 import { execute } from "@/lib/db";
+import { easternTimeInput } from "@/lib/event-time";
 import { readEventRegistrationFields, safeEventRegistrationUrl } from "@/lib/event-registration";
 
 // Optional connection to the existing member service.
@@ -283,7 +284,7 @@ export async function registerForEventAction(formData: FormData) {
   if (!memberId || !eventId) return;
   const member = await execute("SELECT membership_status FROM members WHERE id = ? LIMIT 1", [memberId]);
   if (member.rows[0]?.membership_status !== "active") return;
-  const event = await execute("SELECT id, registration_url FROM events WHERE id = ? AND status = 'upcoming' AND julianday(event_date) >= julianday('now')", [eventId]);
+  const event = await execute("SELECT id, registration_url FROM events WHERE id = ? AND status = 'upcoming' AND ((date_precision = 'day' AND substr(event_date, 1, 10) >= ?) OR (date_precision <> 'day' AND julianday(event_date) > julianday('now')))", [eventId, easternTimeInput(new Date().toISOString()).slice(0, 10)]);
   if (!event.rows.length) return;
   const registrationUrl = safeEventRegistrationUrl(event.rows[0].registration_url);
   if (registrationUrl) redirect(registrationUrl);

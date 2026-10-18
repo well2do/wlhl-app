@@ -1,5 +1,6 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
 import { databaseConfig } from "./database-config";
+import { easternTimeInput } from "./event-time";
 import type { ActivityLog, Announcement, Attendance, ClubEvent, EventRegistration, ExpertProfileRecord, Member, Product } from "./types";
 import { initialExpertProfiles, shenPeihongPlaceholderBiographyCn, shenPeihongProfile } from "./expert-profiles";
 import { landingPageDefaults, type LandingPageContent, type LandingPageLocale } from "./landing-page-content";
@@ -146,7 +147,7 @@ async function initialize() {
   );
 
   for (const [table, columns] of [
-    ["events", ["title_cn", "description_cn", "location_cn", "category_cn", "registration_url", "fee_details", "fee_details_cn", "payment_instructions", "payment_instructions_cn", "page_copy", "page_copy_cn"]],
+    ["events", ["title_cn", "description_cn", "location_cn", "category_cn", "registration_url", "fee_details", "fee_details_cn", "payment_instructions", "payment_instructions_cn", "page_copy", "page_copy_cn", "date_precision"]],
     ["announcements", ["title_cn", "message_cn"]],
     ["products", ["name_cn", "description_cn", "category_cn", "badge_cn"]],
   ] as const) {
@@ -280,8 +281,25 @@ export async function getEvents(includePast = false) {
     `SELECT e.*, COUNT(a.id) AS attendee_count,
      (SELECT updated_at FROM landing_page_assets WHERE slot = 'event-' || e.id) AS poster_updated_at FROM events e
      LEFT JOIN attendance a ON a.event_id = e.id
-     ${includePast ? "" : "WHERE e.status = 'upcoming' AND e.event_date >= datetime('now')"}
-     GROUP BY e.id ORDER BY e.event_date ASC`,
+     ${includePast ? "" : `WHERE e.status = 'upcoming' AND (
+       (e.date_precision = 'day' AND substr(e.event_date, 1, 10) >= ?) OR
+       (e.date_precision <> 'day' AND julianday(e.event_date) > julianday('now')))`}
+     GROUP BY e.id ORDER BY julianday(e.event_date) ASC, e.id ASC`,
+    includePast ? [] : [easternTimeInput(new Date().toISOString()).slice(0, 10)],
+  );
+  return result.rows as unknown as ClubEvent[];
+}
+
+export async function getPastEvents() {
+  const result = await execute(
+    `SELECT e.*, COUNT(a.id) AS attendee_count,
+     (SELECT updated_at FROM landing_page_assets WHERE slot = 'event-' || e.id) AS poster_updated_at
+     FROM events e LEFT JOIN attendance a ON a.event_id = e.id
+     WHERE e.status = 'completed' OR (e.status = 'upcoming' AND (
+       (e.date_precision = 'day' AND substr(e.event_date, 1, 10) < ?) OR
+       (e.date_precision <> 'day' AND julianday(e.event_date) <= julianday('now'))))
+     GROUP BY e.id ORDER BY julianday(e.event_date) DESC, e.id ASC`,
+    [easternTimeInput(new Date().toISOString()).slice(0, 10)],
   );
   return result.rows as unknown as ClubEvent[];
 }
@@ -395,8 +413,8 @@ export async function getDashboardStats() {
   const result = await execute(`SELECT
     (SELECT COUNT(*) FROM members) AS members,
     (SELECT COUNT(*) FROM members WHERE membership_status = 'active') AS active_members,
-    (SELECT COUNT(*) FROM events WHERE status = 'upcoming' AND event_date >= datetime('now')) AS upcoming_events,
+    (SELECT COUNT(*) FROM events WHERE status = 'upcoming' AND ((date_precision = 'day' AND substr(event_date, 1, 10) >= ?) OR (date_precision <> 'day' AND julianday(event_date) > julianday('now')))) AS upcoming_events,
     (SELECT COUNT(*) FROM attendance WHERE status IN ('attended','completed')) AS check_ins,
-    (SELECT COUNT(*) FROM event_registrations WHERE status != 'cancelled') AS registrations`);
+    (SELECT COUNT(*) FROM event_registrations WHERE status != 'cancelled') AS registrations`, [easternTimeInput(new Date().toISOString()).slice(0, 10)]);
   return result.rows[0] as unknown as { members: number; active_members: number; upcoming_events: number; check_ins: number; registrations: number };
 }

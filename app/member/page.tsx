@@ -91,7 +91,7 @@ export default async function MemberPage({ searchParams }: { searchParams: Promi
                 return (
                   <article key={event.id} className="portal-event">
                     <div className="portal-event-date"><strong>{new Date(event.event_date).toLocaleDateString("en-US", { timeZone: "America/New_York", day: "2-digit" })}</strong><span>{new Date(event.event_date).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short" })}</span></div>
-                    <div className="portal-event-info"><small>{event.category}</small><h3>{event.title}</h3><p><Clock3 size={14} />{formatEventTime(event.event_date)} <span>·</span> <MapPin size={14} />{event.location}</p></div>
+                    <div className="portal-event-info"><small>{event.category}</small><h3>{event.title}</h3><p>{event.date_precision !== 'day' && <><Clock3 size={14} />{formatEventTime(event.event_date)} <span>·</span> </>}<MapPin size={14} />{event.location}</p></div>
                     {safeEventRegistrationUrl(event.registration_url) ? <Link className="button button-outline button-small" href={eventHref(event.id)}>{copyText("Register")}</Link> : record ? <span className="reserved-chip"><CheckCircle2 size={14} />{copyText(record.status)}</span> : member.membership_status !== "active" ? (
                       <span className="approval-chip">{copyText("Approval pending")}</span>
                     ) : (

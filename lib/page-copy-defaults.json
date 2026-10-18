@@ -13,7 +13,12 @@
       "Make yourself a regular",
       "Belonging starts with",
       "showing up.",
-      "Join the club "
+      "Join the club ",
+      "Past events",
+      "Meeting minutes and recaps",
+      "Browse past gatherings by date, newest first. Open an event for the full record.",
+      "View event record",
+      "Register"
     ],
     "cn": [
       "俱乐部活动日历",
@@ -28,7 +33,11 @@
       "成为社区的一员",
       "归属感，从",
       "每一次参与开始。",
-      "加入俱乐部 "
+      "加入俱乐部 ",
+      "历史活动",
+      "会议纪要与活动回顾",
+      "按活动日期由新到旧排列，打开详情查看完整记录。",
+      "查看活动记录"
     ]
   },
   "join": {

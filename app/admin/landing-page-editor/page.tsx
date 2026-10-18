@@ -181,7 +181,7 @@ export default async function LandingPageEditor({
                   <label>Location<input name="location" defaultValue={nextEvent.location} required /></label>
                   <label>Category<input name="category" defaultValue={nextEvent.category} required /></label>
                   <EventRegistrationFields event={nextEvent} locale={locale} />
-                  <p className="landing-derived-copy">Date shown on the page: <strong>{formatEventDate(nextEvent.event_date, true)} at {formatEventTime(nextEvent.event_date)}</strong></p>
+                  <p className="landing-derived-copy">Date shown on the page: <strong>{formatEventDate(nextEvent.event_date, true)}{nextEvent.date_precision !== 'day' && <> at {formatEventTime(nextEvent.event_date)}</>}</strong></p>
                   <div className="form-row two-columns">
                     <label>Start date and time (UTC)<input name="eventDate" type="datetime-local" defaultValue={new Date(nextEvent.event_date).toISOString().slice(0, 16)} required /></label>
                     <label>End date and time (UTC)<input name="endDate" type="datetime-local" defaultValue={nextEvent.end_date ? new Date(nextEvent.end_date).toISOString().slice(0, 16) : ""} /></label>

@@ -24,3 +24,9 @@ export function easternTimeToIso(value: string) {
 export function eventHref(id: string, locale: "en" | "cn" = "en") {
   return `${locale === "cn" ? "/cn" : ""}/events/${id === "forum-2026-09-07" ? "ai-health-wealth-forum" : encodeURIComponent(id)}`;
 }
+
+export function isUpcomingEvent(event: { status: string; event_date: string; date_precision?: string }, now = new Date()) {
+  return event.status === 'upcoming' && (event.date_precision === 'day'
+    ? easternTimeInput(event.event_date).slice(0, 10) >= easternTimeInput(now.toISOString()).slice(0, 10)
+    : new Date(event.event_date).getTime() > now.getTime());
+}

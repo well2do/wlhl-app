@@ -9,7 +9,7 @@ import { landingImageUrl } from '@/lib/landing-page-content';
 import { EventRegistrationFields } from './event-registration-fields';
 import { EventPageCopyFields } from './event-page-copy-fields';
 
-const statuses: Record<string, string> = { draft: '草稿（仅后台可见）', upcoming: '上线（即将举行）', completed: '已结束', cancelled: '下线 / 取消' };
+const statuses: Record<string, string> = { draft: '草稿（仅后台可见）', upcoming: '上线（即将举行）', completed: '已结束（显示在历史活动）', cancelled: '下线 / 取消' };
 export function EventManagerForm({ initialEventId }: { initialEventId?: string }) {
   const [manager, setManager] = useState<EventManager | null>(null);
   const [events, setEvents] = useState<ManagedEvent[]>([]);
@@ -21,6 +21,7 @@ export function EventManagerForm({ initialEventId }: { initialEventId?: string }
   const [preview, setPreview] = useState('');
   const [reset, setReset] = useState(0);
   const [publicLink, setPublicLink] = useState('');
+  const [dateOnly, setDateOnly] = useState(false);
   async function load() {
     const response = await fetch('/api/shop-manager/events', { cache: 'no-store' });
     const result = await response.json();
@@ -32,12 +33,13 @@ export function EventManagerForm({ initialEventId }: { initialEventId?: string }
     load().then(items => {
       if (!initialEventId) return;
       const event = items.find(item => item.id === initialEventId);
-      if (event) setSelected(event);
+      if (event) { setSelected(event); setDateOnly(event.date_precision === 'day'); }
       else setError('找不到这个活动，或当前账号没有管理权限。');
     }).catch(error => setError(error.message)).finally(() => setLoaded(true));
   }, [initialEventId]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   function choose(event: ManagedEvent | null) {
+    setDateOnly(event?.date_precision === 'day');
     setSelected(event); setPreview(''); setError(''); setMessage(''); setPublicLink(''); setReset(value => value + 1);
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -52,7 +54,7 @@ export function EventManagerForm({ initialEventId }: { initialEventId?: string }
       return entries.length ? Object.fromEntries(entries.map(([key, value]) => [key.slice(prefix.length), value])) : undefined;
     };
     const pageCopy = pageCopyFields('pageCopy:'), pageCopyCn = pageCopyFields('pageCopyCn:');
-    body.set('event', JSON.stringify({ ...input, pageCopy, pageCopyCn, id: selected?.id, revision: selected?.revision }));
+    body.set('event', JSON.stringify({ ...input, dateOnly, pageCopy, pageCopyCn, id: selected?.id, revision: selected?.revision }));
     const poster = form.get('poster');
     if (poster instanceof File && poster.size) body.set('poster', poster);
     try {
@@ -71,6 +73,7 @@ export function EventManagerForm({ initialEventId }: { initialEventId?: string }
     <nav><Link href="/wlhl-application/index.html">← 部门后台</Link><Link href="/cn/events">查看网站活动日历</Link></nav>
     <h1>网站活动管理</h1>
     <p>填写活动资料、上传海报，选择“上线（即将举行）”并保存，即可显示在活动日历；最近的一场活动也会显示在首页。</p>
+    <p>会议纪要和活动回顾请选择“已结束”，会按日期由新到旧显示在历史活动中。未记录具体时间时，可勾选“仅显示日期”。</p>
     {error && <p role="alert" className="form-error">{error}</p>}
     {!loaded && <p role="status">正在核对登录信息…</p>}
     {loaded && !manager && <p><Link className="button button-dark" href="/wlhl-application/index.html#/login">登录部门后台</Link> <Link href="/admin/login">网站管理员登录</Link></p>}
@@ -91,7 +94,7 @@ export function EventManagerForm({ initialEventId }: { initialEventId?: string }
           <button className="button button-dark" disabled={!manager.canCreate || busy} onClick={() => choose(null)}>＋ 新增活动</button>
           <ul>{events.map(event => <li key={event.id}>
             <strong>{event.title_cn || event.title}</strong>
-            <span>{easternTimeInput(event.event_date).replace('T',' ')} · {statuses[event.status]}</span>
+            <span>{event.date_precision === 'day' ? easternTimeInput(event.event_date).slice(0, 10) : easternTimeInput(event.event_date).replace('T',' ')} · {statuses[event.status]}</span>
             {manager.isSiteAdmin && <span>{event.merchant_id == null ? '历史活动（未分配分会）' : `分会 ${event.merchant_id} · ${event.store_id ? `部门 ${event.store_id}` : '分会统一活动'}`}</span>}
             <button type="button" disabled={!manager.canEdit || busy} onClick={() => choose(event)}>编辑活动</button>
             {['upcoming','completed'].includes(event.status) && <Link href={eventHref(event.id,'cn')} target="_blank">查看前台</Link>}
@@ -103,9 +106,10 @@ export function EventManagerForm({ initialEventId }: { initialEventId?: string }
           <fieldset disabled={busy || (selected ? !manager.canEdit : !manager.canCreate)}>
             <label>活动标题<input name="titleCn" required maxLength={300} defaultValue={selected?.title_cn || selected?.title} /></label>
             <label>活动介绍 / 流程<textarea name="descriptionCn" required maxLength={4000} rows={6} defaultValue={selected?.description_cn || selected?.description} /></label>
+            <label className="event-date-only"><input type="checkbox" checked={dateOnly} onChange={event => setDateOnly(event.target.checked)} />仅显示日期（未记录具体时间）</label>
             <div className="form-row two-columns">
-              <label>开始时间（美国东部时间）<input name="start" type="datetime-local" required defaultValue={selected ? easternTimeInput(selected.event_date) : ''} /></label>
-              <label>结束时间（美国东部时间）<input name="end" type="datetime-local" required defaultValue={selected?.end_date ? easternTimeInput(selected.end_date) : ''} /></label>
+              <label>{dateOnly ? '活动日期' : '开始时间（美国东部时间）'}<input key={dateOnly ? 'date' : 'time'} name="start" type={dateOnly ? 'date' : 'datetime-local'} required defaultValue={selected ? easternTimeInput(selected.event_date).slice(0, dateOnly ? 10 : 16) : ''} /></label>
+              {!dateOnly && <label>结束时间（美国东部时间，选填）<input name="end" type="datetime-local" defaultValue={selected?.end_date ? easternTimeInput(selected.end_date) : ''} /></label>}
             </div>
             <label>地点及地址<input name="locationCn" required maxLength={500} defaultValue={selected?.location_cn || selected?.location} /></label>
             <h3>报名登记与收费</h3>

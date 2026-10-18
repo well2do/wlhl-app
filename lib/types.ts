@@ -19,6 +19,7 @@ export type ClubEvent = {
   title: string;
   description: string;
   event_date: string;
+  date_precision?: string;
   end_date: string | null;
   location: string;
   category: string;

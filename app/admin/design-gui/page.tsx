@@ -31,7 +31,7 @@ export default async function DesignGuiPage() {
           title: nextEvent.title,
           description: nextEvent.description,
           date: formatEventDate(nextEvent.event_date, true),
-          time: formatEventTime(nextEvent.event_date),
+          time: nextEvent.date_precision === 'day' ? '' : formatEventTime(nextEvent.event_date),
           location: nextEvent.location,
           availability: `${Math.max(nextEvent.capacity - Number(nextEvent.attendee_count || 0), 0)} spots open`,
         }

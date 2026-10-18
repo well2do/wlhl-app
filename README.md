@@ -486,3 +486,20 @@ and event management. `build:content-admin` applies the terminology to staged
 Vue views and backend route titles. Saved organization names, article content,
 API identifiers, authorization scopes, and WeChat payment merchant numbers
 are unchanged. Rebuild both administration entry points when changing labels.
+
+### Historical events and meeting minutes
+
+Publish meeting minutes through `/shop-manager/events` with status **已结束**.
+The public Chinese and English calendars show completed events and elapsed
+published events under **历史活动** / **Past events**, ordered by event date
+newest first. Upcoming events keep chronological order. Drafts and cancelled
+events are excluded from both public sections. Archive headings and link labels
+remain editable through the event calendar page-copy editor.
+
+Select **仅显示日期（未记录具体时间）** when only the meeting date is known.
+The editor stores `date_precision = 'day'`, preserves the calendar date in
+Eastern Time, and suppresses the internal time anchor in public displays.
+The end time is optional. Existing clients preserve date precision when they
+omit the new setting. Full minutes remain editable in the description field;
+calendar cards show a short excerpt, and details without posters use the full
+reading column.

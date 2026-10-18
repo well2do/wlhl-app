@@ -92,7 +92,7 @@ export default async function ChineseMemberPage({ searchParams }: { searchParams
               const record = attendanceMap.get(event.id);
               return <article key={event.id} className="portal-event">
                 <div className="portal-event-date"><strong>{new Date(event.event_date).toLocaleDateString("zh-CN", { timeZone: "America/New_York", day: "2-digit" })}</strong><span>{new Date(event.event_date).toLocaleDateString("zh-CN", { timeZone: "America/New_York", month: "short" })}</span></div>
-                <div className="portal-event-info"><small>{event.category}</small><h3>{event.title}</h3><p><Clock3 size={14} />{formatChineseEventTime(event.event_date)} <span>·</span> <MapPin size={14} />{event.location}</p></div>
+                <div className="portal-event-info"><small>{event.category}</small><h3>{event.title}</h3><p>{event.date_precision !== 'day' && <><Clock3 size={14} />{formatChineseEventTime(event.event_date)} <span>·</span> </>}<MapPin size={14} />{event.location}</p></div>
                 {safeEventRegistrationUrl(event.registration_url) ? <Link className="button button-outline button-small" href={eventHref(event.id, "cn")}>{copyText("报名登记")}</Link> : record ? <span className="reserved-chip"><CheckCircle2 size={14} />{copyText(statusText[record.status] || record.status)}</span> : member.membership_status !== "active" ? <span className="approval-chip">{copyText("等待会员审核")}</span> : <form action={registerForEventAction}><input type="hidden" name="eventId" value={event.id} /><button className="button button-outline button-small">{copyText("报名登记")}</button></form>}
               </article>;
             })}</div>
